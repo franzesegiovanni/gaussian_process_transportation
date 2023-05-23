@@ -10,9 +10,9 @@ from transport import Transport
 from tag_detector import Tag_Detector
 import rospy
 
-class GILoSA(Transport, Tag_Detector, ILoSA):
+class GILoSA(ILoSA, Transport, Tag_Detector):
     def __init__(self):
-        rospy.init_node('GILOSA', anonymous=True)
+        rospy.init_node('GILoSA', anonymous=True)
         rospy.sleep(2)
         super(GILoSA,self).__init__()
         
