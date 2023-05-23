@@ -5,7 +5,7 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 
-import ILoSA
+from ILoSA import ILoSA
 from transport import Transport 
 from tag_detector import Tag_Detector
 import rospy
