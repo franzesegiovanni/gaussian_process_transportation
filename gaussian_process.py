@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 class GaussianProcess():
-    def __init__(self, kernel, alpha=1e-10, n_restarts_optimizer=1):
-        self.gp = GaussianProcessRegressor(kernel=kernel, alpha=1e-10, n_restarts_optimizer=5)
+    def __init__(self, kernel, alpha=1e-10, n_restarts_optimizer=5):
+        self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, n_restarts_optimizer=n_restarts_optimizer)
     def fit(self, X, Y):
             self.X=X
             self.Y=Y

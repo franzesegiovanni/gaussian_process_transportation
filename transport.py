@@ -1,6 +1,8 @@
 from gaussian_process import GaussianProcess
 import pickle
-
+import numpy as np
+from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
+import quaternion
 class Transport():
     def __init__(self):
         super(Transport, self).__init__()
@@ -53,23 +55,19 @@ class Transport():
         delta_map_mean, _= self.gp_delta_map.predict(self.training_traj)
         transported_traj = self.training_traj + delta_map_mean 
 
-        #Deform Deltas
+        #Deform Deltas and orientation
         new_delta = np.ones((len(self.training_traj),3))
         for i in range(len(self.training_traj[:,0])):
             pos=(np.array(self.training_traj[i,:]).reshape(1,-1))
             [Jacobian,_]=self.gp_delta_map.derivative(pos)
             new_delta[i]=(self.training_delta[i]+np.matmul(np.transpose(Jacobian[0]),self.training_delta[i]))
+            rot=np.eye(3) + np.transpose(Jacobian[0])
+            rot_norm=rot/np.linalg.det(rot)
+            quat_deformation=quaternion.from_rotation_matrix(rot_norm, nonorthogonal=True)
+            curr_quat=quaternion.from_float_array(self.training_ori[i,:])
+            product_quat=quat_deformation*curr_quat
+            self.training_ori[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])
+
         #Update the trajectory and the delta     
         self.training_traj=transported_traj
         self.training_delta=new_delta
-
-        #TODO: Deform orientation    
-        # for i in range(len(self.training_traj[:,0])):
-        #     pos=(np.array(self.training_traj[i,:]).reshape(1,-1))
-        #     [Jacobian,_]=self.gp_delta_map.derivative(pos)
-        #     rot=np.eye(3) + np.transpose(Jacobian[0])
-        #     rot_norm=rot/np.linalg.det(rot)
-        #     quat_deformation=np.from_rotation_matrix(rot_norm, nonorthogonal=True)
-        #     curr_quat=np.from_float_array(self.training_ori[i,:])
-        #     product_quat=quat_deformation*curr_quat
-        #     self.training_ori[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])

@@ -20,6 +20,7 @@ time.sleep(1)
 print("Record of the source disributions")
 GILoSA.go_to_pose(GILoSA.view_marker)
 time.sleep(2)
+#%%
 GILoSA.record_source_distribution()    
 #%%
 time.sleep(1)
@@ -87,9 +88,9 @@ print("Reset to the starting cartesian position if you loaded the demo")
 start = PoseStamped()
 GILoSA.home_gripper()
 
-start.pose.position.x = GILoSA.transported_traj[0,0]
-start.pose.position.y = GILoSA.transported_traj[0,1]
-start.pose.position.z = GILoSA.transported_traj[0,2]
+start.pose.position.x = GILoSA.training_traj[0,0]
+start.pose.position.y = GILoSA.training_traj[0,1]
+start.pose.position.z = GILoSA.training_traj[0,2]
 
 start.pose.orientation.w = GILoSA.training_ori[0,0] 
 start.pose.orientation.x = GILoSA.training_ori[0,1] 
@@ -102,3 +103,5 @@ time.sleep(1)
 print("Interactive Control through target distribution")
 GILoSA.Interactive_Control(verboose=True)
 
+
+# %%

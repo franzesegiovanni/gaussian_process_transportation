@@ -4,6 +4,7 @@ import tf2_ros
 from tf2_geometry_msgs import do_transform_pose
 import rospy
 from geometry_msgs.msg import PoseStamped
+import numpy as np
 class Tag_Detector():
     def __init__(self):
         super(Tag_Detector, self).__init__()
