@@ -13,7 +13,7 @@ from sensor_msgs.msg import PointCloud2
 import sensor_msgs.point_cloud2 as pc2
 import open3d as o3d
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
-from regressor3d import GPR
+from gaussian_process import GaussianProcess
 
 class Surface_PointCloud_Detector(): 
     def __init__(self,queue_size =5):
@@ -34,7 +34,7 @@ class Surface_PointCloud_Detector():
 
         # Create Open3D point cloud from numpy array
         self.point_cloud.points = o3d.utility.Vector3dVector(pc_data)
-
+        self.point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]) # Flip the pointclouds, otherwise they will be upside down. 
 
     def pick_points(self,pcd):
         print("")
@@ -75,17 +75,26 @@ class Surface_PointCloud_Detector():
         return meshgrid
 
 
-    
-    def crop_geometry(self,pcd):
 
-        print("Save a PCD corresponding to the item")
-        print("1) Press 'Y' twice to align geometry with negative direction of y-axis")
-        print("2) Press 'K' to lock screen and to switch to selection mode")
-        print("3) Drag for rectangle selection,")
-        print("   or use ctrl + left click for polygon selection")
-        print("4) Press 'C' to get a selected geometry and to save it")
-        print("5) Press 'F' to switch to freeview mode")
-        vis = o3d.visualization.draw_geometries_with_editing([pcd])
+    def crop_geometry(self,pcd):
+        picked_id_distribution = self.pick_points(pcd)
+        picked_points_distribution = np.asarray(pcd.points)[picked_id_distribution]
+
+        min_bound = np.min(picked_points_distribution, axis=0)
+        max_bound = np.max(picked_points_distribution, axis=0)
+    
+        # Set z-bounds to positive and negative infinity
+        min_bound[2] = -np.inf
+        max_bound[2] = np.inf
+    
+        bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=min_bound, max_bound=max_bound)
+
+
+        # Crop the point cloud using the bounding box
+        cropped_pcd = pcd.crop(bbox)
+
+        o3d.visualization.draw_geometries([pcd])  # Visualize original point cloud
+        o3d.visualization.draw_geometries([cropped_pcd])  # Visualize cropped point cloud
 
 
     def record_distribution(self, distribution):
@@ -93,9 +102,24 @@ class Surface_PointCloud_Detector():
         print("Visualize np Distribution and Grid")
         picked_id_distribution = self.pick_points(distribution)
         picked_points_distribution = np.asarray(distribution.points)[picked_id_distribution]
+
+        min_bound = np.min(picked_points_distribution, axis=0)
+        max_bound = np.max(picked_points_distribution, axis=0)
+    
+        # Set z-bounds to positive and negative infinity
+        min_bound[2] = -np.inf
+        max_bound[2] = np.inf
+    
+        bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=min_bound, max_bound=max_bound)
+
+
+        # Crop the point cloud using the bounding box
+        cropped_distribution = distribution.crop(bbox)
+
+
         meshgrid_distribution = self.meshgrid(picked_points_distribution)
 
-        down_distribution = distribution.voxel_down_sample(voxel_size=0.1)
+        down_distribution = cropped_distribution.voxel_down_sample(voxel_size=0.1)
 
         distribution_np = np.asarray(down_distribution.points)
         fig = plt.figure()
@@ -104,7 +128,7 @@ class Surface_PointCloud_Detector():
         plt.show()
 
         k_distribution = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(2)) + WhiteKernel(0.01 )
-        gp_distribution = GPR(kernel=k_distribution)
+        gp_distribution = GaussianProcess(kernel=k_distribution)
         gp_distribution.fit(distribution_np[:,:2],distribution_np[:,2].reshape(-1,1))
 
         # newgrid = newgrid.reshape(-1,2)
@@ -119,16 +143,12 @@ class Surface_PointCloud_Detector():
 
 
     def record_source_distribution(self):
-        rospy.sleep(1)
+        rospy.sleep(2)
         source_cloud = self.point_cloud
-        self.crop_geometry(source_cloud)
-        source_cropped_cloud = o3d.io.read_point_cloud("./source.ply")
-        self.source_distribution = self.record_distribution(source_cropped_cloud)
+        self.source_distribution = self.record_distribution(source_cloud)
 
 
     def record_target_distribution(self):
         rospy.sleep(1)
         target_cloud = self.point_cloud
-        self.crop_geometry(target_cloud)
-        target_cropped_cloud = o3d.io.read_point_cloud("./target.ply")
-        self.target_distribution = self.record_distribution(target_cropped_cloud)
+        self.target_distribution = self.record_distribution(target_cloud)
