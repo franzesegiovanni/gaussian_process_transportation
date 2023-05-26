@@ -1,5 +1,4 @@
 from apriltag_ros.msg import AprilTagDetectionArray
-import tf
 import tf2_ros
 from tf2_geometry_msgs import do_transform_pose
 import rospy
@@ -12,18 +11,31 @@ class Tag_Detector():
         rospy.Subscriber("/tag_detections", AprilTagDetectionArray, self.april_tags_callback)
         self.camera_frame = "camera_color_optical_frame"
         self.base_frame = "panda_link0"
-        self._tf_listener = tf.TransformListener()
 
         # camera and tags
         self.view_marker = PoseStamped()
-        self.view_marker.header.frame_id = "panda_link0"
-        self.view_marker.pose.position.x = 0.4585609490798406
-        self.view_marker.pose.position.y = -0.04373075604079746
-        self.view_marker.pose.position.z = 0.6862181406538658
-        self.view_marker.pose.orientation.w = 0.03724672277393113
-        self.view_marker.pose.orientation.x =  0.9986700943869168
-        self.view_marker.pose.orientation.y =  0.03529063207161849
-        self.view_marker.pose.orientation.z = -0.004525063460755314
+
+        # For PnP experiment
+        # self.view_marker.header.frame_id = "panda_link0"
+        # self.view_marker.pose.position.x = 0.4585609490798406
+        # self.view_marker.pose.position.y = -0.04373075604079746
+        # self.view_marker.pose.position.z = 0.6862181406538658
+        # self.view_marker.pose.orientation.w = 0.03724672277393113
+        # self.view_marker.pose.orientation.x =  0.9986700943869168
+        # self.view_marker.pose.orientation.y =  0.03529063207161849
+        # self.view_marker.pose.orientation.z = -0.004525063460755314
+
+
+        # For Dressing experiment
+        self.view_marker.pose.position.x = 0.07650615785799098
+        self.view_marker.pose.position.y = -0.005898850023904138
+        self.view_marker.pose.position.z =  0.8236296151909983
+        self.view_marker.pose.orientation.w = 0.10245957026488291
+        self.view_marker.pose.orientation.x =  0.9301912956033728
+        self.view_marker.pose.orientation.y =  -0.06560049023651632
+        self.view_marker.pose.orientation.z = 0.34632055741502105
+
+
         self.tfBuffer = tf2_ros.Buffer()
         self.transform_listener = tf2_ros.TransformListener(self.tfBuffer)
 

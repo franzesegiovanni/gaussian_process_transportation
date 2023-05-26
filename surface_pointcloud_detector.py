@@ -11,31 +11,64 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sensor_msgs.msg import PointCloud2
 import sensor_msgs.point_cloud2 as pc2
+import tf2_ros
+from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
+from geometry_msgs.msg import PoseStamped
 import open3d as o3d
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 from gaussian_process import GaussianProcess
 
 class Surface_PointCloud_Detector(): 
-    def __init__(self,queue_size =5):
-        super(Surface_PointCloud_Detector, self).__init__()    
-        rospy.init_node('pointcloud', anonymous=True)   
+    def __init__(self):
+        super(Surface_PointCloud_Detector, self).__init__() 
+
+        self.tf_buffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.tf_buffer)
+        self.base_frame = "panda_link0"
+
+        # camera and tags
+        self.view_marker = PoseStamped()
+
+        # For Cleaning experiment
+        self.view_marker.header.frame_id = "panda_link0"
+        self.view_marker.pose.position.x = 0.4585609490798406
+        self.view_marker.pose.position.y = -0.04373075604079746
+        self.view_marker.pose.position.z = 0.6862181406538658
+        self.view_marker.pose.orientation.w = 0.03724672277393113
+        self.view_marker.pose.orientation.x =  0.9986700943869168
+        self.view_marker.pose.orientation.y =  0.03529063207161849
+        self.view_marker.pose.orientation.z = -0.004525063460755314
+
+
         rospy.Subscriber("/camera/depth_registered/points", PointCloud2, self.pointcloud_subscriber_callback)
         self.point_cloud = o3d.geometry.PointCloud()
         self.source_distribution = None
         self.target_distribution = None
-        self.source_mesh = None
-        self.target_mesh = None
+
 
 
     def pointcloud_subscriber_callback(self, msg):
+        try:
+            # Retrieve the transform between the camera frame and the robot frame
 
-        # Convert PointCloud2 message to numpy array
-        pc_data = pc2.read_points(msg, skip_nans=True, field_names=("x", "y", "z"))
+            transform = self.tf_buffer.lookup_transform(self.base_frame, msg.header.frame_id, msg.header.stamp, rospy.Duration(1.0))
 
-        # Create Open3D point cloud from numpy array
-        self.point_cloud.points = o3d.utility.Vector3dVector(pc_data)
-        self.point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]) # Flip the pointclouds, otherwise they will be upside down. 
+            # Convert the point cloud to the robot frame
+            msg_in_robot_frame = do_transform_cloud(msg, transform)
 
+            # Convert PointCloud2 message to numpy array
+            pc_data = pc2.read_points(msg_in_robot_frame, skip_nans=True, field_names=("x", "y", "z"))
+            # pc_data = pc2.read_points(msg, skip_nans=True, field_names=("x", "y", "z"))
+
+            # Create Open3D point cloud from numpy array
+            self.point_cloud.points = o3d.utility.Vector3dVector(pc_data)
+            # self.point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]) # Flip the pointclouds, otherwise they will be upside down. 
+
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+            rospy.logerr('Error occurred during point cloud transformation: %s', str(e))
+
+
+        
     def pick_points(self,pcd):
         print("")
         print("1) Please pick the corner points of the PCD using [shift + left click]")
@@ -101,7 +134,7 @@ class Surface_PointCloud_Detector():
 
         meshgrid_distribution = self.meshgrid(picked_points_distribution)
 
-        down_distribution = cropped_distribution.voxel_down_sample(voxel_size=0.1)
+        down_distribution = cropped_distribution.voxel_down_sample(voxel_size=0.02)
 
         distribution_np = np.asarray(down_distribution.points)
         fig = plt.figure()
@@ -120,12 +153,13 @@ class Surface_PointCloud_Detector():
         distribution_surface=distribution_surface[::3]
         return distribution_surface
 
-
+    def convert_distribution_to_array(self):
+        pass
 
 
 
     def record_source_distribution(self):
-        rospy.sleep(2)
+        rospy.sleep(5)
         source_cloud = self.point_cloud
         self.source_distribution = self.record_distribution(source_cloud)
 
