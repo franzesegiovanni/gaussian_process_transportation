@@ -76,10 +76,7 @@ class Surface_PointCloud_Detector():
 
 
 
-    def crop_geometry(self,pcd):
-        picked_id_distribution = self.pick_points(pcd)
-        picked_points_distribution = np.asarray(pcd.points)[picked_id_distribution]
-
+    def crop_geometry(self, picked_points_distribution, pcd):
         min_bound = np.min(picked_points_distribution, axis=0)
         max_bound = np.max(picked_points_distribution, axis=0)
     
@@ -89,13 +86,10 @@ class Surface_PointCloud_Detector():
     
         bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=min_bound, max_bound=max_bound)
 
-
         # Crop the point cloud using the bounding box
         cropped_pcd = pcd.crop(bbox)
 
-        o3d.visualization.draw_geometries([pcd])  # Visualize original point cloud
-        o3d.visualization.draw_geometries([cropped_pcd])  # Visualize cropped point cloud
-
+        return cropped_pcd
 
     def record_distribution(self, distribution):
         
@@ -103,19 +97,7 @@ class Surface_PointCloud_Detector():
         picked_id_distribution = self.pick_points(distribution)
         picked_points_distribution = np.asarray(distribution.points)[picked_id_distribution]
 
-        min_bound = np.min(picked_points_distribution, axis=0)
-        max_bound = np.max(picked_points_distribution, axis=0)
-    
-        # Set z-bounds to positive and negative infinity
-        min_bound[2] = -np.inf
-        max_bound[2] = np.inf
-    
-        bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=min_bound, max_bound=max_bound)
-
-
-        # Crop the point cloud using the bounding box
-        cropped_distribution = distribution.crop(bbox)
-
+        cropped_distribution = self.crop_geometry(picked_points_distribution, distribution)
 
         meshgrid_distribution = self.meshgrid(picked_points_distribution)
 
