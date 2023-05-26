@@ -18,6 +18,7 @@ from interface import Drawing
 # Press once 'z' to start drawing. Once the drawing is done, press 'w' or 'd' or 'n'
 # to save the drawing as surface or demo or new surface respectively (This also stops the drawing )
 # Press 'q' to exit
+%matplotlib qt
 Surface_Demo = Drawing(draw=2)
 
 #%% Visualize the drawings
@@ -34,6 +35,6 @@ plt.scatter(newsurface[:,0],newsurface[:,1], color=[0,0,1])
 
 #%% Save the drawings
 
-Surface_Demo.save(data='indexing1')
+Surface_Demo.save(data='indexing2')
 
 # %%
