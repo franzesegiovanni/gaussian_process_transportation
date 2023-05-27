@@ -89,29 +89,31 @@ class Transport():
         #Deform Deltas and orientation
         new_delta = np.ones_like(self.training_delta)
         for i in range(len(self.training_traj[:,0])):
-            pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
-            [Jacobian,_]=self.gp_delta_map.derivative(pos)
-            rot_gp= np.eye(Jacobian[0].shape[0]) + np.transpose(Jacobian[0]) 
-            rot_affine= affine_transform.rotation_matrix
-            new_delta[i]= rot_affine @ self.training_delta[i]
-            new_delta[i]= rot_gp @ new_delta[i]
-            if  hasattr(self, 'self.training_ori'):
-                U, S, Vt = np.linalg.svd(rot_gp)
-                V=Vt.T
-                rot_gp_norm = V @ U.T 
-                #Check for reflactions https://nghiaho.com/?page_id=671
-                if np.linalg.det(rot_gp_norm)<0:
-                    V[:,-1]*= -1
-                    rot_gp_norm= V @ U.T
-                # Assert that this is a rotation matrix
-                assert(is_rotation_matrix(rot_gp_norm))    
-                print("Rotation gp:" , rot_gp_norm)
-                quat_deformation=quaternion.from_rotation_matrix(rot_gp_norm @ rot_affine, nonorthogonal=True)
-                quat_i=quaternion.from_float_array(self.training_ori[i,:])
-                product_quat=quat_deformation*quat_i
-                self.training_ori[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])
+            if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
+                pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
+                [Jacobian,_]=self.gp_delta_map.derivative(pos)
+                rot_gp= np.eye(Jacobian[0].shape[0]) + np.transpose(Jacobian[0]) 
+                rot_affine= affine_transform.rotation_matrix
+                if  hasattr(self, 'training_delta'):
+                    new_delta[i]= rot_affine @ self.training_delta[i]
+                    new_delta[i]= rot_gp @ new_delta[i]
+                if  hasattr(self, 'training_ori'):
+                    U, S, Vt = np.linalg.svd(rot_gp)
+                    V=Vt.T
+                    rot_gp_norm = V @ U.T 
+                    #Check for reflactions https://nghiaho.com/?page_id=671
+                    if np.linalg.det(rot_gp_norm)<0:
+                        V[:,-1]*= -1
+                        rot_gp_norm= V @ U.T
+                    # Assert that this is a rotation matrix
+                    assert(is_rotation_matrix(rot_gp_norm))    
+                    print("Rotation gp:" , rot_gp_norm)
+                    quat_deformation=quaternion.from_rotation_matrix(rot_gp_norm @ rot_affine, nonorthogonal=True)
+                    quat_i=quaternion.from_float_array(self.training_ori[i,:])
+                    product_quat=quat_deformation*quat_i
+                    self.training_ori[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])
 
         #Update the trajectory and the delta     
         self.training_traj=transported_traj
-        if  hasattr(self, 'self.training_delta'):
+        if  hasattr(self, 'training_delta'):
             self.training_delta=new_delta
