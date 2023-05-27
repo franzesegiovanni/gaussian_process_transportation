@@ -14,7 +14,7 @@ def plot_vector_field(model,datax_grid,datay_grid,demo,surface):
     plt.streamplot(dataXX, dataYY, u, v, density = 2)
     plt.scatter(demo[:,0],demo[:,1], color=[1,0,0])
     plt.scatter(surface[:,0],surface[:,1], color=[0,0,0])
-    plt.show() 
+    #plt.show() 
 
 def plot_vector_field3D(model,datax_grid,datay_grid,dataz_grid,demo,surface):
     dataXX, dataYY, dataZZ = np.meshgrid(datax_grid, datay_grid, dataz_grid)
@@ -33,7 +33,7 @@ def plot_vector_field3D(model,datax_grid,datay_grid,dataz_grid,demo,surface):
     ax.quiver(dataXX, dataYY, dataZZ, u, v,w, density = 2)
     ax.scatter(demo[:,0],demo[:,1],demo[:,2], color=[1,0,0])
     # ax.scatter(surface[:,0],surface[:,1], color=[0,0,0])
-    plt.show() 
+    #plt.show() 
 
 def plot_vector_field_minvar(model,datax_grid,datay_grid,demo,surface):
     dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
@@ -52,7 +52,7 @@ def plot_vector_field_minvar(model,datax_grid,datay_grid,demo,surface):
     plt.scatter(demo[:,0],demo[:,1], color=[1,0,0]) 
     plt.scatter(surface[:,0],surface[:,1], color=[0,0,0])
     plt.title("Minimum variance")
-    plt.show()
+    #plt.show()
 
 def plot_vector_field_minvar3D(model,datax_grid,datay_grid,demo,surface):
     dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
@@ -71,4 +71,4 @@ def plot_vector_field_minvar3D(model,datax_grid,datay_grid,demo,surface):
     plt.scatter(demo[:,0],demo[:,1], color=[1,0,0]) 
     plt.scatter(surface[:,0],surface[:,1], color=[0,0,0])
     plt.title("Minimum variance")
-    plt.show()
+    #plt.show()

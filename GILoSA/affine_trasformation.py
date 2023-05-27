@@ -1,3 +1,9 @@
+"""
+Authors: Ravi Prakash & Giovanni Franzese, March 2023
+Email: g.franzese@tudelft.nl, r.prakash@tudelft.nl
+Cognitive Robotics, TU Delft
+This code is part of TERI (TEaching Robots Interactively) project
+"""
 import numpy as np
 class AffineTransform():
     def __init__(self):
@@ -9,26 +15,20 @@ class AffineTransform():
 
         # Compute centroids
         self.S_centroid = np.mean(source_points, axis=0)
-        print("Mean Source", self.S_centroid)
         self.T_centroid = np.mean(target_points, axis=0)
-        print("Mean Target", self.T_centroid)
         self.source_points_centered=source_points-self.S_centroid
         self.target_points_centered=target_points-self.T_centroid
 
         #  Compute covariance matrix
         H = np.dot(np.transpose(self.source_points_centered),  self.target_points_centered)
-        print("covariance matrix")
-        print(H)
 	    # Perform SVD
         U, S, Vt = np.linalg.svd(H)
-
-        #Use Kabsh algorithm https://en.wikipedia.org/wiki/Kabsch_algorithm
-        print(S.shape[0])
-        S_prime=np.eye(S.shape[0])
-        S_prime[-1,-1]=np.sign(np.linalg.det(Vt.T*U.T))*1
-        print("S prime:", S_prime)
-        # Compute Rotation Matrix
-        self.rotation_matrix= Vt.T @ S_prime @ U.T
+        V=Vt.T
+        self.rotation_matrix = V @ U.T 
+        #Check for reflactions https://nghiaho.com/?page_id=671
+        if np.linalg.det(self.rotation_matrix)<0:
+            V[:,-1]*= -1
+            self.rotation_matrix= V @ U.T
         print ("Rotation Matrix:", self.rotation_matrix)
         #Compute translation
         self.translation=self.T_centroid-self.S_centroid

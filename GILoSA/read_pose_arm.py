@@ -1,3 +1,9 @@
+"""
+Authors: Giovanni Franzese & Ravi Prakash, March 2023
+Email: g.franzese@tudelft.nl, r.prakash@tudelft.nl
+Cognitive Robotics, TU Delft
+This code is part of TERI (TEaching Robots Interactively) project
+"""
 import cv2
 import mediapipe as mp
 import rospy
@@ -11,7 +17,6 @@ from sensor_msgs.point_cloud2 import read_points
 import numpy as np
 import cv2
 import struct
-# from depth_image_proc import DepthImageProc
 
 class LeftArmPose():
     def __init__(self):

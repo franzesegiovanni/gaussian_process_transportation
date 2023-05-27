@@ -1,6 +1,6 @@
 """
 Authors: Ravi Prakash & Giovanni Franzese, March 2023
-Email: g.franzese@tudelft.nl
+Email: g.franzese@tudelft.nl, r.prakash@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """

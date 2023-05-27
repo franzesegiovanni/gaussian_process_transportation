@@ -1,8 +1,27 @@
-from GILoSA import GaussianProcess
+"""
+Authors: Giovanni Franzese & Ravi Prakash, March 2023
+Email: g.franzese@tudelft.nl, r.prakash@tudelft.nl
+Cognitive Robotics, TU Delft
+This code is part of TERI (TEaching Robots Interactively) project
+"""
+from GILoSA import GaussianProcess, AffineTransform
 import pickle
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import quaternion
+def is_rotation_matrix(matrix):
+    # Check if the matrix is orthogonal
+    is_orthogonal = np.allclose(np.eye(matrix.shape[0]), matrix @ matrix.T)
+    if not is_orthogonal:
+        return False
+
+    # Check if the determinant of the matrix is 1
+    det = np.linalg.det(matrix)
+    if not np.isclose(det, 1.0):
+        return False
+
+    return True
+
 class Transport():
     def __init__(self):
         super(Transport, self).__init__()
@@ -43,31 +62,56 @@ class Transport():
 
 
 
-    def Policy_Transport(self, verboose=False):
-        self.convert_distribution_to_array() #this needs to be a function of every sensor class
-        delta_map = self.target_distribution - self.source_distribution
-        kernel = C(0.1,[0.1,0.1]) * RBF(length_scale=[0.5], length_scale_bounds=[0.3,1.0]) + WhiteKernel(0.0001, [0.0001,0.0001]) # test based on sim
+    def Policy_Transport(self):
+        if type(self.target_distribution) != type(self.source_distribution):
+            raise TypeError("Both the distribution must be a numpy array.")
+        elif not(isinstance(self.target_distribution, np.ndarray)) and not(isinstance(self.source_distribution, np.ndarray)):
+            self.convert_distribution_to_array() #this needs to be a function of every sensor class
 
-        self.gp_delta_map=GaussianProcess(kernel=kernel, n_restarts_optimizer=20)
-        self.gp_delta_map.fit(self.source_distribution, delta_map)        
+        affine_transform=AffineTransform()
+        affine_transform.fit(self.source_distribution, self.target_distribution)
 
+        source_distribution=affine_transform.predict(self.source_distribution)  
+ 
+        delta_distribution = self.target_distribution - source_distribution
+
+        kernel = C(0.1) * RBF(length_scale=np.ones(source_distribution.shape[1])) + WhiteKernel(0.0001, [0.0001,0.0001])
+        self.gp_delta_map=GaussianProcess(kernel=kernel, n_restarts_optimizer=0)
+        print(kernel)
+        print(source_distribution.shape)
+        self.gp_delta_map.fit(source_distribution, delta_distribution)        
+        
         #Deform Trajactories 
-        delta_map_mean, _= self.gp_delta_map.predict(self.training_traj)
-        transported_traj = self.training_traj + delta_map_mean 
+        traj_rotated=affine_transform.predict(self.training_traj)
+        delta_map_mean, _= self.gp_delta_map.predict(traj_rotated)
+        transported_traj = traj_rotated + delta_map_mean 
 
         #Deform Deltas and orientation
-        new_delta = np.ones((len(self.training_traj),3))
+        new_delta = np.ones_like(self.training_delta)
         for i in range(len(self.training_traj[:,0])):
-            pos=(np.array(self.training_traj[i,:]).reshape(1,-1))
+            pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
             [Jacobian,_]=self.gp_delta_map.derivative(pos)
-            new_delta[i]=(self.training_delta[i]+np.matmul(np.transpose(Jacobian[0]),self.training_delta[i]))
-            rot=np.eye(3) + np.transpose(Jacobian[0])
-            rot_norm=rot/np.linalg.det(rot)
-            quat_deformation=quaternion.from_rotation_matrix(rot_norm, nonorthogonal=True)
-            curr_quat=quaternion.from_float_array(self.training_ori[i,:])
-            product_quat=quat_deformation*curr_quat
-            self.training_ori[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])
+            rot_gp= np.eye(Jacobian[0].shape[0]) + np.transpose(Jacobian[0]) 
+            rot_affine= affine_transform.rotation_matrix
+            new_delta[i]= rot_affine @ self.training_delta[i]
+            new_delta[i]= rot_gp @ new_delta[i]
+            if  hasattr(self, 'self.training_ori'):
+                U, S, Vt = np.linalg.svd(rot_gp)
+                V=Vt.T
+                rot_gp_norm = V @ U.T 
+                #Check for reflactions https://nghiaho.com/?page_id=671
+                if np.linalg.det(rot_gp_norm)<0:
+                    V[:,-1]*= -1
+                    rot_gp_norm= V @ U.T
+                # Assert that this is a rotation matrix
+                assert(is_rotation_matrix(rot_gp_norm))    
+                print("Rotation gp:" , rot_gp_norm)
+                quat_deformation=quaternion.from_rotation_matrix(rot_gp_norm @ rot_affine, nonorthogonal=True)
+                quat_i=quaternion.from_float_array(self.training_ori[i,:])
+                product_quat=quat_deformation*quat_i
+                self.training_ori[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])
 
         #Update the trajectory and the delta     
         self.training_traj=transported_traj
-        self.training_delta=new_delta
+        if  hasattr(self, 'self.training_delta'):
+            self.training_delta=new_delta

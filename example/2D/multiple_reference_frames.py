@@ -9,9 +9,10 @@ This code is part of TERI (TEaching Robots Interactively) project
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
-from regressor import GPR
 import pathlib
 from plot_utils import plot_vector_field_minvar
+from GILoSA import GaussianProcess as GPR
+from GILoSA import Transport
 # %matplotlib inline
 
 #%% Load the drawings
@@ -45,17 +46,15 @@ gp_deltaX.fit(X, deltaX)
 x_grid=np.linspace(np.min(X[:,0]-10), np.max(X[:,0]+10), 100)
 y_grid=np.linspace(np.min(X[:,1]-10), np.max(X[:,1]+10), 100)
 
-S_sampled = S  
-S1_sampled= S1
-deltaPC = S1 - S
-#%% Fit a GP to delta pointcloud and Find demo for the new surface
-k_deltaPC = C(1, [1,1])  * RBF(20*np.ones(1), [20,100]) + WhiteKernel(0.0001, [0.0001,0.0001] )
+transport=Transport()
+transport.source_distribution=S 
+transport.target_distribution=S1
+transport.training_traj=X
+transport.training_delta=deltaX
+transport.Policy_Transport()
+X1=transport.training_traj
+deltaX1=transport.training_delta 
 
-gp_deltaPC = GPR(kernel=k_deltaPC)
-gp_deltaPC.fit(S_sampled,deltaPC)
-[deltaPCX, _]=gp_deltaPC.predict(X)
-
-X1 = X+deltaPCX
 fig = plt.figure(figsize = (12, 7))
 plt.xlim([-50, 50-1])
 plt.ylim([-50, 50-1])
@@ -67,16 +66,8 @@ plt.scatter(S[:,0],S[:,1], color=[0,0,0])
 x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 100)
 y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 100)
 
-
-
-#%%  Fit a dynamical system for the new demo 
-deltaX1=np.ones((len(X),2))
-for i in range(len(X[:,0])):
-    pos=np.array(X[i,:]).reshape(1,-1)
-    [Jacobian,_]=gp_deltaPC.derivative(pos)
-    deltaX1[i]=deltaX[i]+np.matmul(np.transpose(Jacobian[0]),deltaX[i])
 k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01 ) #this kernel works much better!    
 gp_deltaX1=GPR(kernel=k_deltaX1)
 gp_deltaX1.fit(X1, deltaX1)
 plot_vector_field_minvar(gp_deltaX1, x1_grid,y1_grid,X1,S1)
-
+plt.show()
