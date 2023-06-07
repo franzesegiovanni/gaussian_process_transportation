@@ -11,21 +11,40 @@ from scipy import linalg
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
+from tqdm import tqdm
 class GaussianProcess():
-    def __init__(self, kernel, alpha=1e-10, n_restarts_optimizer=5):
+    def __init__(self, kernel, alpha=1e-10, n_restarts_optimizer=5, n_samples_max=20):
         self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, n_restarts_optimizer=n_restarts_optimizer)
+        self.kernel=kernel
+        self.alpha=alpha
+        self.n_samples_max=n_samples_max
     def fit(self, X, Y):
             self.X=X
             self.Y=Y
-            
             self.n_features=np.shape(self.X)[1]
             self.n_samples=np.shape(self.X)[0]
-            self.gp.fit(self.X,self.Y)
+            if self.n_samples > self.n_samples_max:
+                print("Starting Active Learning")
+                n_initial = 5
+                initial_idx = np.random.choice(range(self.n_samples), size=n_initial, replace=False)
+                X_sample, Y_sample = self.X[initial_idx], self.Y[initial_idx]
+                gp_active = GaussianProcessRegressor(kernel=self.kernel, alpha=self.alpha, n_restarts_optimizer=0)
+                gp_active.fit(X_sample,Y_sample)
+                for i in tqdm(range(self.n_samples_max-n_initial)):
+                    #print("Added sample number",n_initial + i+1, "out of", self.n_samples_max)
+                    [_, std]=gp_active.predict(self.X, return_std=True)
+                    query_idx = np.argmax(std[:,0])
+                    X_sample=np.vstack([X_sample, self.X[query_idx]])
+                    Y_sample=np.vstack([Y_sample, self.Y[query_idx]])
+                    # print("X_sample",X_sample)
+                    gp_active.fit(X_sample,Y_sample)
+                self.gp.fit(self.X,self.Y)    
+            else:
+                self.gp.fit(self.X,self.Y)
             self.kernel= self.gp.kernel_
             self.kernel_params_= [self.kernel.get_params()['k1__k2__length_scale'], self.kernel.get_params()['k1']]
             self.noise_var_ = self.gp.alpha + self.kernel.get_params()['k2__noise_level']
             self.max_var   = self.kernel.get_params()['k1__k1__constant_value']+ self.noise_var_
-
             K_ = self.kernel(X, X) + (self.noise_var_ * np.eye(len(X)))
             self.K_inv = np.linalg.inv(K_)
             print('lenghtscales', self.kernel.get_params()['k1__k2__length_scale'] )
