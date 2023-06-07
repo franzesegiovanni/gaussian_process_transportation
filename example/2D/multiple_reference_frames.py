@@ -13,6 +13,8 @@ import pathlib
 from plot_utils import plot_vector_field_minvar
 from GILoSA import GaussianProcess as GPR
 from GILoSA import Transport
+import warnings
+warnings.filterwarnings("ignore")
 # %matplotlib inline
 
 #%% Load the drawings

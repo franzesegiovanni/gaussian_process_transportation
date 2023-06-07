@@ -13,6 +13,8 @@ from GILoSA import GaussianProcess as GPR
 import pathlib
 from plot_utils import *
 from GILoSA import Transport
+import warnings
+warnings.filterwarnings("ignore")
 # Load the drawings
 
 data =np.load(str(pathlib.Path().resolve())+'/data/'+str('example')+'.npz')

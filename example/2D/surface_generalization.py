@@ -14,7 +14,9 @@ from GILoSA import AffineTransform
 from GILoSA import Transport
 import pathlib
 from plot_utils import plot_vector_field_minvar, plot_vector_field 
-
+import ot
+import warnings
+warnings.filterwarnings("ignore")
 #%% Load the drawings
 
 data =np.load(str(pathlib.Path().resolve())+'/data/'+str('example')+'.npz')
