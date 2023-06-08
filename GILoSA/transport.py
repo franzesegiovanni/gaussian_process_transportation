@@ -26,11 +26,6 @@ class Transport():
     def __init__(self):
         super(Transport, self).__init__()
 
-    def record_source_distribution(self):
-        self.source_distribution=self.detections
-
-    def record_target_distribution(self):
-        self.target_distribution=self.detections    
 
     def save_distributions(self):
         # create a binary pickle file 

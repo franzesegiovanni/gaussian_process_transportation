@@ -16,7 +16,7 @@ from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from geometry_msgs.msg import PoseStamped
 import open3d as o3d
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
-from gaussian_process import GaussianProcess
+from GILoSA import GaussianProcess
 
 class Surface_PointCloud_Detector(): 
     def __init__(self):

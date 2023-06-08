@@ -58,3 +58,9 @@ class Tag_Detector():
                     source_array=np.vstack((source_array,s))
         self.target_distribution=target_array
         self.source_distribution=source_array
+        
+    def record_source_distribution(self):
+        self.source_distribution=self.detections
+
+    def record_target_distribution(self):
+        self.target_distribution=self.detections    

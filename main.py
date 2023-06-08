@@ -5,12 +5,13 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 #%%
-from GILoSA import GILoSA
+# from GILoSA.GILoSA import GILoSA_surface
+from GILoSA.modules import GILoSA_surface
 import time
 from geometry_msgs.msg import PoseStamped
 #%%
 if __name__ == '__main__':
-    GILoSA=GILoSA()
+    GILoSA=GILoSA_surface()
     GILoSA.connect_ROS()
     time.sleep(5)
     GILoSA.home_gripper()
@@ -46,7 +47,7 @@ GILoSA.save_distributions()
 #%%
 time.sleep(1)
 print("Load the data") 
-GILoSA.load()   
+# GILoSA.load()   
 GILoSA.load_distributions()
 
 #%% 
