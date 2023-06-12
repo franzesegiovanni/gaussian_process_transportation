@@ -17,7 +17,6 @@ class GaussianProcess():
         self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, n_restarts_optimizer=n_restarts_optimizer)
         self.kernel=kernel
         self.alpha=alpha
-        self.n_samples_max=n_samples_max
     def fit(self, X, Y):
             self.X=X
             self.Y=Y

@@ -74,12 +74,13 @@ class Transport():
         #kernel = C(0.1) * RBF() + WhiteKernel(0.0001, [0.0001,0.0001])
         #kernel = C() * RBF() + WhiteKernel()
         # kernel = C(0.1) * RBF(length_scale=np.ones(source_distribution.shape[1]), length_scale_bounds=[0.1, 1]) + WhiteKernel()
-        # kernel = C(0.1,[0.1,0.1]) * RBF(length_scale=[0.5], length_scale_bounds=[0.3,1.0]) + WhiteKernel(0.0001, [0.0001,0.0001]) # test based on sim
+        #kernel = C(0.1,[0.1,0.1]) * RBF(length_scale=[0.5], length_scale_bounds=[0.3,1.0]) + WhiteKernel(0.0001, [0.0001,0.0001]) # test based on sim
         #kernel = C(0.1,[0.1,0.1]) * RBF(length_scale=[0.5]) + WhiteKernel(0.0001, [0.0001,0.0001]) #working for tags
-        kernel = C(0.1) * RBF(length_scale=[0.1]) + WhiteKernel(0.0001) #this works for the surface
-        self.gp_delta_map=GaussianProcess(kernel=kernel, n_restarts_optimizer=5)
-        print(kernel)
-        print(source_distribution.shape)
+        #kernel = C(0.1) * RBF(length_scale=[0.1]) + WhiteKernel(0.0001) #this works for the surface
+        if not(hasattr(self, 'kernel_transport')):
+            self.kernel_transport=C(0.1) * RBF(length_scale=[0.1]) + WhiteKernel(0.0001) #this works for the surface
+            print("Set kernel not set by the user")
+        self.gp_delta_map=GaussianProcess(kernel=self.kernel_transport, n_restarts_optimizer=5)
         self.gp_delta_map.fit(source_distribution, delta_distribution)        
         
         #Deform Trajactories 

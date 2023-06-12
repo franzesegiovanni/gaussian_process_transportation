@@ -5,7 +5,8 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 #%%
-# from GILoSA.GILoSA import GILoSA_surface
+import warnings
+warnings.filterwarnings("ignore")
 from GILoSA.modules import GILoSA_surface
 import time
 from geometry_msgs.msg import PoseStamped

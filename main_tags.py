@@ -5,10 +5,14 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 #%%
+import warnings
+warnings.filterwarnings("ignore")
 from GILoSA.modules import GILoSA
 #from GILoSA.modules import GILoSA_surface
 import time
 from geometry_msgs.msg import PoseStamped
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel as C
+
 #%%
 if __name__ == '__main__':
     GILoSA=GILoSA()
@@ -40,7 +44,7 @@ GILoSA.record_target_distribution()
 time.sleep(1)
 print("Save the data") 
 GILoSA.save()
-# GILoSA.save_distributions()
+GILoSA.save_distributions()
 
 #%%
 time.sleep(1)
@@ -78,6 +82,7 @@ GILoSA.Interactive_Control(verboose=False)
 #%%
 time.sleep(1)
 print("Find the transported policy")
+GILoSA.kernel_transport=C(0.1,[0.1,0.1]) * RBF(length_scale=[0.3], length_scale_bounds=[0.2,0.5]) + WhiteKernel(0.0001, [0.0001,0.0001])
 GILoSA.Policy_Transport()
 GILoSA.Train_GPs() # Train your policy after transporting the trajectory and the deltas
 #%%
@@ -101,4 +106,4 @@ GILoSA.go_to_pose(start)
 time.sleep(1)
 print("Interactive Control through target distribution")
 GILoSA.Interactive_Control(verboose=True)
-# %%
+#%%
