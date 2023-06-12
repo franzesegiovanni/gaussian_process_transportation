@@ -13,7 +13,7 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 class GaussianProcess():
-    def __init__(self, kernel, alpha=1e-10, n_restarts_optimizer=5):
+    def __init__(self, kernel, alpha=1e-10, n_restarts_optimizer=5, n_samples_max=20000):
         self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, n_restarts_optimizer=n_restarts_optimizer)
         self.kernel=kernel
         self.alpha=alpha
@@ -23,6 +23,48 @@ class GaussianProcess():
             self.Y=Y
             self.n_features=np.shape(self.X)[1]
             self.n_samples=np.shape(self.X)[0]
+            if self.n_samples > self.n_samples_max:
+                print("Starting Active Learning")
+                n_initial = int(0.1*self.n_samples_max)
+                X_tmp=np.copy(self.X)
+                Y_tmp=np.copy(self.Y)
+                initial_idx = np.random.choice(range(self.n_samples), size=n_initial, replace=False)
+                X_sample= X_tmp[initial_idx]
+                Y_sample = Y_tmp[initial_idx]
+                X_tmp=np.delete(X_tmp, initial_idx, axis=0)
+                Y_tmp=np.delete(Y_tmp,initial_idx, axis=0)
+                gp_active = GaussianProcessRegressor(kernel=self.kernel, alpha=self.alpha)
+                gp_active.fit(X_sample,Y_sample)
+                self.n_samples_batch=int(self.n_samples_max/20) 
+                for i in tqdm(range(int((self.n_samples_max-n_initial)))):
+                    #print("Added sample number",n_initial + i+1, "out of", self.n_samples_max)
+                    [mean, std]=gp_active.predict(X_tmp, return_std=True)
+                    print("std.shape")
+                    print(std.shape) 
+                    print("Y_tmp.shape[1]")
+                    print(Y_tmp.shape[1]) 
+                    std=std.reshape(-1,Y_tmp.shape[1])
+                    query_idx = np.argmax(std[:,0])
+                    #indices = np.argsort(std[:,0])  # Get the indices that would sort the array
+                    #query_idx = indices[-self.n_samples_batch:]
+
+                    X_sample=np.vstack([X_sample, X_tmp[query_idx]])
+                    Y_sample=np.vstack([Y_sample, Y_tmp[query_idx]])
+                    X_tmp=np.delete(X_tmp, query_idx, axis=0)
+                    Y_tmp=np.delete(Y_tmp,query_idx, axis=0)
+                    # add the point with the maximun error also:
+                    # print("X_sample",X_sample)
+                    gp_active.fit(X_sample,Y_sample)
+                [mean, std]=gp_active.predict(self.X, return_std=True)
+                error= np.mean(np.sum(np.abs(mean-self.X), axis=1))
+                print("error:", error)
+            # query_idx = np.argmax(error)
+            # X_sample=np.vstack([X_sample, self.X[query_idx]])
+            # Y_sample=np.vstack([Y_sample, self.Y[query_idx]])
+
+                self.n_samples=self.n_samples_max    
+                self.X=np.copy(X_sample)
+                self.Y =np.copy(Y_sample) 
             self.gp.fit(self.X,self.Y)
             self.kernel= self.gp.kernel_
             self.kernel_params_= [self.kernel.get_params()['k1__k2__length_scale'], self.kernel.get_params()['k1']]
@@ -54,6 +96,11 @@ class GaussianProcess():
             k_star_T=k_star.transpose()
             k_star_stack= np.vstack([k_star_T]*self.n_features)
             beta = -2 * np.matmul(self.K_inv, k_star)
+            # print(self.X.shape)
+            # print(x[i,:].shape)
+            # print(k_star_stack.shape)
+            # a=(self.X- x[i,:])
+            # print(a.shape)
             dk_star_dX= k_star_stack * (self.X- x[i,:]).transpose()/ (lscale_stack** 2)
             dy_dx.append(np.matmul(dk_star_dX, alfa))
             dsigma_dx.append(np.matmul(dk_star_dX, beta))
