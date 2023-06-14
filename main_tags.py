@@ -18,7 +18,7 @@ if __name__ == '__main__':
     GILoSA=GILoSA()
     GILoSA.connect_ROS()
     time.sleep(1)
-    GILoSA.home_gripper()
+    # GILoSA.home_gripper()
 
 #%%
 time.sleep(1)
@@ -60,7 +60,7 @@ GILoSA.Train_GPs()
 time.sleep(1)
 print("Reset to the starting cartesian position if you loaded the demo")
 start = PoseStamped()
-GILoSA.home_gripper()
+# GILoSA.home_gripper()
 
 start.pose.position.x = GILoSA.training_traj[0,0]
 start.pose.position.y = GILoSA.training_traj[0,1]
@@ -75,7 +75,7 @@ GILoSA.go_to_pose(start)
 
 #%% 
 time.sleep(1)
-print("Interactive Control through target distribution")
+print("Interactive Control through source distribution")
 GILoSA.Interactive_Control(verboose=False)
 
 
@@ -90,7 +90,7 @@ GILoSA.Train_GPs() # Train your policy after transporting the trajectory and the
 time.sleep(1)
 print("Reset to the starting cartesian position if you loaded the demo")
 start = PoseStamped()
-GILoSA.home_gripper()
+# GILoSA.home_gripper()
 
 start.pose.position.x = GILoSA.training_traj[0,0]
 start.pose.position.y = GILoSA.training_traj[0,1]

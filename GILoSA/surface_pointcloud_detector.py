@@ -5,6 +5,7 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 
+
 import rospy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -85,27 +86,34 @@ class Surface_PointCloud_Detector():
 
     def meshgrid(self,picked_points):
         # Define the 4 corner points of the quadrilateral
+
         A = np.array(picked_points[0,:-1])
         B = np.array(picked_points[1,:-1])
-        D = np.array(picked_points[2,:-1])
-        C = np.array(picked_points[3,:-1])
+        C = np.array(picked_points[2,:-1])
+        D = np.array(picked_points[3,:-1])
+
 
         # Define the number of points in the x and y directions of the grid
-        nx = 50
-        ny = 50
+        nx = 20
+        ny = 20
 
         # Create the linspace arrays for AB and CD
         AB = np.linspace(A, B, nx)
-        CD = np.linspace(C, D, nx)
+        CD = np.linspace(D, C, nx)
 
         # Initialize the meshgrid array
         meshgrid = np.zeros((nx, ny, 2))
+        data=np.empty([0,2])
 
         # Create the meshgrid by linearly interpolating between AB and CD
         for i in range(nx):
-            meshgrid[i, :, :] = np.linspace(AB[i], CD[i], ny)
+            # meshgrid[i, :, :] = np.linspace(AB[i], CD[i], ny)
+            line=np.linspace(AB[i], CD[i], ny)
+            data=np.vstack([data,line])
 
-        return meshgrid
+        print("data.shape",data.shape)    
+
+        return data
 
 
 
@@ -140,17 +148,21 @@ class Surface_PointCloud_Detector():
         fig = plt.figure()
         ax = plt.axes(projection ='3d') 
         ax.scatter(distribution_np[:,0], distribution_np[:,1], distribution_np[:,2])
-        plt.show()
 
         k_distribution = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(2)) + WhiteKernel(0.01 )
         gp_distribution = GaussianProcess(kernel=k_distribution)
         gp_distribution.fit(distribution_np[:,:2],distribution_np[:,2].reshape(-1,1))
 
         # newgrid = newgrid.reshape(-1,2)
-        newZ,_ = gp_distribution.predict(meshgrid_distribution.reshape(-1,2))
-        distribution_surface = np.array([meshgrid_distribution[:,:,0],meshgrid_distribution[:,:,1],newZ.reshape(meshgrid_distribution[:,:,0].shape)]).T
-        distribution_surface = distribution_surface.reshape(-1,3)
-        distribution_surface=distribution_surface[::3]
+        newZ,_ = gp_distribution.predict(meshgrid_distribution)
+        # distribution_surface = np.array([meshgrid_distribution[:,:,0],meshgrid_distribution[:,:,1],newZ.reshape(meshgrid_distribution[:,:,0].shape)]).T
+        # distribution_surface = distribution_surface.reshape(-1,3)
+
+        # distribution_surface=distribution_surface[::3]
+        distribution_surface=np.hstack([meshgrid_distribution,newZ.reshape(-1,1)])
+        print("distribution_surface.shape",distribution_surface.shape)
+        ax.scatter(distribution_surface[:,0], distribution_surface[:,1], distribution_surface[:,2], 'r')
+        plt.show()
         return distribution_surface
 
     def convert_distribution_to_array(self):

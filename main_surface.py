@@ -10,12 +10,13 @@ warnings.filterwarnings("ignore")
 from GILoSA.modules import GILoSA_surface
 import time
 from geometry_msgs.msg import PoseStamped
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel as C
 #%%
 if __name__ == '__main__':
     GILoSA=GILoSA_surface()
     GILoSA.connect_ROS()
     time.sleep(5)
-    GILoSA.home_gripper()
+    #GILoSA.home_gripper()
 
 #%%
 time.sleep(1)
@@ -23,6 +24,7 @@ print("Record of the source disributions")
 GILoSA.go_to_pose(GILoSA.view_marker)
 # time.sleep(2)
 #%%
+# %matplotlib qt
 GILoSA.record_source_distribution()    
 #%%
 time.sleep(1)
@@ -35,13 +37,13 @@ print("Record of the target disributions")
 GILoSA.go_to_pose(GILoSA.view_marker)
 #%%
 time.sleep(2)
-GILoSA.record_target_distribution()    
+GILoSA.record_target_distribution()  
 
 #%%
 time.sleep(1)
 print("Save the data") 
 GILoSA.save()
-# GILoSA.save_distributions()
+GILoSA.save_distributions()
 
 #%%
 time.sleep(1)
@@ -55,7 +57,7 @@ print("Train the Gaussian Process Models")
 GILoSA.Train_GPs()
 #%%
 time.sleep(1)
-print("Reset to the starting cartesian position if you loaded the demo")
+print("Reset to the starting cartesian position demo")
 start = PoseStamped()
 GILoSA.home_gripper()
 
@@ -72,13 +74,14 @@ GILoSA.go_to_pose(start)
 
 #%% 
 time.sleep(1)
-print("Interactive Control through target distribution")
+print("Interactive Control through source distribution")
 GILoSA.Interactive_Control(verboose=False)
 
 
 #%%
 time.sleep(1)
 print("Find the transported policy")
+# GILoSA.kernel_transport=C(0.1) * RBF(length_scale=[0.1, 0.1, 0.1]) + WhiteKernel(0.0001)
 GILoSA.Policy_Transport()
 GILoSA.Train_GPs() # Train your policy after transporting the trajectory and the deltas
 #%%
@@ -100,6 +103,8 @@ GILoSA.go_to_pose(start)
 #%% 
 time.sleep(1)
 print("Interactive Control through target distribution")
-GILoSA.Interactive_Control(verboose=True)
+GILoSA.Interactive_Control(verboose=False)
+
+# %%
 
 # %%
