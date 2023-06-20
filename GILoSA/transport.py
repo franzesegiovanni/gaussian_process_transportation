@@ -4,7 +4,8 @@ Email: g.franzese@tudelft.nl, r.prakash@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
-from GILoSA import GaussianProcess, AffineTransform
+from GILoSA import AffineTransform
+from GILoSA.gaussian_process_torch import GaussianProcess 
 import pickle
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
@@ -72,14 +73,15 @@ class Transport():
         if not(hasattr(self, 'kernel_transport')):
             self.kernel_transport=C(0.1) * RBF(length_scale=[0.1]) + WhiteKernel(0.0001) #this works for the surface
             print("Set kernel not set by the user")
-        self.gp_delta_map=GaussianProcess(kernel=self.kernel_transport, n_restarts_optimizer=5)
-        self.gp_delta_map.fit(source_distribution, delta_distribution)  
+        self.gp_delta_map=GaussianProcess(source_distribution, delta_distribution )
+        self.gp_delta_map.fit()  
 
     def apply_trasportation(self):
               
         #Deform Trajactories 
         traj_rotated=self.affine_transform.predict(self.training_traj)
         delta_map_mean, _= self.gp_delta_map.predict(traj_rotated)
+        print(delta_map_mean)
         transported_traj = traj_rotated + delta_map_mean 
 
         #Deform Deltas and orientation
@@ -87,9 +89,10 @@ class Transport():
         for i in range(len(self.training_traj[:,0])):
             if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
                 pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
-                [Jacobian,_]=self.gp_delta_map.derivative(pos)
-                rot_gp= np.eye(Jacobian[0].shape[0]) + np.transpose(Jacobian[0]) 
-                rot_affine= affine_transform.rotation_matrix
+                #[Jacobian,_]=self.gp_delta_map.derivative(pos)
+                #Jacobian=np.zeros(pos.shape[1])
+                rot_gp= np.eye(2) #+ np.transpose(Jacobian[0]) 
+                rot_affine= self.affine_transform.rotation_matrix
                 if  hasattr(self, 'training_delta'):
                     new_delta[i]= rot_affine @ self.training_delta[i]
                     new_delta[i]= rot_gp @ new_delta[i]
