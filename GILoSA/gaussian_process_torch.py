@@ -1,6 +1,6 @@
 """
-Authors: Ravi Prakash & Giovanni Franzese, March 2023
-Email: g.franzese@tudelft.nl, r.prakash@tudelft.nl
+Authors: Giovanni Franzese, March 2023
+Email: g.franzese@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
@@ -10,9 +10,7 @@ import torch
 import gpytorch
 from torch.utils.data import TensorDataset, DataLoader
 from gpytorch.models import ApproximateGP
-from gpytorch.variational import CholeskyVariationalDistribution
-from gpytorch.variational import VariationalStrategy
-
+from  torch.autograd.functional import jacobian
 # num_latents = 1
 # num_tasks = 2
 
@@ -76,7 +74,7 @@ class GaussianProcess():
 
         train_dataset = TensorDataset(self.gp.X, self.gp.Y)
         self.train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True)
-    def fit(self, num_epochs=100):
+    def fit(self, num_epochs=10):
         self.gp.train()
         self.gp.likelihood.train()
 
@@ -101,11 +99,19 @@ class GaussianProcess():
                 loss.backward()
                 optimizer.step()  
 
+    def mean_fun(self,x):
+        predictions = self.gp.likelihood(self.gp(x))
+        return predictions.mean
+    def variance_fun(self,x):
+        predictions = self.gp.likelihood(self.gp(x))
+        return predictions.variance
     def predict(self,x):
         x=torch.from_numpy(x).float()
         predictions = self.gp.likelihood(self.gp(x))
         return predictions.mean.detach().numpy(), predictions.variance.detach().numpy()
          
-    # def derivative(self, x): # GP with RBF kernel 
-
-    #     return np.array(dy_dx), np.array(dsigma_dx)
+    def derivative(self, x): 
+        # jacobian(self.mean_fun, x)
+        # print(type(x))
+        x=torch.from_numpy(x).float()
+        return jacobian(self.mean_fun, x).detach().numpy()#, jacobian(self.variance_fun, x).detach().numpy()

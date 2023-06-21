@@ -54,7 +54,8 @@ transport.source_distribution=source_distribution
 transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
-transport.Policy_Transport()
+transport.fit_trasportation()
+transport.apply_trasportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 
 

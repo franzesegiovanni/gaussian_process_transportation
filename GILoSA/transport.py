@@ -73,7 +73,7 @@ class Transport():
         if not(hasattr(self, 'kernel_transport')):
             self.kernel_transport=C(0.1) * RBF(length_scale=[0.1]) + WhiteKernel(0.0001) #this works for the surface
             print("Set kernel not set by the user")
-        self.gp_delta_map=GaussianProcess(source_distribution, delta_distribution )
+        self.gp_delta_map=GaussianProcess(source_distribution, delta_distribution)
         self.gp_delta_map.fit()  
 
     def apply_trasportation(self):
@@ -81,7 +81,7 @@ class Transport():
         #Deform Trajactories 
         traj_rotated=self.affine_transform.predict(self.training_traj)
         delta_map_mean, _= self.gp_delta_map.predict(traj_rotated)
-        print(delta_map_mean)
+        # print(delta_map_mean)
         transported_traj = traj_rotated + delta_map_mean 
 
         #Deform Deltas and orientation
@@ -89,9 +89,14 @@ class Transport():
         for i in range(len(self.training_traj[:,0])):
             if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
                 pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
-                #[Jacobian,_]=self.gp_delta_map.derivative(pos)
-                #Jacobian=np.zeros(pos.shape[1])
-                rot_gp= np.eye(2) #+ np.transpose(Jacobian[0]) 
+                # print(type(pos))
+                Jacobian=self.gp_delta_map.derivative(pos)
+                #print(Jacobian.shape)
+                #print(Jacobian)
+                Jacobian=Jacobian.reshape(self.training_delta.shape[1],pos.shape[1])
+                #print(Jacobian)
+                # Jacobian=np.zeros(pos.shape[1])
+                rot_gp= np.eye(pos.shape[1]) + Jacobian 
                 rot_affine= self.affine_transform.rotation_matrix
                 if  hasattr(self, 'training_delta'):
                     new_delta[i]= rot_affine @ self.training_delta[i]
