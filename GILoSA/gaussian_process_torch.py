@@ -58,9 +58,6 @@ class SVGP(ApproximateGP):
         #     self.likelihood=self.likelihood.cuda()
         #     self.mean_module =self.mean_module.cuda()
         #     self.covar_module=self.covar_module.cuda()
-        # self.mean_module=self.mean_module                                     
-        # self.covar_module=self.covar_module
-        # self.likelihood=self.likelihood
     def forward(self, x):
         # The forward function should be written as if we were dealing with each output
         # dimension in batch
@@ -83,7 +80,6 @@ class GaussianProcess():
         ], lr=0.01)
 
         self.mll = gpytorch.mlls.VariationalELBO(self.gp.likelihood, self.gp, num_data=self.gp.Y.size(0))
-        # epochs_iter = tqdm.notebook.tqdm(range(num_epochs), desc="Epoch")
         epochs_iter = tqdm(range(num_epochs))
         for i in epochs_iter:
             # Within each iteration, we will go over each minibatch of data
@@ -91,10 +87,7 @@ class GaussianProcess():
             for x_batch, y_batch in minibatch_iter:
                 optimizer.zero_grad()
                 output = self.gp(x_batch)
-                #print(output)
-                #print(y_batch)
                 loss = -self.mll(output, y_batch)
-                # print(loss)
                 minibatch_iter.set_postfix(loss=loss.item())
                 loss.backward()
                 optimizer.step()  
@@ -111,7 +104,5 @@ class GaussianProcess():
         return predictions.mean.detach().numpy(), predictions.variance.detach().numpy()
          
     def derivative(self, x): 
-        # jacobian(self.mean_fun, x)
-        # print(type(x))
         x=torch.from_numpy(x).float()
         return jacobian(self.mean_fun, x).detach().numpy()#, jacobian(self.variance_fun, x).detach().numpy()
