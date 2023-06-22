@@ -40,7 +40,7 @@ for j in range(len(X)-1):
 ## Downsample
 X=X[::2,:]
 deltaX=deltaX[::2,:]
-
+print("Fit Gaussian Process Dynamical System on the source distribution")
 #%% Fit a dynamical system to the demo and plot it
 k_deltaX = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01) 
 gp_deltaX=GPR(kernel=k_deltaX)
@@ -92,13 +92,18 @@ transport.source_distribution=source_distribution[mask] #select only the point t
 transport.target_distribution=target_distribution[mask] #select only the point that have low entropy
 transport.training_traj=X
 transport.training_delta=deltaX
-transport.Policy_Transport()
+print("Fit the Gaussian Process Transportation")
+transport.fit_transportation()
+transport.apply_transportation()
+
+
 X1=transport.training_traj
 deltaX1=transport.training_delta 
 x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 100)
 y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 100)
 
-# Fit the Gaussian Process dynamical system   
+# Fit the Gaussian Process dynamical system 
+print("Fit the Gaussian Process Dynamical System on the target distribution")  
 k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01 ) #this kernel works much better!    
 gp_deltaX1=GPR(kernel=k_deltaX1)
 gp_deltaX1.fit(X1, deltaX1)
