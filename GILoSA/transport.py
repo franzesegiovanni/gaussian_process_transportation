@@ -70,10 +70,7 @@ class Transport():
  
         delta_distribution = self.target_distribution - source_distribution
 
-        if not(hasattr(self, 'kernel_transport')):
-            self.kernel_transport=C(0.1) * RBF(length_scale=[0.1]) + WhiteKernel(0.0001) #this works for the surface
-            print("Set kernel not set by the user")
-        self.gp_delta_map=GaussianProcess(source_distribution, delta_distribution)
+        self.gp_delta_map=GaussianProcess(source_distribution, delta_distribution, num_inducing=100, num_epochs=10)
         self.gp_delta_map.fit()  
 
     def apply_trasportation(self):
