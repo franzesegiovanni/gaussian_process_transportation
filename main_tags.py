@@ -83,8 +83,8 @@ GILoSA.Interactive_Control(verboose=False)
 time.sleep(1)
 print("Find the transported policy")
 GILoSA.kernel_transport=C(0.1,[0.1,0.1]) * RBF(length_scale=[0.3], length_scale_bounds=[0.2,0.5]) + WhiteKernel(0.0001, [0.0001,0.0001])
-GILoSA.fit_trasportation()
-GILoSA.apply_trasportation()
+GILoSA.fit_transportation()
+GILoSA.apply_transportation()
 GILoSA.Train_GPs() # Train your policy after transporting the trajectory and the deltas
 #%%
 
