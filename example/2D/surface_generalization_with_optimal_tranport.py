@@ -92,7 +92,8 @@ transport.source_distribution=source_distribution[mask] #select only the point t
 transport.target_distribution=target_distribution[mask] #select only the point that have low entropy
 transport.training_traj=X
 transport.training_delta=deltaX
-transport.Policy_Transport()
+transport.fit_transportation(num_epochs=100)
+transport.apply_transportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 
 x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 100)

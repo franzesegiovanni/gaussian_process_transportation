@@ -43,7 +43,7 @@ class Transport():
             print("No target distribution saved")    
 
 
-    def fit_transportation(self):
+    def fit_transportation(self, num_epochs=20):
         if type(self.target_distribution) != type(self.source_distribution):
             raise TypeError("Both the distribution must be a numpy array.")
         elif not(isinstance(self.target_distribution, np.ndarray)) and not(isinstance(self.source_distribution, np.ndarray)):
@@ -57,7 +57,7 @@ class Transport():
         delta_distribution = self.target_distribution - source_distribution
 
         self.gp_delta_map=GaussianProcess(source_distribution, delta_distribution, num_inducing=100)
-        self.gp_delta_map.fit(num_epochs=10)  
+        self.gp_delta_map.fit(num_epochs=num_epochs)  
 
     def apply_transportation(self):
               
