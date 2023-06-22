@@ -15,7 +15,9 @@ setup(
 	'rospy',
 	'scikit_learn',
 	'scipy',
-	'sensor_msgs'],
+	'sensor_msgs',
+	'torch',
+	'gpytorch'],
     # Add other dependencies here
     classifiers=[
         'Development Status :: 5 - Production/Stable',
