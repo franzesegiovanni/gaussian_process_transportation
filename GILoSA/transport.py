@@ -89,7 +89,7 @@ class Transport():
                 pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
                 [Jacobian,_]=self.gp_delta_map.derivative(pos)
                 rot_gp= np.eye(Jacobian[0].shape[0]) + np.transpose(Jacobian[0]) 
-                rot_affine= affine_transform.rotation_matrix
+                rot_affine= self.affine_transform.rotation_matrix
                 if  hasattr(self, 'training_delta'):
                     new_delta[i]= rot_affine @ self.training_delta[i]
                     new_delta[i]= rot_gp @ new_delta[i]
