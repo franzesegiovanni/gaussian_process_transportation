@@ -9,19 +9,6 @@ import pickle
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import quaternion
-def is_rotation_matrix(matrix):
-    # Check if the matrix is orthogonal
-    is_orthogonal = np.allclose(np.eye(matrix.shape[0]), matrix @ matrix.T)
-    if not is_orthogonal:
-        return False
-
-    # Check if the determinant of the matrix is 1
-    det = np.linalg.det(matrix)
-    if not np.isclose(det, 1.0):
-        return False
-
-    return True
-
 class Transport():
     def __init__(self):
         super(Transport, self).__init__()
@@ -56,7 +43,7 @@ class Transport():
             print("No target distribution saved")    
 
 
-    def fit_trasportation(self):
+    def fit_transportation(self):
         if type(self.target_distribution) != type(self.source_distribution):
             raise TypeError("Both the distribution must be a numpy array.")
         elif not(isinstance(self.target_distribution, np.ndarray)) and not(isinstance(self.source_distribution, np.ndarray)):
@@ -71,11 +58,12 @@ class Transport():
 
         if not(hasattr(self, 'kernel_transport')):
             self.kernel_transport=C(0.1) * RBF(length_scale=[0.1]) + WhiteKernel(0.0001) #this works for the surface
-            print("Set kernel not set by the user")
+            print("Kernel not set by the user")
+            print("Kernel:", self.kernel_transport)
         self.gp_delta_map=GaussianProcess(kernel=self.kernel_transport, n_restarts_optimizer=5)
         self.gp_delta_map.fit(source_distribution, delta_distribution)  
 
-    def apply_trasportation(self):
+    def apply_transportation(self):
               
         #Deform Trajactories 
         traj_rotated=self.affine_transform.predict(self.training_traj)
@@ -108,3 +96,16 @@ class Transport():
         self.training_traj=transported_traj
         if  hasattr(self, 'training_delta'):
             self.training_delta=new_delta
+
+def is_rotation_matrix(matrix):
+    # Check if the matrix is orthogonal
+    is_orthogonal = np.allclose(np.eye(matrix.shape[0]), matrix @ matrix.T)
+    if not is_orthogonal:
+        return False
+
+    # Check if the determinant of the matrix is 1
+    det = np.linalg.det(matrix)
+    if not np.isclose(det, 1.0):
+        return False
+
+    return True
