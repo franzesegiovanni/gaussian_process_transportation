@@ -1,6 +1,6 @@
 """
-Authors: Ravi Prakash and Giovanni Franzese, May 2023
-Email: r.prakash-1@tudelft.nl
+Authors: Giovanni Franzese and Ravi Prakash, May 2023
+Email: r.prakash-1@tudelft.nl, g.franzese@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
@@ -16,8 +16,7 @@ import tf2_ros
 from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from geometry_msgs.msg import PoseStamped
 import open3d as o3d
-from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
-from GILoSA import GaussianProcess
+from GILoSA.gaussian_process_torch import GaussianProcess
 
 class Surface_PointCloud_Detector(): 
     def __init__(self):
@@ -59,12 +58,9 @@ class Surface_PointCloud_Detector():
 
             # Convert PointCloud2 message to numpy array
             pc_data = pc2.read_points(msg_in_robot_frame, skip_nans=True, field_names=("x", "y", "z"))
-            # pc_data = pc2.read_points(msg, skip_nans=True, field_names=("x", "y", "z"))
 
             # Create Open3D point cloud from numpy array
             self.point_cloud.points = o3d.utility.Vector3dVector(pc_data)
-            # self.point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]]) # Flip the pointclouds, otherwise they will be upside down. 
-
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
             rospy.logerr('Error occurred during point cloud transformation: %s', str(e))
 
@@ -102,16 +98,13 @@ class Surface_PointCloud_Detector():
         CD = np.linspace(D, C, nx)
 
         # Initialize the meshgrid array
-        meshgrid = np.zeros((nx, ny, 2))
         data=np.empty([0,2])
-
         # Create the meshgrid by linearly interpolating between AB and CD
         for i in range(nx):
-            # meshgrid[i, :, :] = np.linspace(AB[i], CD[i], ny)
             line=np.linspace(AB[i], CD[i], ny)
             data=np.vstack([data,line])
 
-        print("data.shape",data.shape)    
+        # print("data.shape",data.shape)    
 
         return data
 
@@ -149,16 +142,10 @@ class Surface_PointCloud_Detector():
         ax = plt.axes(projection ='3d') 
         ax.scatter(distribution_np[:,0], distribution_np[:,1], distribution_np[:,2])
 
-        k_distribution = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(2)) + WhiteKernel(0.01 )
-        gp_distribution = GaussianProcess(kernel=k_distribution)
-        gp_distribution.fit(distribution_np[:,:2],distribution_np[:,2].reshape(-1,1))
-
-        # newgrid = newgrid.reshape(-1,2)
+        gp_distribution=GaussianProcess(distribution_np[:,:2], distribution_np[:,2].reshape(-1,1), num_inducing=100)
+        gp_distribution.fit(num_epochs=10) 
         newZ,_ = gp_distribution.predict(meshgrid_distribution)
-        # distribution_surface = np.array([meshgrid_distribution[:,:,0],meshgrid_distribution[:,:,1],newZ.reshape(meshgrid_distribution[:,:,0].shape)]).T
-        # distribution_surface = distribution_surface.reshape(-1,3)
 
-        # distribution_surface=distribution_surface[::3]
         distribution_surface=np.hstack([meshgrid_distribution,newZ.reshape(-1,1)])
         print("distribution_surface.shape",distribution_surface.shape)
         ax.scatter(distribution_surface[:,0], distribution_surface[:,1], distribution_surface[:,2], 'r')
@@ -168,13 +155,10 @@ class Surface_PointCloud_Detector():
     def convert_distribution_to_array(self):
         pass
 
-
-
     def record_source_distribution(self):
         rospy.sleep(5)
         source_cloud = self.point_cloud
         self.source_distribution = self.record_distribution(source_cloud)
-
 
     def record_target_distribution(self):
         rospy.sleep(1)
