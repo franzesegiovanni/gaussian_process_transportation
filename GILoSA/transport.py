@@ -91,6 +91,14 @@ class Transport():
                     if quat_i.w*product_quat.w  + quat_i.x * product_quat.x+ quat_i.y* product_quat.y + quat_i.z * product_quat.z < 0:
                         product_quat = - product_quat
                     self.training_ori[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])
+                if hasattr(self, 'training_stiff_ori'):
+                    rot_stiff=rot_gp_norm @ rot_affine
+                    quat_stiff=quaternion.from_rotation_matrix(rot_stiff)
+                    self.training_stiff_ori[i,:]=np.array([quat_stiff.w, quat_stiff.x, quat_stiff.y, quat_stiff.z])
+
+
+
+
 
         #Update the trajectory and the delta     
         self.training_traj=transported_traj
