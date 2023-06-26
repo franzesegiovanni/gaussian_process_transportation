@@ -15,7 +15,7 @@ from  torch.autograd.functional import jacobian
 # num_tasks = 2
 
 class SVGP(ApproximateGP):
-    def __init__(self, X, Y, num_inducing=100, num_task=1, num_latents=1):
+    def __init__(self, X, Y, num_inducing=100, num_task=1, num_latents=2):
         # Let's use a different set of inducing points for each latent function
 
         # We have to mark the CholeskyVariationalDistribution as batch
@@ -44,11 +44,15 @@ class SVGP(ApproximateGP):
         # The mean and covariance modules should be marked as batch
         # so we learn a different set of hyperparameters
         self.mean_module = gpytorch.means.ZeroMean(batch_shape=torch.Size([num_latents]))
+        # self.covar_module = gpytorch.kernels.ScaleKernel(
+        #     gpytorch.kernels.MaternKernel(batch_shape=torch.Size([num_latents])),
+        #     batch_shape=torch.Size([num_latents]), ard_num_dims=X.shape[1], nu=2.5
+        # )
         self.covar_module = gpytorch.kernels.ScaleKernel(
-            gpytorch.kernels.MaternKernel(batch_shape=torch.Size([num_latents])),
-            batch_shape=torch.Size([num_latents]), ard_num_dims=X.shape[1], nu=1.5
-        )
-        self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=Y.shape[1])
+            gpytorch.kernels.RBFKernel(batch_shape=torch.Size([num_latents])),
+            batch_shape=torch.Size([num_latents]), ard_num_dims=X.shape[1])   
+        interval=gpytorch.constraints.Interval(0.0001,0.001)
+        self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=Y.shape[1], noise_constraint=interval)
         self.X=torch.from_numpy(X).float()
         self.Y=torch.from_numpy(Y).float()
 
@@ -67,7 +71,7 @@ class SVGP(ApproximateGP):
 
 class GaussianProcess():
     def __init__(self, X, Y, num_inducing=100):
-        self.gp= SVGP(num_latents=1, X=X, Y=Y ,num_task=X.shape[1], num_inducing=num_inducing)
+        self.gp= SVGP(num_latents=1, X=X, Y=Y ,num_task=Y.shape[1], num_inducing=num_inducing)
 
         train_dataset = TensorDataset(self.gp.X, self.gp.Y)
         self.train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True)
