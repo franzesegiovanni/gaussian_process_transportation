@@ -111,7 +111,7 @@ class SVGP(gpytorch.models.ApproximateGP):
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)    
         
-class GaussianProcess():
+class StocasticVariationalGaussianProcess():
     def __init__(self, X, Y, num_inducing=100):
         # self.gp= SVGP_LMC(num_latents=1, X=X, Y=Y ,num_task=Y.shape[1], num_inducing=num_inducing)
         self.gp= SVGP(X=X, Y=Y ,num_tasks=Y.shape[1], num_inducing=num_inducing)

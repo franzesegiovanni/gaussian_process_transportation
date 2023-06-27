@@ -16,7 +16,7 @@ import tf2_ros
 from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from geometry_msgs.msg import PoseStamped
 import open3d as o3d
-from GILoSA.gaussian_process_torch import GaussianProcess
+from GILoSA import StocasticVariationalGaussianProcess
 
 class Surface_PointCloud_Detector(): 
     def __init__(self):
@@ -143,7 +143,7 @@ class Surface_PointCloud_Detector():
         ax.scatter(distribution_np[:,0], distribution_np[:,1], distribution_np[:,2])
 
         print("Find the points corresponding of the selected grid")
-        gp_distribution=GaussianProcess(distribution_np[:,:2], distribution_np[:,2].reshape(-1,1), num_inducing=100)
+        gp_distribution=StocasticVariationalGaussianProcess(distribution_np[:,:2], distribution_np[:,2].reshape(-1,1), num_inducing=100)
         gp_distribution.fit(num_epochs=10) 
         newZ,_ = gp_distribution.predict(meshgrid_distribution)
 

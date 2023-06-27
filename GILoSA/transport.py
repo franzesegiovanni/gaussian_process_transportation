@@ -5,7 +5,7 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 from GILoSA import AffineTransform
-from GILoSA.gaussian_process_torch import GaussianProcess 
+from GILoSA.stocastic_variational_gaussian_process import StocasticVariationalGaussianProcess 
 import pickle
 import numpy as np
 import quaternion
@@ -43,7 +43,7 @@ class Transport():
             print("No target distribution saved")    
 
 
-    def fit_transportation(self, num_epochs=20):
+    def fit_transportation(self, num_epochs=20, num_inducing=100):
         if type(self.target_distribution) != type(self.source_distribution):
             raise TypeError("Both the distribution must be a numpy array.")
         elif not(isinstance(self.target_distribution, np.ndarray)) and not(isinstance(self.source_distribution, np.ndarray)):
@@ -56,7 +56,7 @@ class Transport():
  
         delta_distribution = self.target_distribution - source_distribution
 
-        self.gp_delta_map=GaussianProcess(source_distribution, delta_distribution, num_inducing=100)
+        self.gp_delta_map=StocasticVariationalGaussianProcess(source_distribution, delta_distribution, num_inducing=num_inducing)
         self.gp_delta_map.fit(num_epochs=num_epochs)  
 
     def apply_transportation(self):
