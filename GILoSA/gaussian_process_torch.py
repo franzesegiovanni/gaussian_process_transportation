@@ -15,7 +15,7 @@ from  torch.autograd.functional import jacobian
 # num_tasks = 2
 
 class SVGP_LMC(ApproximateGP):
-    def __init__(self, X, Y, num_inducing=200, num_task=1, num_latents=1):
+    def __init__(self, X, Y, num_inducing=200, num_tasks=1, num_latents=1):
         # Let's use a different set of inducing points for each latent function
 
         # We have to mark the CholeskyVariationalDistribution as batch
@@ -34,7 +34,7 @@ class SVGP_LMC(ApproximateGP):
             gpytorch.variational.VariationalStrategy(
                 self, self.inducing_points, variational_distribution, learn_inducing_locations=True
             ),
-            num_tasks=num_task,
+            num_tasks=num_tasks,
             num_latents=num_latents,
             latent_dim=-1
         )
@@ -114,7 +114,7 @@ class SVGP(gpytorch.models.ApproximateGP):
 class GaussianProcess():
     def __init__(self, X, Y, num_inducing=100):
         # self.gp= SVGP_LMC(num_latents=1, X=X, Y=Y ,num_task=Y.shape[1], num_inducing=num_inducing)
-        self.gp= SVGP(num_latents=1, X=X, Y=Y ,num_task=Y.shape[1], num_inducing=num_inducing)
+        self.gp= SVGP(X=X, Y=Y ,num_tasks=Y.shape[1], num_inducing=num_inducing)
         if torch.cuda.is_available():
             self.gp=self.gp.cuda()
         train_dataset = TensorDataset(self.gp.X, self.gp.Y)
