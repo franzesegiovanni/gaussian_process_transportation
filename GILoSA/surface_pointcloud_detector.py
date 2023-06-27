@@ -17,6 +17,7 @@ from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from geometry_msgs.msg import PoseStamped
 import open3d as o3d
 from GILoSA.gaussian_process_torch import GaussianProcess
+import pathlib
 
 class Surface_PointCloud_Detector(): 
     def __init__(self):
@@ -62,7 +63,8 @@ class Surface_PointCloud_Detector():
             # Create Open3D point cloud from numpy array
             self.point_cloud.points = o3d.utility.Vector3dVector(pc_data)
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
-            rospy.logerr('Error occurred during point cloud transformation: %s', str(e))
+            # rospy.logerr('Error occurred during point cloud transformation: %s', str(e))
+            pass
 
 
         
@@ -141,10 +143,11 @@ class Surface_PointCloud_Detector():
         fig = plt.figure()
         ax = plt.axes(projection ='3d') 
         ax.scatter(distribution_np[:,0], distribution_np[:,1], distribution_np[:,2])
-
+        np.savez(str(pathlib.Path().resolve())+'/data/point_cloud_distribution.npz', point_cloud_distribution=distribution_np)
+ 
         print("Find the points corresponding of the selected grid")
-        gp_distribution=GaussianProcess(distribution_np[:,:2], distribution_np[:,2].reshape(-1,1), num_inducing=100)
-        gp_distribution.fit(num_epochs=10) 
+        gp_distribution=GaussianProcess(X=distribution_np[:,:2], Y=distribution_np[:,2].reshape(-1,1), num_inducing=500)
+        gp_distribution.fit(num_epochs=50) 
         newZ,_ = gp_distribution.predict(meshgrid_distribution)
 
         distribution_surface=np.hstack([meshgrid_distribution,newZ.reshape(-1,1)])
