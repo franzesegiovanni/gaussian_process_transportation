@@ -145,8 +145,8 @@ class Surface_PointCloud_Detector():
         # np.savez(str(pathlib.Path().resolve())+'/data/point_cloud_distribution.npz', point_cloud_distribution=distribution_np)
  
         print("Find the points corresponding of the selected grid")
-        gp_distribution=StocasticVariationalGaussianProcess(distribution_np[:,:2], distribution_np[:,2].reshape(-1,1), num_inducing=100)
-        gp_distribution.fit(num_epochs=10) 
+        gp_distribution=StocasticVariationalGaussianProcess(distribution_np[:,:2], distribution_np[:,2].reshape(-1,1), num_inducing=1000)
+        gp_distribution.fit(num_epochs=20) 
         newZ,_ = gp_distribution.predict(meshgrid_distribution)
 
         distribution_surface=np.hstack([meshgrid_distribution,newZ.reshape(-1,1)])
