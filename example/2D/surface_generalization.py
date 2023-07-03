@@ -71,16 +71,42 @@ transport.source_distribution=source_distribution
 transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
+print('Transporting the dynamical system on the new surface')
+k_transport = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(2)) + WhiteKernel(0.01 )
+transport.kernel_transport=k_transport
 transport.fit_transportation()
 transport.apply_transportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 
-x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 100)
-y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 100)
+x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 200)
+y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 200)
 
 # Fit the Gaussian Process dynamical system   
+print('Fitting the GP dynamical system on the transported trajectory')
 k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01 ) #this kernel works much better!    
 gp_deltaX1=GPR(kernel=k_deltaX1)
 gp_deltaX1.fit(X1, deltaX1)
 plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,S1)
+plt.show()
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+X, Y = np.meshgrid(x1_grid, y1_grid)
+input=np.hstack((X.reshape(-1,1),Y.reshape(-1,1)))
+sigma=gp_deltaX1.predict(input)[1]
+
+# Print the final uncertainty of the policy
+for i in range(len(input)):
+    [Jacobian,_]=transport.gp_delta_map.derivative(input[i].reshape(1,-1))
+    _, std= transport.gp_delta_map.predict(input[i].reshape(1,-1))
+    std_derivative=std/np.linalg.norm(transport.gp_delta_map.kernel_params_[0])
+    # compute the determinant of the Jacobian
+    det_Jacobian = np.linalg.det(Jacobian[0])
+    # scale the standard deviation by the determinant of the Jacobian
+    sigma[i] = sigma[i] * (1+det_Jacobian) + 0.5*std_derivative
+
+sigma=sigma.reshape(X.shape)
+# ax.scatter3D(X1[:,0], X1[:,1], np.zeros(len(X1[:,0])), 'r')
+surf = ax.plot_surface(X, Y, sigma, linewidth=0, antialiased=True, cmap=plt.cm.inferno)
+plt.axis('off')
 plt.show()
