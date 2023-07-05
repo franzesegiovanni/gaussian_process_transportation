@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from GILoSA import GaussianProcess as GPR
 from GILoSA import AffineTransform 
 from GILoSA import Transport
+# from GILoSA.neural_transport import Neural_Transport as Transport
 import pathlib
 from plot_utils import plot_vector_field_minvar, plot_vector_field 
 import warnings
@@ -44,10 +45,11 @@ deltaX=deltaX[::2,:]
 k_deltaX = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01) 
 gp_deltaX=GPR(kernel=k_deltaX)
 gp_deltaX.fit(X, deltaX)
-x_grid=np.linspace(np.min(X[:,0]-10), np.max(X[:,0]+10), 100)
-y_grid=np.linspace(np.min(X[:,1]-10), np.max(X[:,1]+10), 100)
+x_grid=np.linspace(np.min(X[:,0]-25), np.max(X[:,0]+25), 100)
+y_grid=np.linspace(np.min(X[:,1]-25), np.max(X[:,1]+25), 100)
 plot_vector_field(gp_deltaX, x_grid,y_grid,X,S)
-
+plt.xlim(np.min(X[:,0]-25), np.max(X[:,0]+25))
+plt.ylim(np.min(X[:,1]-25), np.max(X[:,1]+25))
 #%% Fit a GP to both surfaces and sample equal amount of indexed points, find delta pointcloud between old and sampled new surface
 indexS = np.linspace(0, 1, len(S[:,0]))
 indexS1 = np.linspace(0, 1, len(S1[:,0]))
@@ -71,16 +73,18 @@ transport.source_distribution=source_distribution
 transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
-transport.fit_transportation(num_epochs=100)
+transport.fit_transportation(num_epochs=1000)
 transport.apply_transportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 
-x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 100)
-y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 100)
+x1_grid=np.linspace(np.min(X[:,0]-25), np.max(X[:,0]+25), 100)
+y1_grid=np.linspace(np.min(X[:,1]-25), np.max(X[:,1]+25), 100)
 
 # Fit the Gaussian Process dynamical system   
 k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01 ) #this kernel works much better!    
 gp_deltaX1=GPR(kernel=k_deltaX1)
 gp_deltaX1.fit(X1, deltaX1)
 plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,S1)
+plt.xlim(np.min(X[:,0]-25), np.max(X[:,0]+25))
+plt.ylim(np.min(X[:,1]-25), np.max(X[:,1]+25))
 plt.show()

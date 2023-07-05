@@ -134,8 +134,9 @@ class StocasticVariationalGaussianProcess():
             minibatch_iter = tqdm(self.train_loader, desc="Minibatch", leave=False)
             for x_batch, y_batch in minibatch_iter:
                 optimizer.zero_grad()
-                x_batch=x_batch.cuda()
-                y_batch=y_batch.cuda()
+                if torch.cuda.is_available():
+                    x_batch=x_batch.cuda()
+                    y_batch=y_batch.cuda()
                 output = self.gp(x_batch)
                 loss = -self.mll(output, y_batch)
                 minibatch_iter.set_postfix(loss=loss.item())
