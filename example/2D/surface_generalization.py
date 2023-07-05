@@ -86,7 +86,7 @@ print('Fitting the GP dynamical system on the transported trajectory')
 k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01 ) #this kernel works much better!    
 gp_deltaX1=GPR(kernel=k_deltaX1)
 gp_deltaX1.fit(X1, deltaX1)
-plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,S1)
+plot_vector_field_minvar(gp_deltaX1, x1_grid,y1_grid,X1,S1)
 plt.show()
 
 fig = plt.figure()

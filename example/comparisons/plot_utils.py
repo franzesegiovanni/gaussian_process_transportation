@@ -59,8 +59,8 @@ def plot_vector_field_minvar(model,datax_grid,datay_grid,demo,surface):
             pos=np.array([dataXX[i,j],dataYY[i, j]]).reshape(1,-1)
             [vel, std]=model.predict(pos)
             [_,grad]=model.derivative(pos)
-            u[i,j]=vel[0,0]-2*std[0][0]*grad[0,0,0]/np.sqrt(grad[0,0,0]**2+grad[0,0,0]**2)
-            v[i,j]=vel[0,1]-2*std[0][0]*grad[0,1,0]/np.sqrt(grad[0,0,0]**2+grad[0,1,0]**2)
+            u[i,j]=vel[0,0]-2*std[0]*grad[0,0,0]/np.sqrt(grad[0,0,0]**2+grad[0,0,0]**2)
+            v[i,j]=vel[0,1]-2*std[0]*grad[0,1,0]/np.sqrt(grad[0,0,0]**2+grad[0,1,0]**2)
 
     fig = plt.figure(figsize = (12, 7))
     plt.streamplot(dataXX, dataYY, u, v, density = 2)
@@ -81,7 +81,7 @@ def plot_vector_field_minvar3D(model,datax_grid,datay_grid,demo,surface):
             u[i,j]=vel[0,0]-2*std[0][0]*grad[0,0,0]/np.sqrt(grad[0,0,0]**2+grad[0,0,0]**2)
             v[i,j]=vel[0,1]-2*std[0][0]*grad[0,1,0]/np.sqrt(grad[0,0,0]**2+grad[0,1,0]**2)
 
-    fig = plt.figure(figsize = (12, 7))
+    fig = plt.figure()
     plt.streamplot(dataXX, dataYY, u, v, density = 2)
     plt.scatter(demo[:,0],demo[:,1], color=[1,0,0]) 
     plt.scatter(surface[:,0],surface[:,1], color=[0,0,0])
