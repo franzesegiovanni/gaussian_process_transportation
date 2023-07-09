@@ -1,3 +1,6 @@
+# This code is heavily based on the code from https://github.com/BatyaGG/Task-Parameterized-Gaussian-Mixture-Model
+#if you want to run it, you must copy this file and A.npy and B.npy in the original repository.
+
 import numpy as np
 from matplotlib import pyplot as plt
 from TPGMM_GMR import TPGMM_GMR
@@ -19,9 +22,6 @@ class s:
         self.nbData = nbData
         self.GAMMA0 = np.zeros(shape=(nbStates, self.nbData))
         self.GAMMA = None        
-
-
-
 # Initialization of parameters and properties------------------------------------------------------------------------- #
 nbSamples = 4
 nbVar = 3
@@ -33,10 +33,10 @@ nbData = 200
 slist = []
 for i in range(nbSamples):
     pmat = np.empty(shape=(nbFrames, nbData), dtype=object)
-    tempData = np.loadtxt('Multiple_Reference_Frames/sample' + str(i + 1) + '_Data.txt', delimiter=',')
+    tempData = np.loadtxt('data/sample' + str(i + 1) + '_Data.txt', delimiter=',')
     for j in range(nbFrames):
-        tempA = np.loadtxt('Multiple_Reference_Frames/sample' + str(i + 1) + '_frame' + str(j + 1) + '_A.txt', delimiter=',')
-        tempB = np.loadtxt('Multiple_Reference_Frames/sample' + str(i + 1) + '_frame' + str(j + 1) + '_b.txt', delimiter=',')
+        tempA = np.loadtxt('data/sample' + str(i + 1) + '_frame' + str(j + 1) + '_A.txt', delimiter=',')
+        tempB = np.loadtxt('data/sample' + str(i + 1) + '_frame' + str(j + 1) + '_b.txt', delimiter=',')
         for k in range(nbData):
             pmat[j, k] = p(tempA[:, 3*k : 3*k + 3], tempB[:, k].reshape(len(tempB[:, k]), 1),
                            np.linalg.inv(tempA[:, 3*k : 3*k + 3]), nbStates)
