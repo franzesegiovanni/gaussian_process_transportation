@@ -13,8 +13,11 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 class GaussianProcess():
-    def __init__(self, kernel, alpha=1e-10, n_restarts_optimizer=5):
-        self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, n_restarts_optimizer=n_restarts_optimizer)
+    def __init__(self, kernel, alpha=1e-10, optimizer='fmin_l_bfgs_b', n_restarts_optimizer=5):
+        if optimizer != None:
+            self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, optimizer=optimizer ,n_restarts_optimizer=n_restarts_optimizer)
+        else:
+            self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, optimizer=optimizer)      
         self.kernel=kernel
         self.alpha=alpha
     def fit(self, X, Y):
