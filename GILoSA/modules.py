@@ -25,9 +25,22 @@ class GILoSA_arm(Transport, LeftArmPose, ILoSA):
         rospy.sleep(2)
         super(GILoSA_arm,self).__init__()        
         
-class GILoSA(Transport, Tag_Detector, ILoSA):
+class GILoSA_tag(Transport, Tag_Detector, ILoSA):
     def __init__(self):
         rospy.init_node('GILoSA', anonymous=True)
         rospy.sleep(2)
-        super(GILoSA,self).__init__()
+        super(GILoSA_tag,self).__init__()
+
+class GILoSA_tag_online(Transport, Tag_Detector, ILoSA):
+    def __init__(self):
+        rospy.init_node('GILoSA', anonymous=True)
+        rospy.sleep(2)
+        super(GILoSA_tag,self).__init__() 
+    
+    # def onine_tansportation_callback(self):
+        
+    # def online_transportation(self):
+
+
+
         
