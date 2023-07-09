@@ -166,10 +166,8 @@ for j in range(number_repetitions):
         _, _, _, results_fde[j,k]= execute( distribution_new, index_source, index_target=k , plot=False, training_set=False)
 
 
-np.savez('results_transportation.npz', 
-    results_df=results_df, 
-    results_area=results_area, 
-    results_dtw=results_dtw,
+np.savez('results_transportation_random.npz', 
+
     results_fde=results_fde)
 
 
