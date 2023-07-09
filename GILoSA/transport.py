@@ -43,12 +43,7 @@ class Transport():
             print("No target distribution saved")    
 
 
-    def fit_transportation(self):
-        if type(self.target_distribution) != type(self.source_distribution):
-            raise TypeError("Both the distribution must be a numpy array.")
-        elif not(isinstance(self.target_distribution, np.ndarray)) and not(isinstance(self.source_distribution, np.ndarray)):
-            self.convert_distribution_to_array() #this needs to be a function of every sensor class
-
+    def fit_transportation(self, optimize=True):
         self.affine_transform=AffineTransform()
         self.affine_transform.fit(self.source_distribution, self.target_distribution)
 
@@ -60,7 +55,11 @@ class Transport():
             self.kernel_transport=C(0.1) * RBF(length_scale=[0.1]) + WhiteKernel(0.0001) #this works for the surface
             print("Kernel not set by the user")
             print("Kernel:", self.kernel_transport)
-        self.gp_delta_map=GaussianProcess(kernel=self.kernel_transport, n_restarts_optimizer=5)
+        if optimize==True:    
+            self.gp_delta_map=GaussianProcess(kernel=self.kernel_transport, n_restarts_optimizer=5)
+            self.kernel_transport=self.gp_delta_map.kernel
+        else:
+            self.gp_delta_map=GaussianProcess(kernel=self.kernel_transport, optimizer=None)    
         self.gp_delta_map.fit(source_distribution, delta_distribution)  
 
     def apply_transportation(self):
