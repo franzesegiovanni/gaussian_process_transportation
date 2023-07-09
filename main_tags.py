@@ -7,12 +7,12 @@ This code is part of TERI (TEaching Robots Interactively) project
 #%%
 import warnings
 warnings.filterwarnings("ignore")
-from GILoSA.modules import GILoSA
+from GILoSA.modules import GILoSA_tag as GILoSA
 #from GILoSA.modules import GILoSA_surface
 import time
 from geometry_msgs.msg import PoseStamped
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel as C
-
+import numpy as np
 #%%
 if __name__ == '__main__':
     GILoSA=GILoSA()
@@ -79,6 +79,13 @@ time.sleep(1)
 print("Interactive Control through source distribution")
 GILoSA.Interactive_Control()
 
+#%%
+if type(GILoSA.target_distribution) != type(GILoSA.source_distribution):
+    raise TypeError("Both the distribution must be a numpy array.")
+elif not(isinstance(GILoSA.target_distribution, np.ndarray)) and not(isinstance(GILoSA.source_distribution, np.ndarray)):
+    GILoSA.convert_distribution_to_array() #this needs to be a function of every sensor class
+    # if you want to use the orientation, you can use
+    #GILoSA.convert_distribution_to_array(use_orientation=True) #this needs to be a function of every sensor class
 
 #%%
 time.sleep(1)
