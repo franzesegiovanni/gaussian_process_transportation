@@ -13,9 +13,11 @@ import matplotlib.pyplot as plt
 from GILoSA import GaussianProcess as GPR 
 from GILoSA import Transport
 import pathlib
-from plot_utils import plot_vector_field_minvar, plot_vector_field 
+from plot_utils import plot_vector_field_minvar, plot_vector_field , draw_error_band
 import warnings
 from GILoSA import AffineTransform
+import random
+from models import Ensamble_NN
 warnings.filterwarnings("ignore")
 #%% Load the drawings
 
@@ -70,13 +72,22 @@ affine_transform=AffineTransform()
 affine_transform.fit(source_distribution, target_distribution)
 source_distribution=affine_transform.predict(source_distribution) 
 delta_distribution = target_distribution - source_distribution
-model = MLPRegressor(hidden_layer_sizes=(100, 100, 100, 100, 100, 50, 20), max_iter=10000, random_state=42)
+# model = MLPRegressor(hidden_layer_sizes=(100, 100, 100, 100, 100, 50, 20), max_iter=10000, random_state=random.randint(0, 2**32 - 1))
+model = Ensamble_NN(n_estimators=50, hidden_layer_sizes=(100, 100, 100, 100, 100, 50, 20))
 model.fit(source_distribution, delta_distribution)
 
 # Make predictions on the test set
 X1=affine_transform.predict(X)
-X1 = X1+model.predict(X1)
-plt.figure()
-plt.scatter(X1[:,0],X1[:,1], cmap='rainbow')
-plt.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,0])
+X1_gp, std = model.predict(X1, return_std=True)
+# print(std)
+std= np.sqrt(std[:,0]**2+std[:,1]**2)
+# print(std)
+X1_gp=X1+X1_gp
+X_samples= X1+model.samples(X1)
+print(X_samples.shape)
+fig, ax = plt.subplots()
+ax.scatter(X1_gp[:,0],X1_gp[:,1], cmap='rainbow')
+ax.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,0])
+ax.plot(X_samples[:,:,0].T, X_samples[:,:,1].T)
+draw_error_band(ax, X1_gp[:,0], X1_gp[:,1], err=2*std[:], facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.7)
 plt.show()
