@@ -165,11 +165,6 @@ class Surface_PointCloud_Detector():
         plt.show()
         return distribution_surface
 
-    def convert_distribution_to_array(self):
-        pass
-
-
-
     def record_source_distribution(self):
         rospy.sleep(5)
         source_cloud = self.point_cloud
