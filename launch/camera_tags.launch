@@ -1,7 +1,28 @@
 <?xml version="1.0" ?>
 <launch>
-	<include file="$(find realsense2_camera)/launch/rs_camera.launch" />
-	<include file="$(find apriltag_ros)/launch/continuous_detection.launch" />
+  <arg name="launch_file_dir" default="$(dirname $(find $(arg file)))"/>
+  <arg name="launch_prefix" default="" />
+  <!-- configure camera input -->
+  <arg name="camera_name" default="/camera" />
+  <arg name="image_topic" default="color/image_raw" />
+  <arg name="queue_size" default="1" />
+
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch" />
+
+  <!-- apriltag_ros continuous detection node -->
+  <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" name="apriltag_ros_continuous_node" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)">
+    <!-- Remap topics from those used in code to those on the ROS network -->
+    <remap from="image_rect" to="$(arg camera_name)/$(arg image_topic)" />
+    <remap from="camera_info" to="$(arg camera_name)/camera_info" />
+
+    <param name="publish_tag_detections_image" type="bool" value="true" /><!-- default: false -->
+    <param name="queue_size" type="int" value="$(arg queue_size)" />
+
+    <!-- load parameters (incl. tag family, tags, etc.) -->
+    <rosparam command="load" file="$(arg launch_file_dir)/../config/settings.yaml"/>
+    <rosparam command="load" file="$(arg launch_file_dir)/../config/tags.yaml"/>
+  </node>
+
 	<node pkg="tf" type="static_transform_publisher" name="camera_tf_publisher" args="0.052919967754720576 -0.033570038292216664 0.06589512674208958 0.0003503695064328269 -0.014442296422120693 0.6997366670003037 0.7142547823925087 panda_hand camera_color_optical_frame 100" />
 </launch>
 
