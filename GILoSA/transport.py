@@ -66,23 +66,22 @@ class Transport():
               
         #Deform Trajactories 
         traj_rotated=self.affine_transform.predict(self.training_traj)
-        delta_map_mean, _= self.gp_delta_map.predict(traj_rotated)
-        transported_traj = traj_rotated + delta_map_mean 
+        delta_map_mean, self.std= self.gp_delta_map.predict(traj_rotated, return_std=True)
+        self.training_traj = traj_rotated + delta_map_mean 
 
         #Deform Deltas and orientation
-        new_delta = np.ones_like(self.training_delta)
         for i in range(len(self.training_traj[:,0])):
             if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
                 pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
                 [Jacobian,_]=self.gp_delta_map.derivative(pos)
                 rot_gp= np.eye(Jacobian[0].shape[0]) + np.transpose(Jacobian[0]) 
                 rot_affine= self.affine_transform.rotation_matrix
+                derivative_affine= self.affine_transform.derivative(pos)
                 if  hasattr(self, 'training_delta'):
-                    new_delta[i]= rot_affine @ self.training_delta[i]
-                    new_delta[i]= rot_gp @ new_delta[i]
+                    self.training_delta[i]= derivative_affine @ self.training_delta[i]
+                    self.training_delta[i]= rot_gp @ self.training_delta[i]
                 if  hasattr(self, 'training_ori'):
-                    rot_gp_norm=rot_gp
-                    rot_gp_norm=rot_gp_norm/np.linalg.det(rot_gp_norm)
+                    rot_gp_norm=rot_gp/np.linalg.det(rot_gp)
                     quat_i=quaternion.from_float_array(self.training_ori[i,:])
                     rot_i=quaternion.as_rotation_matrix(quat_i)
                     rot_final=rot_gp_norm @ rot_affine @ rot_i
@@ -94,15 +93,36 @@ class Transport():
                     rot_stiff=rot_gp_norm @ rot_affine
                     quat_stiff=quaternion.from_rotation_matrix(rot_stiff)
                     self.training_stiff_ori[i,:]=np.array([quat_stiff.w, quat_stiff.x, quat_stiff.y, quat_stiff.z])
+    
 
+    def fit_transportation_linear(self):
+        self.affine_transform=AffineTransform()
+        self.affine_transform.fit(self.source_distribution, self.target_distribution)
 
+    def apply_transportation_linear(self):
+            #Deform Trajactories 
+        self.training_traj=self.affine_transform.predict(self.training_traj)
 
-
-
-        #Update the trajectory and the delta     
-        self.training_traj=transported_traj
-        if  hasattr(self, 'training_delta'):
-            self.training_delta=new_delta
+        #Deform Deltas and orientation
+        for i in range(len(self.training_traj[:,0])):
+            if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
+                pos=(np.array(self.training_traj[i,:]).reshape(1,-1))
+                rot_affine= self.affine_transform.rotation_matrix
+                derivative_affine= self.affine_transform.derivative(pos)
+                if  hasattr(self, 'training_delta'):
+                    self.training_delta[i]= derivative_affine @ self.training_delta[i]
+                if  hasattr(self, 'training_ori'):
+                    quat_i=quaternion.from_float_array(self.training_ori[i,:])
+                    rot_i=quaternion.as_rotation_matrix(quat_i)
+                    rot_final=rot_affine @ rot_i
+                    product_quat=quaternion.from_rotation_matrix(rot_final)
+                    if quat_i.w*product_quat.w  + quat_i.x * product_quat.x+ quat_i.y* product_quat.y + quat_i.z * product_quat.z < 0:
+                        product_quat = - product_quat
+                    self.training_ori[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])
+                if hasattr(self, 'training_stiff_ori'):
+                    rot_stiff= rot_affine
+                    quat_stiff=quaternion.from_rotation_matrix(rot_stiff)
+                    self.training_stiff_ori[i,:]=np.array([quat_stiff.w, quat_stiff.x, quat_stiff.y, quat_stiff.z])
 
 def is_rotation_matrix(matrix):
     # Check if the matrix is orthogonal
