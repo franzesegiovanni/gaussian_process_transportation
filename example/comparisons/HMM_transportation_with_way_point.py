@@ -31,9 +31,10 @@ demos_b = [d for d in demos['b']]
 # distribution_new=np.zeros((len(demos_x),len(demos_x[0])*len(demos_x[0]),2))
 # distribution=np.zeros((len(demos_x),4,2))
 # distribution_new=np.zeros((len(demos_x),4,2))
-distribution=np.zeros((len(demos_x),10,2))
-distribution_new=np.zeros((len(demos_x),10,2))
+distribution=np.zeros((len(demos_x),11, 2))
+distribution_new=np.zeros((len(demos_x),11,2))
 final_distance=np.zeros((len(demos_x),2))
+middle_point=np.zeros((len(demos_x),2))
 final_orientation=np.zeros((len(demos_x),1))
 # index=2
 frame_dim=5
@@ -51,6 +52,9 @@ for i in range(len(demos_x)):
     distribution[i,8,:]=demos_b[i][0][0]+demos_A[i][0][0] @ np.array([ -frame_dim, 0])
     distribution[i,9,:]=demos_b[i][0][1]+demos_A[i][0][1] @ np.array([ -frame_dim, 0])
 
+    distribution[i,10,:]=demos_x[i][len(demos_x[i]) // 2 ,:]
+
+    middle_point[i]=  np.linalg.inv(demos_A[i][0][1]) @ (demos_x[i][len(demos_x[i]) // 2 ,:] - demos_b[i][0][1])
 
     final_distance[i]=  np.linalg.inv(demos_A[i][0][1]) @ (demos_x[i][-1,:] - demos_b[i][0][1])
 
@@ -75,6 +79,11 @@ for i in range(len(demos_x)):
     distribution_new[i,7,:]=demos_b_new[i][0][1]+demos_A_new[i][0][1] @ np.array([ +frame_dim, 0])
     distribution_new[i,8,:]=demos_b_new[i][0][0]+demos_A_new[i][0][0] @ np.array([ -frame_dim, 0])
     distribution_new[i,9,:]=demos_b_new[i][0][1]+demos_A_new[i][0][1] @ np.array([ -frame_dim, 0])
+
+    distribution_new[i,10,:]=demos_b_new[i][0][1]+demos_A_new[i][0][1] @ middle_point[i]
+    #Center of trajectory, via point 
+    
+    # distribution[i,10,:]=  np.linalg.inv(demos_A[i][0][1]) @ (demos_x[i][len(demos_x[i]) // 2 ,:] - demos_b[i][0][1])
     
 
 def execute(distribution_input, index_source, index_target, plot=True, training_set=False):
@@ -148,11 +157,11 @@ def execute(distribution_input, index_source, index_target, plot=True, training_
 
 
 
-index_source=2#random.choice(range(9))
+index_source=random.choice(range(9))
 print(index_source)
 fig, ax = plt.subplots()
 for i in range(9):
-    execute(distribution, index_source, index_target=i , plot=False, training_set=True)
+    execute(distribution, index_source, index_target=i , plot=True, training_set=True)
 plt.plot(demos_x[index_source][:,0],demos_x[index_source][:,1], color=[1,0,0]) 
 ax.grid(color='gray', linestyle='-', linewidth=1)
 # Customize the background color
@@ -171,7 +180,7 @@ fig.savefig('figs/transportation.png', dpi=300, bbox_inches='tight')
 fig, ax = plt.subplots()
 
 for i in range(9):
-    execute(distribution_new, index_source, index_target=i , plot=False, training_set=False)    
+    execute(distribution_new, index_source, index_target=i , plot=True, training_set=False)    
 
 ax.grid(color='gray', linestyle='-', linewidth=1)
 # Customize the background color
@@ -206,32 +215,33 @@ results_fda=[]
 for j in range(number_repetitions):
     # index_source=random.choice(range(len(demos_x)))
     # vector = np.delete(range(len(demos_x)), index_source) 
-
+    fig, ax = plt.subplots()
     index_source = random.choice(range(len(demos_x)))  # Randomly choose an index from 0 to 9
     vector = [i for i in range(len(demos_x)) if i != index_source] 
     for k in vector:
-        df, area, dtw, fde, fda= execute( distribution, index_source, index_target=k , plot=False, training_set=True)
+        df, area, dtw, fde, fda= execute( distribution, index_source, index_target=k , plot=True, training_set=True)
         results_df.append(df)
         results_area.append(area)
         results_dtw.append(dtw)
         results_fde.append(fde)
         results_fda.append(fda)
 
+from generate_random_frame_orientation import generate_frame_orientation
 
-np.savez('results_transportation.npz', 
+np.savez('results_transportation_way_point.npz', 
     results_df=results_df, 
     results_area=results_area, 
     results_dtw=results_dtw,
     results_fde=results_fde, 
     results_fad=results_fda )
-
+# plt.show()
 # Test on unknown data 
-from generate_random_frame_orientation import generate_frame_orientation
+
 results_fde_new=[]
 results_fda_new=[]
 #Sample a demonstration at random and generalize on all the avaialable frames. Repeat this 20 times
 for j in range(number_repetitions):
-    index_source=random.choice(range(len(demos_x)))
+
     demos_A_new, demos_b_new = generate_frame_orientation()
     for demo_i in range(len(demos_x)):
         distribution_new[demo_i,0,:]=demos_b_new[demo_i][0][0]
@@ -247,13 +257,15 @@ for j in range(number_repetitions):
         distribution_new[demo_i,8,:]=demos_b_new[demo_i][0][0]+demos_A_new[demo_i][0][0] @ np.array([ -frame_dim, 0])
         distribution_new[demo_i,9,:]=demos_b_new[demo_i][0][1]+demos_A_new[demo_i][0][1] @ np.array([ -frame_dim, 0])
 
+    index_source=random.choice(range(len(demos_x)))
+    
     for k in range(len(demos_x)):
-        fde, fda= execute( distribution_new, index_source, index_target=k , plot=True, training_set=False)
+        fde, fda= execute( distribution_new, index_source, index_target=k , plot=False, training_set=False)
         results_fde_new.append(fde)
         results_fda_new.append(fda)
 
-# plt.show()
-np.savez('results_transportation_out_distribution.npz', 
+
+np.savez('results_transportation_way_point_out_distribution.npz', 
 
     results_fde=results_fde_new, 
     results_fad=results_fda_new)

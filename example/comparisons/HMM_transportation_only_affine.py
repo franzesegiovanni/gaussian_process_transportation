@@ -42,7 +42,7 @@ for i in range(len(demos_x)):
     distribution[i,1,:]=demos_b[i][0][0]+demos_A[i][0][0] @ np.array([ 0, frame_dim])
     distribution[i,2,:]=demos_b[i][0][1]
     distribution[i,3,:]=demos_b[i][0][1]+demos_A[i][0][1] @ np.array([ 0, -frame_dim])
-    #Extra points
+    # Extra points
     distribution[i,4,:]=demos_b[i][0][0]+demos_A[i][0][0] @ np.array([ 0, -frame_dim])
     distribution[i,5,:]=demos_b[i][0][1]+demos_A[i][0][1] @ np.array([ 0, frame_dim])
 
@@ -67,7 +67,7 @@ for i in range(len(demos_x)):
     distribution_new[i,1,:]=demos_b_new[i][0][0]+demos_A_new[i][0][0] @ np.array([ 0, frame_dim])
     distribution_new[i,2,:]=demos_b_new[i][0][1]
     distribution_new[i,3,:]=demos_b_new[i][0][1]+demos_A_new[i][0][1] @ np.array([ 0, -frame_dim])
-    #Extra points
+    # #Extra points
     distribution_new[i,4,:]=demos_b_new[i][0][0]+demos_A_new[i][0][0] @ np.array([ 0, -frame_dim])
     distribution_new[i,5,:]=demos_b_new[i][0][1]+demos_A_new[i][0][1] @ np.array([ 0, frame_dim])
 
@@ -79,19 +79,16 @@ for i in range(len(demos_x)):
 
 def execute(distribution_input, index_source, index_target, plot=True, training_set=False):
 
-
     X=demos_x[index_source]
-
     transport=Transport()
     transport.source_distribution=distribution[index_source,:,:]
     transport.target_distribution=distribution_input[index_target,:,:]
     transport.training_traj=X
-    k_transport = C(constant_value=np.sqrt(10))  * Matern(20*np.ones(1), [10,50], nu=2.5) + WhiteKernel(0.01 , [0.0000001, 0.000001])
-    transport.kernel_transport=k_transport
-    transport.fit_transportation()
-    transport.apply_transportation()
+    transport.fit_transportation_linear()
+    transport.apply_transportation_linear()
     X1=transport.training_traj
-    std=transport.std[:,0]
+    std=np.zeros_like(X1)
+    std=std[:,0]
 
     if plot==True:
         draw_error_band(ax, X1[:,0], X1[:,1], err=std, facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.8)
@@ -115,7 +112,6 @@ def execute(distribution_input, index_source, index_target, plot=True, training_
         # Dynamic Time Warping distance
         dtw, d = similaritymeasures.dtw(demos_x[index_target], X1)
 
-        # fde=np.linalg.norm(demos_x[i][-1]-X1[-1])
         fd=  np.linalg.inv(demos_A[index_target][0][1]) @ (X1[-1] - demos_b[index_target][0][1])
         fde=np.linalg.norm(final_distance[index_target]-fd)
 
@@ -132,7 +128,6 @@ def execute(distribution_input, index_source, index_target, plot=True, training_
         print("Final Angle Distance  : ", final_angle_distance[0])
         return df, area, dtw, fde, final_angle_distance[0]
     else:
-        # fde=np.linalg.norm(transport.target_distribution[2,:]-X1[-1])
         fd=  np.linalg.inv(demos_A_new[index_target][0][1]) @ (X1[-1] - demos_b_new[index_target][0][1])
         fde=np.linalg.norm(final_distance[index_target]-fd)
 
@@ -148,17 +143,18 @@ def execute(distribution_input, index_source, index_target, plot=True, training_
 
 
 
-index_source=2#random.choice(range(9))
+index_source=random.choice(range(9))
 print(index_source)
 fig, ax = plt.subplots()
 for i in range(9):
-    execute(distribution, index_source, index_target=i , plot=False, training_set=True)
+    execute(distribution, index_source, index_target=i , plot=True, training_set=True)
 plt.plot(demos_x[index_source][:,0],demos_x[index_source][:,1], color=[1,0,0]) 
 ax.grid(color='gray', linestyle='-', linewidth=1)
 # Customize the background color
 ax.set_facecolor('white')
 ax.set_xlim(-60, 60)
 ax.set_ylim(-60, 60)
+ax.set_aspect('equal')
 # Customize the background color
 ax.set_facecolor('white')
 # Remove the box around the figure
@@ -171,15 +167,15 @@ fig.savefig('figs/transportation.png', dpi=300, bbox_inches='tight')
 fig, ax = plt.subplots()
 
 for i in range(9):
-    execute(distribution_new, index_source, index_target=i , plot=False, training_set=False)    
+    execute(distribution_new, index_source, index_target=i , plot=True, training_set=False)    
 
 ax.grid(color='gray', linestyle='-', linewidth=1)
 # Customize the background color
 ax.set_facecolor('white')
 # ax.set_xlim(-75, 105)
 # ax.set_ylim(-95, 70)
-ax.axis('equal')
 # Customize the background color
+ax.set_aspect('equal')
 ax.set_facecolor('white')
 # Remove the box around the figure
 ax.spines['top'].set_visible(False)
@@ -187,15 +183,11 @@ ax.spines['right'].set_visible(False)
 ax.spines['bottom'].set_visible(False)
 ax.spines['left'].set_visible(False)
 fig.savefig('figs/transportation_new.png', dpi=1200, bbox_inches='tight')
-# plt.show()
+plt.show()
 
 
-# Experiments
+# EXPERIMENTS
 number_repetitions=20
-# results_df=np.zeros( ( number_repetitions, len(demos_x)) )
-# results_area=np.zeros(( number_repetitions, len(demos_x)) )
-# results_dtw=np.zeros(( number_repetitions, len(demos_x) ) )
-# results_fde=np.zeros((  number_repetitions , len(demos_x) ))
 results_df=[]
 results_area=[]
 results_dtw=[]
@@ -218,7 +210,7 @@ for j in range(number_repetitions):
         results_fda.append(fda)
 
 
-np.savez('results_transportation.npz', 
+np.savez('results_affine.npz', 
     results_df=results_df, 
     results_area=results_area, 
     results_dtw=results_dtw,
@@ -227,11 +219,11 @@ np.savez('results_transportation.npz',
 
 # Test on unknown data 
 from generate_random_frame_orientation import generate_frame_orientation
+
 results_fde_new=[]
 results_fda_new=[]
 #Sample a demonstration at random and generalize on all the avaialable frames. Repeat this 20 times
 for j in range(number_repetitions):
-    index_source=random.choice(range(len(demos_x)))
     demos_A_new, demos_b_new = generate_frame_orientation()
     for demo_i in range(len(demos_x)):
         distribution_new[demo_i,0,:]=demos_b_new[demo_i][0][0]
@@ -247,13 +239,16 @@ for j in range(number_repetitions):
         distribution_new[demo_i,8,:]=demos_b_new[demo_i][0][0]+demos_A_new[demo_i][0][0] @ np.array([ -frame_dim, 0])
         distribution_new[demo_i,9,:]=demos_b_new[demo_i][0][1]+demos_A_new[demo_i][0][1] @ np.array([ -frame_dim, 0])
 
+
+    index_source=random.choice(range(len(demos_x)))
+    
     for k in range(len(demos_x)):
-        fde, fda= execute( distribution_new, index_source, index_target=k , plot=True, training_set=False)
+        fde, fda= execute( distribution_new, index_source, index_target=k , plot=False, training_set=False)
         results_fde_new.append(fde)
         results_fda_new.append(fda)
 
-# plt.show()
-np.savez('results_transportation_out_distribution.npz', 
+
+np.savez('results_affine_out_distribution.npz', 
 
     results_fde=results_fde_new, 
     results_fad=results_fda_new)
