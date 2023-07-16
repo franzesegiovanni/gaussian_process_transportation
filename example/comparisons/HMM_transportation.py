@@ -152,7 +152,7 @@ index_source=2#random.choice(range(9))
 print(index_source)
 fig, ax = plt.subplots()
 for i in range(9):
-    execute(distribution, index_source, index_target=i , plot=False, training_set=True)
+    execute(distribution, index_source, index_target=i , plot=True, training_set=True)
 plt.plot(demos_x[index_source][:,0],demos_x[index_source][:,1], color=[1,0,0]) 
 ax.grid(color='gray', linestyle='-', linewidth=1)
 # Customize the background color
@@ -171,7 +171,7 @@ fig.savefig('figs/transportation.png', dpi=300, bbox_inches='tight')
 fig, ax = plt.subplots()
 
 for i in range(9):
-    execute(distribution_new, index_source, index_target=i , plot=False, training_set=False)    
+    execute(distribution_new, index_source, index_target=i , plot=True, training_set=False)    
 
 ax.grid(color='gray', linestyle='-', linewidth=1)
 # Customize the background color
@@ -187,7 +187,7 @@ ax.spines['right'].set_visible(False)
 ax.spines['bottom'].set_visible(False)
 ax.spines['left'].set_visible(False)
 fig.savefig('figs/transportation_new.png', dpi=1200, bbox_inches='tight')
-# plt.show()
+plt.show()
 
 
 # Experiments

@@ -43,21 +43,25 @@ def generate_ranking(df):
     rankings = pd.DataFrame({'group': groups, 'rank': len(groups)})
 
     # Perform Kruskal-Wallis test
-    stat, p_value = stats.kruskal(*[df[group] for group in groups])
+    # stat, p_value = stats.kruskal(*[df[group] for group in groups])
 
-    # If p-value is significant, perform post-hoc tests
-    if p_value < 0.05:
-        for i in range(len(groups)):
-            for j in range(len(groups)):
-                group1 = groups[i]
-                group2 = groups[j]
-                samples1 = df[group1]
-                samples2 = df[group2]
-                posthoc_p_value = stats.mannwhitneyu(samples1, samples2, alternative='less')[1]  # Perform one-sided Mann-Whitney U test for lower distribution
-                if posthoc_p_value < 0.05:
-                    rankings.loc[rankings['group'] == group1, 'rank'] -= 1
+    # # If p-value is significant, perform post-hoc tests
+    # if p_value < 0.05:
+    for i in range(len(groups)):
+        for j in range(len(groups)):
+            group1 = groups[i]
+            group2 = groups[j]
+            samples1 = df[group1].dropna()
+            samples2 = df[group2].dropna()
+            #t_statistic, p_value=ttest_ind(samples1, samples2, alternative='less') 
+            p_value = stats.mannwhitneyu(samples1, samples2, alternative='less')[1]  # Perform one-sided Mann-Whitney U test for lower distribution
+
+            # if t_statistic < 0 and pvalue < 0.02:
+            if p_value < 0.05:
+                rankings.loc[rankings['group'] == group1, 'rank'] -= 1
 
     min_val=heapq.nsmallest(len(groups), set(rankings['rank']))
     for i in range(len(min_val)):
         rankings.loc[rankings['rank'] == min_val[i], 'rank'] = i+1
-    return rankings.sort_values('rank')
+    rank_sort=rankings.sort_values('rank')    
+    return rank_sort
