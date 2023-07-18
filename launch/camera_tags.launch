@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <launch>
-  <arg name="launch_file_dir" default="$(dirname $(find $(arg file)))"/>
+  <arg name="launch_file_dir" default="./"/>
   <arg name="launch_prefix" default="" />
   <!-- configure camera input -->
   <arg name="camera_name" default="/camera" />
