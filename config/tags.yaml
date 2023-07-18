@@ -19,8 +19,32 @@
 #     {id: ID, size: SIZE, name: NAME},
 #     ...
 #   ]
+# FOR DRESSING
+# standalone_tags:
+#   [ 
+#   {id: 0, size: 0.0245, name: marker},
+#   {id: 1, size: 0.0245},
+#   {id: 2, size: 0.0245},
+#   {id: 3, size: 0.0245},
+#   {id: 4, size: 0.0245},
+#   {id: 5, size: 0.0245},
+#   {id: 6, size: 0.0245},
+#   {id: 7, size: 0.0245},
+#   {id: 8, size: 0.0245},
+#   ]
+# FOR PnP
+
 standalone_tags:
-  [ {id: 0, size: 0.105}
+  [ 
+  {id: 0, size: 0.033, name: marker},
+  {id: 1, size: 0.033},
+  {id: 2, size: 0.033},
+  {id: 3, size: 0.033},
+  {id: 4, size: 0.033},
+  {id: 5, size: 0.033},
+  {id: 6, size: 0.033},
+  {id: 7, size: 0.033},
+  {id: 32, size: 0.039},
   ]
 # ## Tag bundle definitions
 # ### Remarks
