@@ -9,7 +9,7 @@ class AffineTransform():
     def __init__(self):
         pass
 
-    def fit(self, source_points, target_points):
+    def fit(self, source_points, target_points, compute_rot=False):
         # Matched points should have the same length
         assert len(source_points) == len(target_points)
             
@@ -19,9 +19,7 @@ class AffineTransform():
         self.source_points_centered=source_points-self.S_centroid
         self.target_points_centered=target_points-self.T_centroid
 
-        if source_points.shape[1] == 2 and source_points.shape[0] < 2:
-            self.rotation_matrix= np.eye(source_points.shape[1])
-        elif source_points.shape[1] == 3 and source_points.shape[0] < 3:
+        if (source_points.shape[1] == 2 and source_points.shape[0] < 3) or (source_points.shape[1] == 3 and source_points.shape[0] < 4) or compute_rot==False:
             self.rotation_matrix= np.eye(source_points.shape[1])
         else:    
             #  Compute covariance matrix
