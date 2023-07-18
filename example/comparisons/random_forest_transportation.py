@@ -17,7 +17,7 @@ from plot_utils import plot_vector_field_minvar, plot_vector_field , draw_error_
 import warnings
 from GILoSA import AffineTransform
 import random
-from models import Ensamble_NN
+from models import Ensamble_NN, Ensemble_RF
 warnings.filterwarnings("ignore")
 #%% Load the drawings
 
@@ -73,7 +73,7 @@ affine_transform.fit(source_distribution, target_distribution)
 source_distribution=affine_transform.predict(source_distribution) 
 delta_distribution = target_distribution - source_distribution
 # model = MLPRegressor(hidden_layer_sizes=(100, 100, 100, 100, 100, 50, 20), max_iter=10000, random_state=random.randint(0, 2**32 - 1))
-model = Ensamble_NN(n_estimators=50, hidden_layer_sizes=(100, 100, 100, 100, 100, 50, 20))
+model =Ensemble_RF(n_estimators=20, max_depth=10)
 model.fit(source_distribution, delta_distribution)
 
 # Make predictions on the test set

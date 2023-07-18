@@ -1,5 +1,5 @@
 """
-Authors: Ravi Prakash & Giovanni Franzese, March 2023
+Authors: Giovanni Franzese & Ravi, March 2023
 Email: g.franzese@tudelft.nl, r.prakash@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
@@ -13,11 +13,11 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 class GaussianProcess():
-    def __init__(self, kernel, alpha=1e-10, optimizer='fmin_l_bfgs_b', n_restarts_optimizer=5):
+    def __init__(self, kernel, alpha=1e-10, optimizer='fmin_l_bfgs_b', n_restarts_optimizer=5, n_targets=None):
         if optimizer != None:
-            self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, optimizer=optimizer ,n_restarts_optimizer=n_restarts_optimizer)
+            self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, optimizer=optimizer ,n_restarts_optimizer=n_restarts_optimizer, n_targets=n_targets)
         else:
-            self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, optimizer=optimizer)      
+            self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, optimizer=optimizer, n_targets=n_targets)      
         self.kernel=kernel
         self.alpha=alpha
     def fit(self, X, Y):
@@ -33,11 +33,17 @@ class GaussianProcess():
             K_ = self.kernel(self.X, self.X) + (self.noise_var_ * np.eye(len(self.X)))
             self.K_inv = np.linalg.inv(K_)
             print('lenghtscales', self.kernel.get_params()['k1__k2__length_scale'] )
-    def predict(self,x):
-        [y, std]=self.gp.predict(x, return_std=True)
+
+    def predict(self,x, return_std=True):
+        [y, std]=self.gp.predict(x, return_std=return_std)
         
         return np.array(y), np.array(std-np.sqrt(self.kernel.get_params()['k2__noise_level']))
-         
+    
+    def samples(self, x):
+        samples=self.gp.sample_y(x, n_samples=10)
+        samples_transpose=np.transpose(samples, (2, 0, 1))
+        return samples_transpose
+    
     def derivative(self, x): # GP with RBF kernel 
         """Input has shape n_query x n_features. 
         There are two outputs,

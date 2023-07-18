@@ -90,7 +90,7 @@ def plot_vector_field_minvar3D(model,datax_grid,datay_grid,demo,surface):
     plt.title("Minimum variance")
     #plt.show()
 
-def draw_error_band(ax, x, y, err, **kwargs):
+def draw_error_band(ax, x, y, err, loop=False, **kwargs):
     # Calculate normals via centered finite differences (except the first point
     # which uses a forward difference and the last point which uses a backward
     # difference).
@@ -111,7 +111,8 @@ def draw_error_band(ax, x, y, err, **kwargs):
     vertices = np.block([[xp, xn[::-1]],
                          [yp, yn[::-1]]]).T
     codes = np.full(len(vertices), Path.LINETO)
-    # codes[0] = codes[len(xp)] = Path.MOVETO
+    if loop==True:
+        codes[0] = codes[len(xp)] = Path.MOVETO
     codes[0] = Path.MOVETO
     path = Path(vertices, codes)
-    ax.add_patch(PathPatch(path, **kwargs))
+    ax.add_patch(PathPatch(path, label='Uncertanites',  **kwargs))

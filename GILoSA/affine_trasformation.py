@@ -33,16 +33,19 @@ class AffineTransform():
                 V[:,-1]*= -1
                 self.rotation_matrix= V @ U.T
 
+        source_rotated=np.transpose(self.rotation_matrix @ np.transpose((self.source_points_centered)))
+        self.scale = np.sum(source_rotated * self.target_points_centered) / np.sum(source_rotated**2)
         print ("Rotation Matrix of the Affine Matrix:", self.rotation_matrix)
         #Compute translation
         self.translation=self.T_centroid-self.S_centroid
         
     def predict(self, x):
-        transported_x= np.transpose(self.rotation_matrix @ np.transpose((x-self.S_centroid)))+ self.T_centroid
+        transported_x= self.scale*np.transpose(self.rotation_matrix @ np.transpose((x-self.S_centroid)))+ self.T_centroid
         return transported_x
         
     def derivative(self,x):
         transport_derivative=[]  
         for i in range(np.shape(x)[0]):
-            transport_derivative.append(self.rotation_matrix)  
+            transport_derivative.append(self.scale*self.rotation_matrix)
         return np.array(transport_derivative)
+    
