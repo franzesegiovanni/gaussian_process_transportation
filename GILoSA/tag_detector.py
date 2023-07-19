@@ -65,24 +65,24 @@ class Tag_Detector():
                     s=np.array([detection_source.pose.position.x,detection_source.pose.position.y,detection_source.pose.position.z])
                     target_array=np.vstack((target_array,t))
                     source_array=np.vstack((source_array,s))
-                    if use_orientation==True:
+                    if use_orientation:
                         #Corners source
-
+                        scale_factor=2
                         quat_s=quaternion.from_float_array(np.array([detection_source.pose.orientation.w, detection_source.pose.orientation.x, detection_source.pose.orientation.y, detection_source.pose.orientation.z]))
                         rot_s=quaternion.as_rotation_matrix(quat_s)
-                        marker_corners=detect_marker_corners(1*detection_source_in_camera.size[0])
+                        marker_corners=detect_marker_corners(scale_factor*detection_source_in_camera.size[0])
                         # Rotate marker's corners based on the quaternion
                         rotated_corners = np.dot(rot_s, marker_corners.T).T + s 
-                        rotated_corners[:,-1]=s[-1]
+                        # rotated_corners[:,-1]=s[-1]
                         source_array=np.vstack((source_array,rotated_corners))
 
                         # Conrners target 
                         quat_t=quaternion.from_float_array(np.array([detection_target.pose.orientation.w, detection_target.pose.orientation.x, detection_target.pose.orientation.y, detection_target.pose.orientation.z]))
                         rot_t=quaternion.as_rotation_matrix(quat_t)
-                        marker_corners=detect_marker_corners(1*detection_target_in_camera.size[0])
+                        marker_corners=detect_marker_corners(scale_factor*detection_target_in_camera.size[0])
                         # Rotate marker's corners based on the quaternion
                         rotated_corners = np.dot(rot_t, marker_corners.T).T + t
-                        rotated_corners[:,-1]=t[-1]
+                        # rotated_corners[:,-1]=t[-1]
                         target_array=np.vstack((target_array,rotated_corners))
 
   
@@ -123,7 +123,7 @@ class Tag_Detector():
                     # print(distribution_copy[i].id[0])
                     # print(detection_copy[j].id[0])
                     if distribution_copy[i].id[0]==detection_copy[j].id[0]:
-                        distribution_copy[i]=copy(detection_copy[j])
+                        # distribution_copy[i]=copy(detection_copy[j])
                         del detection_copy[j]
                         break 
         distribution_copy= distribution_copy + detection_copy 
@@ -168,12 +168,12 @@ class Tag_Detector():
         j=0
         for i in range(self.recorded_traj_tag.shape[0]-1):
             self.set_attractor(self.recorded_traj_tag[i,:], self.recorded_ori_tag[i,:])
-            if i>20 and i < self.recorded_traj_tag.shape[0]-20 and np.linalg.norm(self.recorded_traj_tag[i-20,:]-self.recorded_traj_tag[i+20,:])<0.0005 and j>20:
-                print("Saving frames")
-                distribution=self.continuous_record(distribution)
+            # if i>10 and i < self.recorded_traj_tag.shape[0]-10 and np.linalg.norm(self.recorded_traj_tag[i-10,:]-self.recorded_traj_tag[i+10,:])<0.005: #and j>20:
+                # print("Saving frames")
+            distribution=self.continuous_record(distribution)
                 # print(distribution)
-                j=0
-            j=j+1
+                # j=0
+            # j=j+1
             self.r_rec.sleep() 
         return distribution    
 
@@ -226,5 +226,14 @@ def  detect_marker_corners(marker_dimension):
             [-marker_dimension/2, -marker_dimension/2, 0],
             [-marker_dimension/2, marker_dimension/2, 0],
             [marker_dimension/2, marker_dimension/2, 0],
-            [marker_dimension/2, -marker_dimension/2, 0]])    
+            [marker_dimension/2, -marker_dimension/2, 0],
+             [-marker_dimension/2, -marker_dimension/2, marker_dimension/2],
+            [-marker_dimension/2, marker_dimension/2, marker_dimension/2],
+            [marker_dimension/2, marker_dimension/2, marker_dimension/2],
+            [marker_dimension/2, -marker_dimension/2, marker_dimension/2],
+             [-marker_dimension/2, -marker_dimension/2, -marker_dimension/2],
+            [-marker_dimension/2, marker_dimension/2, -marker_dimension/2],
+            [marker_dimension/2, marker_dimension/2, -marker_dimension/2],
+            [marker_dimension/2, -marker_dimension/2, -marker_dimension/2]
+            ])    
     return marker_corners
