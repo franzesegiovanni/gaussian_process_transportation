@@ -6,6 +6,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 import numpy as np
 import quaternion
+import copy
 class Tag_Detector():
     def __init__(self):
         super(Tag_Detector, self).__init__()
@@ -84,12 +85,63 @@ class Tag_Detector():
         self.target_distribution=target_array
         self.source_distribution=source_array
         
+    # def record_source_distribution(self):
+    #     self.source_distribution=self.detections
+
+    # def record_target_distribution(self):
+    #     self.target_distribution=self.detections
+
     def record_source_distribution(self):
-        self.source_distribution=self.detections
+        for _ in range(20):
+            self.source_distribution=[]
+            self.source_distribution=self.continuous_record(self.source_distribution)
+            rospy.sleep(0.1)
 
     def record_target_distribution(self):
-        self.target_distribution=self.detections 
+        for _ in range(20):
+            self.target_distribution=[]
+            self.target_distribution=self.continuous_record(self.source_distribution)
+            rospy.sleep(0.1)
 
+    def continuous_record(self, distribution):
+        detection_copy=copy(self.detections)
+        for tags in detection_copy:
+            for distribution_tag in distribution:
+                if tags.id[0]==distribution_tag.id[0]:
+                    detection_copy=detection_copy.remove(tags) 
+        distribution.append(detection_copy) 
+        return distribution           
+
+    def Record_demo_tags(self):
+        self.Passive()
+
+        self.end = False
+        self.recorded_traj_tag = self.cart_pos.reshape(1,3)
+        self.recorded_ori_tag  = self.cart_ori.reshape(1,4)
+        while not self.end:
+
+            self.recorded_traj_tag = np.vstack([self.recorded_traj, self.cart_pos])
+            self.recorded_ori_tag  = np.vstack([self.recorded_ori,  self.cart_ori])
+            self.r_rec.sleep()
+
+    def Record_tags(self, distribution):
+        start = PoseStamped()
+
+        start.pose.position.x = self.recorded_traj_tag[0,0]
+        start.pose.position.y = self.recorded_traj_tag[0,1]
+        start.pose.position.z = self.recorded_traj_tag[0,2]
+
+        start.pose.orientation.w = self.recorded_ori_tag[0,0] 
+        start.pose.orientation.x = self.recorded_ori_tag[0,1] 
+        start.pose.orientation.y = self.recorded_ori_tag[0,2] 
+        start.pose.orientation.z = self.recorded_ori_tag[0,3] 
+        self.go_to_pose(start)
+
+        for i in range(self.recorded_traj_tag.shape[0]):
+            self.set_attractor(self.recorded_traj_tag[i,:], self.recorded_ori_tag[i,:])
+            self.continuous_record(distribution)
+            self.r_rec.sleep() 
+            
 def  detect_marker_corners(marker_dimension):
     marker_corners = np.array([
             [-marker_dimension/2, -marker_dimension/2, 0],
