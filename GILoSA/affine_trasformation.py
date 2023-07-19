@@ -18,8 +18,8 @@ class AffineTransform():
         self.T_centroid = np.mean(target_points, axis=0)
         self.source_points_centered=source_points-self.S_centroid
         self.target_points_centered=target_points-self.T_centroid
-
-        if (source_points.shape[1] == 2 and source_points.shape[0] < 3) or (source_points.shape[1] == 3 and source_points.shape[0] < 4) or compute_rot==False:
+        self.scale=1
+        if (source_points.shape[1] == 2 and source_points.shape[0] < 2) or (source_points.shape[1] == 3 and source_points.shape[0] < 3) or compute_rot==False:
             self.rotation_matrix= np.eye(source_points.shape[1])
         else:    
             #  Compute covariance matrix
@@ -33,8 +33,9 @@ class AffineTransform():
                 V[:,-1]*= -1
                 self.rotation_matrix= V @ U.T
 
-        source_rotated=np.transpose(self.rotation_matrix @ np.transpose((self.source_points_centered)))
-        self.scale = np.sum(source_rotated * self.target_points_centered) / np.sum(source_rotated**2)
+            source_rotated=np.transpose(self.rotation_matrix @ np.transpose((self.source_points_centered)))
+            self.scale = np.sum(source_rotated * self.target_points_centered) / np.sum(source_rotated**2)
+
         print ("Rotation Matrix of the Affine Matrix:", self.rotation_matrix)
         #Compute translation
         self.translation=self.T_centroid-self.S_centroid

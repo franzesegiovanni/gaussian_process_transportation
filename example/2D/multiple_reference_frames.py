@@ -42,13 +42,13 @@ X=X[::2,:]
 deltaX=deltaX[::2,:]
 
 #%% Fit a dynamical system to the demo and plot it
-k_deltaX = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01 ) #this kernel works much better!    
+k_deltaX = C(constant_value=np.sqrt(0.1))  * Matern(np.ones(2), nu=1.5) + WhiteKernel(0.01 ) #this kernel works much better!    
 gp_deltaX=GPR(kernel=k_deltaX)
 gp_deltaX.fit(X, deltaX)
 x_grid=np.linspace(np.min(X[:,0]-10), np.max(X[:,0]+10), 100)
 y_grid=np.linspace(np.min(X[:,1]-10), np.max(X[:,1]+10), 100)
-
 transport=Transport()
+transport.kernel_transport=C(constant_value=np.sqrt(0.1))  * RBF(np.ones(1), length_scale_bounds=[10,100]) + WhiteKernel(0.0001, [0.001, 0.001 ])
 transport.source_distribution=S 
 transport.target_distribution=S1
 transport.training_traj=X
