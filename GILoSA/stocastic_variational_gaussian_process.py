@@ -113,9 +113,12 @@ class SVGP(gpytorch.models.ApproximateGP):
         
 class StocasticVariationalGaussianProcess():
     def __init__(self, X, Y, num_inducing=100):
+        torch.cuda.empty_cache()
+        self.use_cuda=torch.cuda.is_available()
+        # self.use_cuda=0
         # self.gp= SVGP_LMC(num_latents=1, X=X, Y=Y ,num_task=Y.shape[1], num_inducing=num_inducing)
         self.gp= SVGP(X=X, Y=Y ,num_tasks=Y.shape[1], num_inducing=num_inducing)
-        if torch.cuda.is_available():
+        if self.use_cuda:
             self.gp=self.gp.cuda()
         train_dataset = TensorDataset(self.gp.X, self.gp.Y)
         self.train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True)    
@@ -134,8 +137,9 @@ class StocasticVariationalGaussianProcess():
             minibatch_iter = tqdm(self.train_loader, desc="Minibatch", leave=False)
             for x_batch, y_batch in minibatch_iter:
                 optimizer.zero_grad()
-                x_batch=x_batch.cuda()
-                y_batch=y_batch.cuda()
+                if self.use_cuda:
+                    x_batch=x_batch.cuda()
+                    y_batch=y_batch.cuda()
                 output = self.gp(x_batch)
                 loss = -self.mll(output, y_batch)
                 minibatch_iter.set_postfix(loss=loss.item())
@@ -150,13 +154,13 @@ class StocasticVariationalGaussianProcess():
         return predictions.variance
     def predict(self,x):
         x=torch.from_numpy(x).float()
-        if torch.cuda.is_available():
+        if self.use_cuda:
             x=x.cuda()
         predictions = self.gp.likelihood(self.gp(x))
         return predictions.mean.detach().cpu().numpy(), predictions.variance.cpu().detach().numpy()
          
     def derivative(self, x): 
         x=torch.from_numpy(x).float()
-        if torch.cuda.is_available():
+        if self.use_cuda:
             x=x.cuda()
         return jacobian(self.mean_fun, x).cpu().detach().numpy()#, jacobian(self.variance_fun, x).detach().numpy()
