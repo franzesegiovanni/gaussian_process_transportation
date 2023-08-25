@@ -1,12 +1,15 @@
 """
-Authors: Ravi Prakash & Giovanni Franzese, March 2023
+Authors: Giovanni Franzese, Ravi Prakash March 2023
 Email: g.franzese@tudelft.nl, r.prakash@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 import numpy as np
 class AffineTransform():
-    def __init__(self):
+    def __init__(self, do_scale=True, do_rotation=True):
+        self.do_scale = do_scale
+        self.do_rotation = do_rotation
+        self.scale = 1
         pass
 
     def fit(self, source_points, target_points):
@@ -19,9 +22,7 @@ class AffineTransform():
         self.source_points_centered=source_points-self.S_centroid
         self.target_points_centered=target_points-self.T_centroid
 
-        if source_points.shape[1] == 2 and source_points.shape[0] < 2:
-            self.rotation_matrix= np.eye(source_points.shape[1])
-        elif source_points.shape[1] == 3 and source_points.shape[0] < 3:
+        if not self.do_rotation or (source_points.shape[1] == 2 and source_points.shape[0] < 2) or (source_points.shape[1] == 3 and source_points.shape[0] < 3):
             self.rotation_matrix= np.eye(source_points.shape[1])
         else:    
             #  Compute covariance matrix
@@ -35,9 +36,11 @@ class AffineTransform():
                 V[:,-1]*= -1
                 self.rotation_matrix= V @ U.T
 
-        source_rotated=np.transpose(self.rotation_matrix @ np.transpose((self.source_points_centered)))
-        self.scale = np.sum(source_rotated * self.target_points_centered) / np.sum(source_rotated**2)
+        if self.do_scale:
+            source_rotated=np.transpose(self.rotation_matrix @ np.transpose((self.source_points_centered)))
+            self.scale = np.sum(source_rotated * self.target_points_centered) / np.sum(source_rotated**2)
         print ("Rotation Matrix of the Affine Matrix:", self.rotation_matrix)
+        print ("Scaling factor:", self.scale)
         #Compute translation
         self.translation=self.T_centroid-self.S_centroid
         

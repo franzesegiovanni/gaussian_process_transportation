@@ -65,14 +65,15 @@ class Transport():
     def apply_transportation(self):
               
         #Deform Trajactories 
-        traj_rotated=self.affine_transform.predict(self.training_traj)
-        delta_map_mean, self.std= self.gp_delta_map.predict(traj_rotated, return_std=True)
-        self.training_traj = traj_rotated + delta_map_mean 
+        self.training_traj_old=self.training_traj
+        self.traj_rotated=self.affine_transform.predict(self.training_traj)
+        delta_map_mean, self.std= self.gp_delta_map.predict(self.traj_rotated, return_std=True)
+        self.training_traj = self.traj_rotated + delta_map_mean 
 
         #Deform Deltas and orientation
         for i in range(len(self.training_traj[:,0])):
             if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
-                pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
+                pos=(np.array(self.traj_rotated[i,:]).reshape(1,-1))
                 [Jacobian,_]=self.gp_delta_map.derivative(pos)
                 rot_gp= np.eye(Jacobian[0].shape[0]) + np.transpose(Jacobian[0]) 
                 rot_affine= self.affine_transform.rotation_matrix
@@ -94,6 +95,19 @@ class Transport():
                     quat_stiff=quaternion.from_rotation_matrix(rot_stiff)
                     self.training_stiff_ori[i,:]=np.array([quat_stiff.w, quat_stiff.x, quat_stiff.y, quat_stiff.z])
     
+    def check_invertibility(self):
+        y= self.traj_rotated - self.training_traj
+        x= self.training_traj
+        gp_delta_map_inv=GaussianProcess(kernel=self.kernel_transport, n_restarts_optimizer=5)
+        gp_delta_map_inv.fit(x, y)
+        delta_map_mean, self.std= gp_delta_map_inv.predict(x, return_std=True)
+        traj_rotated_inv=delta_map_mean+ self.training_traj
+        score=gp_delta_map_inv.gp.score(x, y)
+        print("Score", gp_delta_map_inv.gp.score(x, y))
+        # print("Error in the transportation map:", np.linalg.norm(self.traj_rotated-traj_rotated_inv))
+        print( 'The transportation map is inveritible')
+        print(score>0.99)
+        # print(np.all(np.abs(traj_rotated_inv-  self.traj_rotated) < tollerance))
 
     def fit_transportation_linear(self):
         self.affine_transform=AffineTransform()
