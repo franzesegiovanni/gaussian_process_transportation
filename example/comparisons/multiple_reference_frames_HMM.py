@@ -86,9 +86,17 @@ for i in range(len(demos_x)):
 demos_A_xdx_new = [np.kron(np.eye(2), d) for d in demos_A_new]
 demos_b_xdx_new = [np.concatenate([d, np.zeros(d.shape)], axis=-1) for d in demos_b_new]
 
-model = pbd.HMM(nb_states=5, nb_dim=8) # nb_states is the number of Gaussian components
+nb_states = 5
+model = pbd.HMM(nb_states=nb_states, nb_dim=8) # nb_states is the number of Gaussian components
 
+horizon_mean=0
+for i in range(len(demos_xdx)):
+    horizon_mean=np.max([horizon_mean, demos_xdx[i].shape[0]])
 
+horizon_mean=2*horizon_mean
+print(horizon_mean)
+# horizon_mean=int(horizon_mean/len(demos_xdx))
+# horizon_mean=200
 sampled_demo=random.sample(demos_xdx_augm, 9)
 indices = [demos_xdx_augm.index(element) for element in sampled_demo]
 model.init_hmm_kbins(sampled_demo) # initializing model
@@ -105,9 +113,16 @@ def execute(i, A, b, distribution, start, plot=True, training_set=False):
     _prod = _mod1 * _mod2
     
     # get the most probable sequence of state for this demonstration
-    sq = model.viterbi(demos_xdx_augm[i])
+    if training_set:
+        sq = model.viterbi(demos_xdx_augm[i])
+        lqr = pbd.PoGLQR(nb_dim=2, dt=0.05, horizon=demos_xdx[i].shape[0])
+    else:
+        sq = [int(count // (horizon_mean/nb_states)) for count in range(horizon_mean)]
+        lqr = pbd.PoGLQR(nb_dim=2, dt=0.05, horizon=horizon_mean)       
+    #sq = [i // (n/m) for i in range(n)]
     # solving LQR with Product of Gaussian, see notebook on LQR
-    lqr = pbd.PoGLQR(nb_dim=2, dt=0.05, horizon=demos_xdx[i].shape[0])
+    
+
     lqr.mvn_xi = _prod.concatenate_gaussian(sq) # augmented version of gaussian
     lqr.mvn_u = -4.
     lqr.x0 = start
@@ -126,8 +141,6 @@ def execute(i, A, b, distribution, start, plot=True, training_set=False):
 
     if training_set==True:
         ax.plot(demos_x[i][:, 0], demos_x[i][:, 1], 'k--', lw=2)
-    
-    if training_set==True:
         df = similaritymeasures.frechet_dist(demos_x[i], xi[:,0:2])
         # area between two curves
         area = similaritymeasures.area_between_two_curves(demos_x[i], xi[:,0:2])
@@ -204,7 +217,7 @@ ax.set_facecolor('white')
 # ax.patch.set_edgecolor('black')
 fig.savefig('figs/hmm_new.png', dpi=1200, bbox_inches='tight')
 
-# plt.show()
+plt.show()
 
 # Experiments
 number_repetitions=20
