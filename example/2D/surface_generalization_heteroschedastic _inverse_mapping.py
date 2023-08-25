@@ -7,7 +7,12 @@ This code is part of TERI (TEaching Robots Interactively) project
 
 #%%
 import numpy as np
+import sklearn
+if sklearn.__version__!='1.3.0':
+    print('Please install scikit-learn 1.3.0')
+    exit()
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
+
 import matplotlib.pyplot as plt
 from GILoSA import GaussianProcess as GPR
 # from GILoSA import HeteroschedasticGaussianProcess as HGPR
@@ -48,7 +53,6 @@ x_grid=np.linspace(np.min(X[:,0]-10), np.max(X[:,0]+10), 100)
 y_grid=np.linspace(np.min(X[:,1]-10), np.max(X[:,1]+10), 100)
 plot_vector_field(gp_deltaX, x_grid,y_grid,X,S)
 
-plt.figure()
 x_grid=np.linspace(np.min(X[:,0]-10), np.max(X[:,0]+10), 100)
 y_grid=np.linspace(np.min(X[:,1]-10), np.max(X[:,1]+10), 100)
 
@@ -56,7 +60,7 @@ X_, Y_ = np.meshgrid(x_grid, y_grid)
 input=np.hstack((X_.reshape(-1,1),Y_.reshape(-1,1)))
 
 sigma_noise_prediction=[]
-std_gp=gp_deltaX.predict(input)[1]
+std_gp=gp_deltaX.predict(input)[1][:,0]
 
 std_gp=std_gp.reshape(X_.shape)
 fig = plt.figure()
@@ -138,13 +142,13 @@ for i in range(len(input)):
     traj_rotated=transport_inverse.affine_transform.predict(input[i].reshape(1,-1))
     delta_map_mean, std= transport_inverse.gp_delta_map.predict(traj_rotated)
     transported_traj = traj_rotated + delta_map_mean 
-    var_derivative=std**2/(np.linalg.norm(transport_inverse.gp_delta_map.kernel_params_[0]))**2
+    var_derivative=std[0][0]**2/(np.linalg.norm(transport_inverse.gp_delta_map.kernel_params_[0]))**2
     sigma_noise_prediction.append(var_derivative)
 
 sigma_noise_prediction=np.array(sigma_noise_prediction)
 
 # print(sigma_noise_prediction)
-std_gp=gp_deltaX1.predict(input)[1]
+std_gp=gp_deltaX1.predict(input)[1][:,0]
 
 std_gp=std_gp.reshape(X.shape)
 
