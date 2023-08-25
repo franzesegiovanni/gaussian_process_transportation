@@ -80,6 +80,8 @@ X1=transport.training_traj
 deltaX1=transport.training_delta 
 x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 200)
 y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 200)
+      
+transport.check_invertibility()
 
 # Fit the Gaussian Process dynamical system   
 print('Fitting the GP dynamical system on the transported trajectory')
