@@ -31,16 +31,16 @@ class Surface_PointCloud_Detector():
 
         # For Cleaning experiment
         self.view_marker.header.frame_id = "panda_link0"
-        self.view_marker.pose.position.x = 0.4585609490798406
-        self.view_marker.pose.position.y = -0.04373075604079746
-        self.view_marker.pose.position.z = 0.6862181406538658
-        self.view_marker.pose.orientation.w = 0.03724672277393113
-        self.view_marker.pose.orientation.x =  0.9986700943869168
-        self.view_marker.pose.orientation.y =  0.03529063207161849
-        self.view_marker.pose.orientation.z = -0.004525063460755314
+        self.view_marker.pose.position.x = 0.37216857
+        self.view_marker.pose.position.y = -0.07206429
+        self.view_marker.pose.position.z = 0.71190887
+        self.view_marker.pose.orientation.w = 0.02090975
+        self.view_marker.pose.orientation.x =  0.99741665
+        self.view_marker.pose.orientation.y =  0.02242987
+        self.view_marker.pose.orientation.z = 0.06492219
 
 
-        rospy.Subscriber("/camera/depth_registered/points", PointCloud2, self.pointcloud_subscriber_callback)
+        rospy.Subscriber("/camera/depth_registered/points", PointCloud2, self.pointcloud_subscriber_callback, queue_size=1)
         self.point_cloud = o3d.geometry.PointCloud()
         self.source_distribution = None
         self.target_distribution = None
@@ -146,7 +146,7 @@ class Surface_PointCloud_Detector():
  
         print("Find the points corresponding of the selected grid")
         gp_distribution=StocasticVariationalGaussianProcess(distribution_np[:,:2], distribution_np[:,2].reshape(-1,1), num_inducing=1000)
-        gp_distribution.fit(num_epochs=20) 
+        gp_distribution.fit(num_epochs=5) 
         newZ,_ = gp_distribution.predict(meshgrid_distribution)
 
         distribution_surface=np.hstack([meshgrid_distribution,newZ.reshape(-1,1)])
@@ -159,11 +159,9 @@ class Surface_PointCloud_Detector():
         pass
 
     def record_source_distribution(self):
-        rospy.sleep(5)
         source_cloud = self.point_cloud
         self.source_distribution = self.record_distribution(source_cloud)
 
     def record_target_distribution(self):
-        rospy.sleep(1)
         target_cloud = self.point_cloud
         self.target_distribution = self.record_distribution(target_cloud)
