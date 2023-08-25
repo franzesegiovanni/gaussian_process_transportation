@@ -55,6 +55,8 @@ GILoSA.load_distributions()
 time.sleep(1)
 print("Train the Gaussian Process Models")
 GILoSA.Train_GPs()
+GILoSA.find_alpha()
+
 #%%
 time.sleep(1)
 print("Reset to the starting cartesian position demo")
@@ -75,16 +77,18 @@ GILoSA.go_to_pose(start)
 #%% 
 time.sleep(1)
 print("Interactive Control through source distribution")
-GILoSA.Interactive_Control(verboose=False)
+GILoSA.Interactive_Control()
 
 
 #%%
 time.sleep(1)
 print("Find the transported policy")
 # GILoSA.kernel_transport=C(0.1) * RBF(length_scale=[0.1, 0.1, 0.1]) + WhiteKernel(0.0001)
-GILoSA.fit_trasportation()
-GILoSA.apply_trasportation()
+GILoSA.fit_transportation()
+GILoSA.apply_transportation()
 GILoSA.Train_GPs() # Train your policy after transporting the trajectory and the deltas
+GILoSA.find_alpha()
+
 #%%
 time.sleep(1)
 print("Reset to the starting cartesian position if you loaded the demo")
@@ -102,9 +106,10 @@ start.pose.orientation.z = GILoSA.training_ori[0,3]
 GILoSA.go_to_pose(start)
 
 #%% 
+
 time.sleep(1)
 print("Interactive Control through target distribution")
-GILoSA.Interactive_Control(verboose=False)
+GILoSA.Interactive_Control()
 
 # %%
 

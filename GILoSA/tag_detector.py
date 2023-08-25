@@ -61,24 +61,26 @@ class Tag_Detector():
                     target_array=np.vstack((target_array,t))
                     source_array=np.vstack((source_array,s))
                     if use_orientation==True:
-                        # Conrners target 
-                        quat_t=quaternion.from_float_array(np.array([detection_target.pose.orientation.w, detection_target.pose.orientation.x, detection_target.pose.orientation.y, detection_target.pose.orientation.z]))
-                        rot_t=quaternion.as_rotation_matrix(quat_t)
-                        marker_corners=marker_corners(self.marker_dimensions)
-                        translated_corners = marker_corners + t
-                        # Rotate marker's corners based on the quaternion
-                        rotated_corners = np.dot(rot_t, translated_corners.T).T
-                        target_array=np.vstack((target_array,rotated_corners))
-
                         #Corners source
 
                         quat_s=quaternion.from_float_array(np.array([detection_source.pose.orientation.w, detection_source.pose.orientation.x, detection_source.pose.orientation.y, detection_source.pose.orientation.z]))
                         rot_s=quaternion.as_rotation_matrix(quat_s)
-                        marker_corners=marker_corners(self.marker_dimensions)
-                        translated_corners = marker_corners + s
+                        marker_corners=detect_marker_corners(1*detection_source_in_camera.size[0])
                         # Rotate marker's corners based on the quaternion
-                        rotated_corners = np.dot(rot_s, translated_corners.T).T
-                        source_array=np.vstack((target_array,rotated_corners))
+                        rotated_corners = np.dot(rot_s, marker_corners.T).T + s 
+                        rotated_corners[:,-1]=s[-1]
+                        source_array=np.vstack((source_array,rotated_corners))
+
+                        # Conrners target 
+                        quat_t=quaternion.from_float_array(np.array([detection_target.pose.orientation.w, detection_target.pose.orientation.x, detection_target.pose.orientation.y, detection_target.pose.orientation.z]))
+                        rot_t=quaternion.as_rotation_matrix(quat_t)
+                        marker_corners=detect_marker_corners(1*detection_target_in_camera.size[0])
+                        # Rotate marker's corners based on the quaternion
+                        rotated_corners = np.dot(rot_t, marker_corners.T).T + t
+                        rotated_corners[:,-1]=t[-1]
+                        target_array=np.vstack((target_array,rotated_corners))
+
+  
                         
         self.target_distribution=target_array
         self.source_distribution=source_array
@@ -132,11 +134,9 @@ class Tag_Detector():
         for i in range(self.recorded_traj_tag.shape[0]):
             self.set_attractor(self.recorded_traj_tag[i,:], self.recorded_ori_tag[i,:])
             self.continuous_record(distribution)
-            self.r_rec.sleep()        
+            self.r_rec.sleep() 
 
-
-        
-def  marker_corners(marker_dimension):
+def  detect_marker_corners(marker_dimension):
     marker_corners = np.array([
             [-marker_dimension/2, -marker_dimension/2, 0],
             [-marker_dimension/2, marker_dimension/2, 0],
