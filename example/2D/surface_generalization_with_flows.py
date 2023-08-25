@@ -11,7 +11,7 @@ from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantK
 import matplotlib.pyplot as plt
 from GILoSA import GaussianProcess as GPR
 from GILoSA import AffineTransform 
-from GILoSA import Transport
+from GILoSA.bijective_transport import Neural_Transport as Transport
 import pathlib
 from plot_utils import plot_vector_field_minvar, plot_vector_field 
 import warnings
