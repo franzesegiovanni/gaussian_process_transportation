@@ -71,12 +71,30 @@ target_distribution, _  =gp_S1.predict(index)
 num_nodes = X.shape[0]
 G = nx.path_graph(num_nodes)
 G = nx.cycle_graph(num_nodes)
+
+# Create a new graph
+combined_graph = nx.Graph()
+
+# Add nodes from the cycle graph to the combined graph
+combined_graph.add_nodes_from(G.nodes())
+combined_graph.add_edges_from(G.edges())
+
+# # Connect each node in the cycle graph to a new node in the combined graph
+for m in range(num_nodes):
+    combined_graph.add_node(m + num_nodes)  # Adding a new node with label = node + 5
+    combined_graph.add_edge(m, m + num_nodes)  # Connecting to a new node with label = node + 5
+
+
+G=combined_graph
+plt.figure()
+nx.draw(G, with_labels=True, node_size=100, node_color="skyblue")
 # Compute the graph Laplacian matrix
 L = nx.laplacian_matrix(G).toarray()
-# print(L.shape)
+print(L)
 
 # print(X.shape)
-DELTA= L @ X 
+X_tot= np.vstack([X, X+deltaX])
+DELTA= L @ X_tot 
 
 # print(DELTA)
 
@@ -119,7 +137,10 @@ diff[mask_traj]=target_distribution[mask_dist] - affine.predict(source_distribut
 constraint= np.zeros_like(X)
 constraint[mask_traj]= X[mask_traj]+ diff[mask_traj]
 
+constraint=np.vstack([constraint, np.zeros_like(constraint)])
+mask_traj=np.hstack([mask_traj, np.zeros_like(mask_traj)])
 P_hat=np.diag(1*mask_traj)
+
 
 
 A= np.vstack([L, P_hat])
@@ -127,9 +148,30 @@ A= np.vstack([L, P_hat])
 B= np.vstack([DELTA, constraint])
 
 P_s= np.linalg.pinv(A) @ B
+
+X1= P_s[:len(X),:]
+deltaX1=np.zeros_like(X1)
+# deltaX1= P_s[len(X):,:] - X1
+for j in range(len(X)-1):
+    deltaX1[j,:]=(X1[j+1,:]-X1[j,:])
 plt.figure()
-plt.scatter(P_s[:,0],P_s[:,1]) 
+plt.scatter(P_s[len(X):,0],P_s[len(X):,1]) 
+plt.scatter(P_s[:len(X),0],P_s[:len(X),1]) 
 plt.scatter(S1[:,0],S1[:,1])
+
+
+
+x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 200)
+y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 200)
+      
+
+
+# Fit the Gaussian Process dynamical system   
+print('Fitting the GP dynamical system on the transported trajectory')
+k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01 ) #this kernel works much better!    
+gp_deltaX1=GPR(kernel=k_deltaX1)
+gp_deltaX1.fit(X1, deltaX1)
+plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,S1)
 plt.show()  
 
 
