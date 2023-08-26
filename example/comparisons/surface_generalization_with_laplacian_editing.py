@@ -1,10 +1,6 @@
-import numpy as np
-import networkx as nx
-from scipy.linalg import eig
-
 """
-Authors:  Giovanni Franzese and Ravi Prakash, Dec 2022
-Email: g.franzese@tudelft.nl, r.prakash-1@tudelft.nl
+Authors:  Giovanni Franzese 
+Email: g.franzese@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
@@ -14,13 +10,12 @@ import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 from GILoSA import GaussianProcess as GPR
-from GILoSA import AffineTransform 
-from GILoSA import Transport
+from GILoSA import AffineTransform
 import pathlib
 from plot_utils import plot_vector_field_minvar, plot_vector_field 
 import warnings
-import numpy as np
 from scipy.spatial import cKDTree
+import networkx as nx
 warnings.filterwarnings("ignore")
 #%% Load the drawings
 
@@ -114,9 +109,13 @@ mask_dist=np.array(list(matched_indices))
 # print(np.array(list(matched_indices)))
 # print(mask_traj)
 
+affine=AffineTransform()
+affine.fit(source_distribution, target_distribution)
+X=affine.predict(X)
+
 diff=np.zeros_like(X)
 
-diff[mask_traj]=target_distribution[mask_dist]- source_distribution[mask_dist]
+diff[mask_traj]=target_distribution[mask_dist] - affine.predict(source_distribution[mask_dist])
 constraint= np.zeros_like(X)
 constraint[mask_traj]= X[mask_traj]+ diff[mask_traj]
 
