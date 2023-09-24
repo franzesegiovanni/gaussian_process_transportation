@@ -43,6 +43,7 @@ class Drawing():
         if key == KeyCode.from_char('z'):
             self.keep_drawing = True
         elif key == KeyCode.from_char('w'):
+            print("Saving the source surface")
             x= self.x[self.idx:]
             y=self.y[self.idx:]
             z=self.z[self.idx:]
@@ -53,12 +54,14 @@ class Drawing():
             self.idx=len(self.x)
             self.keep_drawing = False
         elif key == KeyCode.from_char('d'):
+            print("Saveing the demo")
             x= self.x[self.idx:]
             y=self.y[self.idx:]
             self.demo = np.array([x,y]).T
             self.idx=len(self.x)
             self.keep_drawing = False
         elif key == KeyCode.from_char('n'):
+            print("Saving the target surface")
             x= self.x[self.idx:]
             y=self.y[self.idx:]
             self.newfloor = np.array([x,y]).T

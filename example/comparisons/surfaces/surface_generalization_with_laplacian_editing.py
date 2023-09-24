@@ -1,16 +1,9 @@
-"""
-Authors:  Giovanni Franzese and Ravi Prakash, Dec 2022
-Email: g.franzese@tudelft.nl, r.prakash-1@tudelft.nl
-Cognitive Robotics, TU Delft
-This code is part of TERI (TEaching Robots Interactively) project
-"""
-
 #%%
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
-from policy_transportation import GaussianProcessTransportation as Transport
+from policy_transportation.transportation.laplacian_editing_transportation import LaplacianEditingTransportation as Transport
 import pathlib
 from policy_transportation.plot_utils import plot_vector_field 
 from policy_transportation.utils import resample
@@ -57,12 +50,6 @@ transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
 
-
-k_transport = C(constant_value=np.sqrt(0.1))  * RBF(40*np.ones(2), length_scale_bounds=[0.01, 500]) + WhiteKernel(0.01, noise_level_bounds=[0.01, 0.1] )
-k_transport = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), length_scale_bounds=[20, 500] ,  nu=2.5) + WhiteKernel(0.01,  noise_level_bounds=[0.01, 0.1] ) #this kernel works much better!
-transport.kernel_transport=k_transport
-# print("Optimize the lengthscale to make the mapping to be a diffemorphism")      
-# transport.optimize_diffeomorphism()
 print('Transporting the dynamical system on the new surface')
 transport.fit_transportation()
 transport.apply_transportation()
@@ -76,5 +63,5 @@ gp_deltaX1=GPR(kernel=k_deltaX1)
 gp_deltaX1.fit(X1, deltaX1)
 x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 200)
 y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 200)
-plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,S1)
+plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,target_distribution)
 plt.show()

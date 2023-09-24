@@ -14,13 +14,14 @@ if sklearn.__version__!='1.3.0':
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 
 import matplotlib.pyplot as plt
-from GILoSA import GaussianProcess as GPR
+from policy_transportation import GaussianProcess as GPR
 # from GILoSA import HeteroschedasticGaussianProcess as HGPR
-from GILoSA import Transport
+from policy_transportation import Transport
 import pathlib
-from plot_utils import plot_vector_field_minvar, plot_vector_field 
+from policy_transportation.plot_utils import plot_vector_field_minvar, plot_vector_field 
 import warnings
 warnings.filterwarnings("ignore")
+from utils import resample  
 #%% Load the drawings
 
 data =np.load(str(pathlib.Path().resolve())+'/data/'+str('example')+'.npz')
@@ -68,23 +69,9 @@ ax = fig.add_subplot(111, projection='3d')
 surf = ax.plot_surface(X_, Y_, std_gp, linewidth=0, antialiased=True, cmap=plt.cm.inferno)
 plt.axis('off')
 
-#%% Fit a GP to both surfaces and sample equal amount of indexed points, find delta pointcloud between old and sampled new surface
-indexS = np.linspace(0, 1, len(S[:,0]))
-indexS1 = np.linspace(0, 1, len(S1[:,0]))
-k_S = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(1)) + WhiteKernel(0.01 )  
-gp_S=GPR(kernel=k_S)
-gp_S.fit(indexS.reshape(-1,1),S)
-
-k_S1 = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(1)) + WhiteKernel(0.01 )  
-gp_S1=GPR(kernel=k_S1)
-gp_S1.fit(indexS1.reshape(-1,1),S1)
-
-index = np.linspace(0, 1, 100).reshape(-1,1)
-deltaPC = np.zeros((len(index),2))
-
-source_distribution, _  =gp_S.predict(index)   
-target_distribution, _  =gp_S1.predict(index)
-
+# Create a source and a target distribution with the same number of nodes
+source_distribution=resample(S)
+target_distribution=resample(S1)
 #%% Transport the dynamical system on the new surface
 transport=Transport()
 transport.source_distribution=source_distribution 

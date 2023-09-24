@@ -15,10 +15,12 @@ from interface import Drawing
 
 #%% Get a  surface and demonstration from interactive interface
 # This opens an interactive window to record surface and demonstration.
-# Press once 'z' to start drawing. Once the drawing is done, press 'w' or 'd' or 'n'
+# Press once 'z' to start drawing. 
+# Press 'w' to save the drawing as surface
+# Press 'd' to save the drawing as demo
+# Press 'n' to save the drawing as new surface
 # to save the drawing as surface or demo or new surface respectively (This also stops the drawing )
 # Press 'q' to exit
-%matplotlib qt
 Surface_Demo = Drawing(draw=2)
 
 #%% Visualize the drawings
@@ -35,6 +37,6 @@ plt.scatter(newsurface[:,0],newsurface[:,1], color=[0,0,1])
 
 #%% Save the drawings
 
-Surface_Demo.save(data='indexing2')
+Surface_Demo.save(data='indexing6')
 
 # %%

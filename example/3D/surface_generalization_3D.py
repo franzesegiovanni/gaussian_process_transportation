@@ -9,10 +9,10 @@ This code is part of TERI (TEaching Robots Interactively) project
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
-from GILoSA import GaussianProcess as GPR
+from policy_transportation import GaussianProcess as GPR
 import pathlib
-from plot_utils import *
-from GILoSA import Transport
+from policy_transportation.plot_utils import *
+from policy_transportation import GaussianProcessTransportation as Transport
 import warnings
 warnings.filterwarnings("ignore")
 # Load the drawings

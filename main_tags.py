@@ -7,15 +7,14 @@ This code is part of TERI (TEaching Robots Interactively) project
 #%%
 import warnings
 warnings.filterwarnings("ignore")
-from GILoSA.modules import GILoSA_tag as GILoSA
-#from GILoSA.modules import GILoSA_surface
+from modules import Tag_Transportation
 import time
 from geometry_msgs.msg import PoseStamped
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel as C
 import numpy as np
 #%%
 if __name__ == '__main__':
-    GILoSA=GILoSA()
+    GILoSA=Tag_Transportation()
     GILoSA.connect_ROS()
     time.sleep(1)
     # GILoSA.home_gripper()

@@ -10,9 +10,9 @@ import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 import pathlib
-from plot_utils import plot_vector_field_minvar
-from GILoSA import GaussianProcess as GPR
-from GILoSA import Transport
+from policy_transportation.plot_utils import plot_vector_field_minvar
+from policy_transportation import GaussianProcess as GPR
+from policy_transportation import Transport
 import warnings
 warnings.filterwarnings("ignore")
 # %matplotlib inline

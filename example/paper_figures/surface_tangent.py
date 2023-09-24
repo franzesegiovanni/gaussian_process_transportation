@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from GILoSA import GaussianProcess as GPR
+from policy_transportation import GaussianProcess as GPR
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
-from GILoSA import Transport
+from policy_transportation import Transport
 # Define the parametric equations of the surface
 def surface_equations(u, v):
     x = u

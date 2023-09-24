@@ -57,15 +57,9 @@ transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
 
-
-k_transport = C(constant_value=np.sqrt(0.1))  * RBF(40*np.ones(2), length_scale_bounds=[0.01, 500]) + WhiteKernel(0.01, noise_level_bounds=[0.01, 0.1] )
-k_transport = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), length_scale_bounds=[20, 500] ,  nu=2.5) + WhiteKernel(0.01,  noise_level_bounds=[0.01, 0.1] ) #this kernel works much better!
-transport.kernel_transport=k_transport
-# print("Optimize the lengthscale to make the mapping to be a diffemorphism")      
-# transport.optimize_diffeomorphism()
 print('Transporting the dynamical system on the new surface')
-transport.fit_transportation()
-transport.apply_transportation()
+transport.fit_transportation_linear()
+transport.apply_transportation_linear()
 X1=transport.training_traj
 deltaX1=transport.training_delta 
 

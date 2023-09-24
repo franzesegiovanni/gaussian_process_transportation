@@ -1,12 +1,12 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
-    name='GILoSA',
-    version='0.0.0',
-    description='Interactive Learning of Stiffness and Attractors',
+    name='policy_transportation',
+    version='0.1.0',
+    description='Gaussian Process Transportation',
     author='Giovanni Franzese',
     author_email='g.franzese@tudelft.nl',
-    packages=['GILoSA'],
+    packages=find_packages(),
     install_requires=[
         'matplotlib',
         'numpy',
