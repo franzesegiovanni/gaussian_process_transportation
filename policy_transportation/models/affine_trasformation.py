@@ -6,7 +6,7 @@ This code is part of TERI (TEaching Robots Interactively) project
 """
 import numpy as np
 class AffineTransform():
-    def __init__(self, do_scale=False, do_rotation=True):
+    def __init__(self, do_scale=True, do_rotation=True):
         self.do_scale = do_scale
         self.do_rotation = do_rotation
         self.scale = 1

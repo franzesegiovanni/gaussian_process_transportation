@@ -163,7 +163,7 @@ class GaussianProcessTransportation():
         plt.show()
 
     def fit_transportation_linear(self):
-        self.affine_transform=AffineTransform()
+        self.affine_transform=AffineTransform(do_scale=True, do_rotation=True)
         self.affine_transform.fit(self.source_distribution, self.target_distribution)
 
     def apply_transportation_linear(self):

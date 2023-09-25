@@ -107,10 +107,10 @@ def draw_error_band(ax, x, y, err, loop=False, **kwargs):
     ny = -dx / l
 
     # end points of errors
-    xp = x + nx * err
-    yp = y + ny * err
-    xn = x - nx * err
-    yn = y - ny * err
+    xp = x + nx * err[:,0]
+    yp = y + ny * err[:,1]
+    xn = x - nx * err[:,0]
+    yn = y - ny * err[:,1]
 
     # print(xp.shape, xn.shape, yp.shape, yn.shape)
 

@@ -3,9 +3,9 @@ from matplotlib import pyplot as plt
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 # from sklearn.gaussian_process import GaussianProcessRegressor as GPR
 from policy_transportation import GaussianProcess as GPR
-from policy_transportation import Transport
+from policy_transportation import GaussianProcessTransportation as Transport
 from matplotlib.patches import Circle
-from plot_utils import plot_vector_field_minvar, draw_error_band
+from policy_transportation.plot_utils import draw_error_band
 import warnings
 import os
 import similaritymeasures
@@ -88,7 +88,7 @@ def execute(distribution_input, index_source, index_target, plot=True, training_
     transport.apply_transportation_linear()
     X1=transport.training_traj
     std=np.zeros_like(X1)
-    std=std[:,0]
+    std=std
 
     if plot==True:
         draw_error_band(ax, X1[:,0], X1[:,1], err=std, facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.8)

@@ -85,7 +85,7 @@ for model , name in zip(methods, names):
     deltaX1=model.training_delta 
     std=model.std
     std_list.append(std)
-    std=np.linalg.norm(std, axis=1)
+    # std=np.linalg.norm(std, axis=1)
     X_samples=model.sample_transportation()
     current_ax = ax[i // 3, i % 3]
 

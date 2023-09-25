@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 from policy_transportation import GaussianProcessTransportation as Transport
 from matplotlib.patches import Circle
-from plot_utils import plot_vector_field_minvar, draw_error_band
+from policy_transportation.plot_utils import draw_error_band
 import warnings
 import os
 import similaritymeasures
@@ -89,7 +89,7 @@ def execute(distribution_input, index_source, index_target, plot=True, training_
     transport.fit_transportation()
     transport.apply_transportation()
     X1=transport.training_traj
-    std=transport.std[:,0]
+    std=transport.std
 
     if plot==True:
         draw_error_band(ax, X1[:,0], X1[:,1], err=std, facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.8)
