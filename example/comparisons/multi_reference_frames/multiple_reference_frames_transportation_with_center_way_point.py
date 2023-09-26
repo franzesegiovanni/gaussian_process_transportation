@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 
 filename = 'reach_target'
 
-pbd_path = os. getcwd()  + '/data_hmm/'
+pbd_path = os. getcwd()  + '/data/'
 
 demos = np.load(pbd_path + filename + '.npy', allow_pickle=True, encoding='latin1')[()]
 

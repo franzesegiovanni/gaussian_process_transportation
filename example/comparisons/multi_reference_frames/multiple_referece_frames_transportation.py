@@ -82,7 +82,7 @@ def execute(distribution_input, index_source, index_target, plot=True, training_
 if __name__ == '__main__':
     filename = 'reach_target'
 
-    pbd_path = os. getcwd()  + '/data_hmm/'
+    pbd_path = os. getcwd()  + '/data/'
 
     demos = np.load(pbd_path + filename + '.npy', allow_pickle=True, encoding='latin1')[()]
 
@@ -95,10 +95,6 @@ if __name__ == '__main__':
     demos_A = [d for d in demos['A']]
     demos_b = [d for d in demos['b']]
 
-
-    # distribution_new=np.zeros((len(demos_x),len(demos_x[0])*len(demos_x[0]),2))
-    # distribution=np.zeros((len(demos_x),4,2))
-    # distribution_new=np.zeros((len(demos_x),4,2))
     distribution=np.zeros((len(demos_x),10,2))
     distribution_new=np.zeros((len(demos_x),10,2))
     final_distance=np.zeros((len(demos_x),2))
