@@ -138,7 +138,7 @@ class Multiple_reference_frames_HMM():
             print("Final Angle Distance  : ", final_angle_distance[0])
             return df, area, dtw, fde, final_angle_distance[0]
             
-    def generalize(self, A, b, start, final_distance_label=None, final_distance_angle=None, ax=None, plot=True, compute_metrics=False):
+    def generalize(self, A, b, start, final_distance_label=None, final_distance_angle=None, ax=None):
 
         _mod1 = self.model.marginal_model(slice(0, 4)).lintrans(A[0], b[0])
         _mod2 = self.model.marginal_model(slice(4, 8)).lintrans(A[1], b[1])
@@ -161,7 +161,7 @@ class Multiple_reference_frames_HMM():
         
         # pbd.plot_gmm(_mod1.mu, _mod1.sigma, swap=True, ax=ax[index_in_training_set], dim=[0, 1], color='steelblue', alpha=0.3)
         # pbd.plot_gmm(_mod2.mu, _mod2.sigma, swap=True, ax=ax[index_in_training_set], dim=[0, 1], color='orangered', alpha=0.3)
-        if plot==True:
+        if ax is not None:
             ax.grid(color='gray', linestyle='-', linewidth=1)
             # Customize the background color
             ax.set_facecolor('white')
@@ -178,7 +178,7 @@ class Multiple_reference_frames_HMM():
             ax.scatter(printing_points[0,0],printing_points[0,1], linewidth=10, alpha=0.9, c='green')
             ax.scatter(printing_points[2,0],printing_points[2,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])
 
-        if compute_metrics: 
+        if final_distance_label is not None and final_distance_angle is not None: 
             fd=  np.linalg.inv(A[1][0:2,0:2]) @ (xi[-1, 0:2] - b[1][0:2])
             fde=np.linalg.norm(final_distance_label-fd)
 

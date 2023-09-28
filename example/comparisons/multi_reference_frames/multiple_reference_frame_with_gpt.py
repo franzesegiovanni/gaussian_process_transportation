@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C
 from policy_transportation import GaussianProcessTransportation as Transport
+from generate_random_frame_orientation import generate_frame_orientation
 from policy_transportation.plot_utils import draw_error_band
 import warnings
 import os
@@ -178,8 +179,8 @@ if __name__ == '__main__':
     ax.grid(color='gray', linestyle='-', linewidth=1)
     # Customize the background color
     ax.set_facecolor('white')
-    # ax.set_xlim(-75, 105)
-    # ax.set_ylim(-95, 70)
+    ax.set_xlim(-80, 60)
+    ax.set_ylim(-80, 60)
     ax.axis('equal')
     # Customize the background color
     ax.set_facecolor('white')
@@ -228,7 +229,6 @@ if __name__ == '__main__':
         results_fad=results_fda )
 
     # Test on unknown data 
-    from generate_random_frame_orientation import generate_frame_orientation
     results_fde_new=[]
     results_fda_new=[]
     #Sample a demonstration at random and generalize on all the avaialable frames. Repeat this 20 times

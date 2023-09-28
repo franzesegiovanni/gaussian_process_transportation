@@ -2,18 +2,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 from generate_random_frame_orientation import generate_frame_orientation  
-from model_hmm import Multiple_reference_frames_HMM
+from models.model_hmm import Multiple_reference_frames_HMM
 import os
 # Experiments
-number_repetitions=1
-demonstrations = 8
-
+number_repetitions=20
+minimum_demonstrations=2 #numbber of demonstrations to use to train the gmm model
+maximum_demonstrations=9 #numbber of demonstrations that are available in total
 # Create an empty one-dimensional list with demonstrations using list comprehension
-results_df = [[] for _ in range(demonstrations)]
-results_area= [[] for _ in range(demonstrations)]
-results_dtw= [[] for _ in range(demonstrations)]
-results_fde= [[] for _ in range(demonstrations)]
-results_fad= [[] for _ in range(demonstrations)]
+results_df = [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
+results_area= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
+results_dtw= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
+results_fde= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
+results_fad= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
 
 
 filename = os. getcwd()  + '/data/' + 'reach_target'
@@ -36,9 +36,9 @@ for i in range(len(demos_x)):
     final_delta=np.linalg.inv(demos_A[i][0][1]) @ (demos_x[i][-1,:]-demos_x[i][-2,:])
     final_orientation[i]= np.arctan2(final_delta[1],final_delta[0])
 
-for i in range(demonstrations):
+for i in range(maximum_demonstrations-minimum_demonstrations):
     for j in range(number_repetitions):
-        sampled_demo=random.sample(demos_xdx_augm, i+1)
+        sampled_demo=random.sample(demos_xdx_augm, i+minimum_demonstrations)
         indices = [demos_xdx_augm.index(element) for element in sampled_demo]
         not_in_indices = [index for index in range(len(demos_xdx_augm)) if index not in indices]
         policy.demos_xdx_augm=sampled_demo
@@ -59,7 +59,7 @@ for i in range(demonstrations):
 
 # plt.show()
 
-np.savez('results_sota_dataset.npz', 
+np.savez('results_hmm_dataset.npz', 
     results_df=results_df, 
     results_area=results_area, 
     results_dtw=results_dtw,
@@ -68,9 +68,9 @@ np.savez('results_sota_dataset.npz',
 
 # Create random orientation of the frames
 
-results_df=np.zeros( ( number_repetitions, len(demos_x)) )
+results_df=np.zeros( (  number_repetitions, len(demos_x)) )
 results_area=np.zeros(( number_repetitions, len(demos_x)) )
-results_dtw=np.zeros(( number_repetitions, len(demos_x) ))
+results_dtw=np.zeros((  number_repetitions, len(demos_x) ))
 results_fde=np.zeros((  number_repetitions , len(demos_x) ))
 
 results_fde_new= []
@@ -82,7 +82,8 @@ policy.load_data(filename)
 policy.train()
 
 for j in range(number_repetitions):
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
+    ax=None
 
     demos_A_new, demos_b_new = generate_frame_orientation()
     demos_A_xdx_new = [np.kron(np.eye(2), d) for d in demos_A_new]
@@ -95,16 +96,13 @@ for j in range(number_repetitions):
         vel_new=A[0][2:4,2:4] @ np.linalg.inv(demos_A_xdx[k][0][0][2:4,2:4]) @ start[2:]
         start[2:]=vel_new
 
-        fde, fad = policy.generalize(A, b, start, ax=ax, plot=True, compute_metrics=True, final_distance_label=final_distance[k], final_distance_angle=final_orientation[k])
+        fde, fad = policy.generalize(A, b, start, ax=ax, final_distance_label=final_distance[k], final_distance_angle=final_orientation[k])
         results_fde_new.append(fde)
         results_fad_new.append(fad)
 
-plt.show()
-np.savez('results_sota_out_distribution.npz', 
+
+np.savez('results_hmm_out_distribution.npz', 
     results_fde=results_fde_new,
     results_fad=results_fad_new)
-# with open('results_sota_out_distribution.pickle', 'wb') as file:
-#     pickle.dump(results_fde_new, file)
 
-
-# with open('results_sota_out_distribution.pickle', 'rb') as file:
+plt.show()
