@@ -13,7 +13,7 @@ setup(
 	'pandas',
 	'pynput',
 	'rospy',
-	'scikit_learn',
+	'scikit_learn==1.3.1',
 	'scipy',
 	'sensor_msgs'],
     # Add other dependencies here
