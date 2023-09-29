@@ -15,8 +15,8 @@ results_dtw= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
 results_fde= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
 results_fad= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
 
-
-filename = os. getcwd()  + '/data/' + 'reach_target'
+script_path = str(os.path.dirname(__file__))
+filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_reference_frames_HMM()
 policy.load_data(filename)
 
@@ -44,7 +44,6 @@ for i in range(maximum_demonstrations-minimum_demonstrations):
         policy.demos_xdx_augm=sampled_demo
         policy.train()
 
-        #for k in range(len(demos_x)):
         # fig, ax = plt.subplots()
         for k in not_in_indices:    
             A, b = demos_A_xdx[k][0], demos_b_xdx[k][0]
@@ -59,7 +58,7 @@ for i in range(maximum_demonstrations-minimum_demonstrations):
 
 # plt.show()
 
-np.savez('results_hmm_dataset.npz', 
+np.savez(script_path + '/results/hmm_dataset.npz', 
     results_df=results_df, 
     results_area=results_area, 
     results_dtw=results_dtw,
@@ -76,7 +75,7 @@ results_fde=np.zeros((  number_repetitions , len(demos_x) ))
 results_fde_new= []
 results_fad_new= []
 #we use always all the demos in the training set and we compute the error to reach the final point in a new situation 
-filename = os. getcwd()  + '/data/' + 'reach_target'
+filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_reference_frames_HMM()
 policy.load_data(filename)
 policy.train()
@@ -85,7 +84,7 @@ for j in range(number_repetitions):
     # fig, ax = plt.subplots()
     ax=None
 
-    demos_A_new, demos_b_new = generate_frame_orientation()
+    demos_A_new, demos_b_new = generate_frame_orientation(filename)
     demos_A_xdx_new = [np.kron(np.eye(2), d) for d in demos_A_new]
     demos_b_xdx_new = [np.concatenate([d, np.zeros(d.shape)], axis=-1) for d in demos_b_new]
 
@@ -101,7 +100,7 @@ for j in range(number_repetitions):
         results_fad_new.append(fad)
 
 
-np.savez('results_hmm_out_distribution.npz', 
+np.savez(script_path +  '/results/hmm_out_distribution.npz', 
     results_fde=results_fde_new,
     results_fad=results_fad_new)
 

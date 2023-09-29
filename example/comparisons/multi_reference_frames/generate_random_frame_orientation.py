@@ -12,35 +12,17 @@ def random_rotation_matrix_2d(magnitude=0.1):
 
     return rotation_matrix
 
-def generate_frame_orientation():
-    filename = 'reach_target'
+def generate_frame_orientation(filename):
 
-    pbd_path = os. getcwd()  + '/data/'
-
-    demos = np.load(pbd_path + filename + '.npy', allow_pickle=True, encoding='latin1')[()]
+    demos = np.load(filename + '.npy', allow_pickle=True, encoding='latin1')[()]
 
     ### Trajectory data
     demos_x = demos['x'] # position
-    demos_dx = demos['dx'] # velocity
-    demos_xdx = [np.concatenate([x, dx], axis=1) for x, dx in zip(demos_x, demos_dx)] # concatenation
 
     ### Coordinate systems transformation
     demos_A = [d for d in demos['A']]
     demos_b = [d for d in demos['b']]
 
-
-    # distribution_new=np.zeros((len(demos_x),len(demos_x[0])*len(demos_x[0]),2))
-    distribution=np.zeros((len(demos_x),4,2))
-    distribution_new=np.zeros((len(demos_x),4,2))
-    index=2
-    for i in range(len(demos_x)):
-        distribution[i,0,:]=demos_b[i][0][0]
-        distribution[i,1,:]=demos_b[i][0][0]+demos_A[i][0][0] @ np.array([ 0, 10])
-        distribution[i,2,:]=demos_b[i][0][1]
-        distribution[i,3,:]=demos_b[i][0][1]+demos_A[i][0][1] @ np.array([ 0, -10])
-
-    A=np.empty((len(demos_x), 2, 2, 2))
-    B=np.empty((len(demos_x), 2, 2))
     demos_A_new=copy.deepcopy(demos_A)
     demos_b_new=copy.deepcopy(demos_b)
     translation_offeset=20
@@ -53,8 +35,6 @@ def generate_frame_orientation():
 
     return demos_A_new, demos_b_new
 
-# np.savez('demos_A.npz', demos_A_new)
-# np.savez('demos_b.npz', demos_b_new)
 if __name__ == '__main__':
     demos_A_new, demos_b_new = generate_frame_orientation()
     np.save('demos_A.npy', np.array(demos_A_new, dtype=object) , allow_pickle=True)

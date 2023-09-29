@@ -8,23 +8,22 @@ import os
 import similaritymeasures
 np.set_printoptions(precision=2) 
 class Multiple_reference_frames_TPGMM():
-    def __init__(self, nbVar = 3, nbFrames = 2, nbStates = 3, nbData = 100):
+    def __init__(self, nbVar = 3, nbFrames = 2, nbStates = 3, nbData = 20, total_time=1):
         self.nbVar = nbVar
         self.nbFrames = nbFrames
         self.nbStates = nbStates
         self.nbData = nbData
         self.resample_lenght = nbData
+        self.total_time=total_time
     def load_data(self, filename):
         # demos = np.load(filename + '.npy', allow_pickle=True, encoding='latin1')[()]
         ### Load data
-        pbd_path = os. getcwd() 
-        filename = '/data/reach_target'
-        demos = np.load(pbd_path + filename + '.npy', allow_pickle=True, encoding='latin1')[()]
+        demos = np.load(filename + '.npy', allow_pickle=True, encoding='latin1')[()]
         ### Trajectory data
         demos_x = demos['x'] # position
         for i in range(len(demos_x)):
             demos_x[i] = resample(demos_x[i], self.resample_lenght)
-            demos_x[i] = np.hstack([np.linspace(0, 2,self.resample_lenght).reshape(-1,1), demos_x[i]]) # 
+            demos_x[i] = np.hstack([np.linspace(0, self.total_time,self.resample_lenght).reshape(-1,1), demos_x[i]]) # 
 
         demos_A = demos['A']
         demos_b = demos['b']
@@ -94,7 +93,7 @@ class Multiple_reference_frames_TPGMM():
                     A[1:,1:]=-np.eye(2) @ A[1:,1:]
                     pmat_new[j, k] = p(A, B, np.linalg.inv(A), 3)
             starting_point_rel_new=self.starting_point_rel[i]+ self.demos_b[i][0][0].reshape(-1,)
-            rnewlist[i]=self.policy.reproduce(pmat_new, starting_point_rel_new)
+            rnewlist[i]=self.policy.reproduce(pmat_new, starting_point_rel_new, dt=self.total_time/self.resample_lenght)
         if ax is not None:
             #plot the new trajectories
             for i in index_partial_dataset:
@@ -103,7 +102,8 @@ class Multiple_reference_frames_TPGMM():
                 ax.scatter(self.print_points_frames[i][0,0],self.print_points_frames[i][0,1], linewidth=10, alpha=0.9, c='green')
                 ax.scatter(self.print_points_frames[i][2,0],self.print_points_frames[i][2,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])
                 ax.plot(rnewlist[i].Data[1,:], rnewlist[i].Data[2,:], color=[255.0/256.0,20.0/256.0,147.0/256.0])
-                ax.plot(self.demos_x[i][:,1].transpose(), self.demos_x[i][:,2].transpose(), 'k--', lw=2)
+                # ax.plot(self.demos_x[i][:,1].transpose(), self.demos_x[i][:,2].transpose(), 'k--', lw=2)
+                ax.scatter(self.demos_x[i][:,1].transpose(), self.demos_x[i][:,2].transpose())
 
         if compute_metrics:
             tot_df=[]
@@ -163,7 +163,7 @@ class Multiple_reference_frames_TPGMM():
         # starting_point_rel_new=starting_point_rel+ demos_b_new[i][0][0].reshape(-1,)
         # print(starting_point_rel_new)       
         # rnewlist.append(self.policy.reproduce(pmat_new, start))
-        rnew=self.policy.reproduce(pmat_new, start)
+        rnew=self.policy.reproduce(pmat_new, start, dt=self.total_time/self.resample_lenght)
 
         if ax is not None:
             # for i in range(len(A)):

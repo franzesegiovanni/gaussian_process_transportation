@@ -22,7 +22,8 @@ results_fde= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
 results_fad= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
 
 
-filename = os. getcwd()  + '/data/' + 'reach_target'
+script_path = str(os.path.dirname(__file__))
+filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_reference_frames_TPGMM()
 policy.load_data(filename)
 
@@ -49,7 +50,7 @@ for i in range(maximum_demonstrations-minimum_demonstrations):
 
 # plt.show()
 
-np.savez('results/results_tpgmm_dataset.npz', 
+np.savez(script_path + '/results/tpgmm_dataset.npz', 
     results_df=results_df, 
     results_area=results_area, 
     results_dtw=results_dtw,
@@ -58,11 +59,8 @@ np.savez('results/results_tpgmm_dataset.npz',
 
 # Out of distribution tests
 
-filename = 'reach_target'
 
-pbd_path = os. getcwd()  + '/data/'
-
-demos = np.load(pbd_path + filename + '.npy', allow_pickle=True, encoding='latin1')[()]
+demos = np.load(filename + '.npy', allow_pickle=True, encoding='latin1')[()]
 
 
 demos_A_new= demos['A']
@@ -74,16 +72,16 @@ results_fad_new= []
 # fig, ax = plt.subplots()
 ax=None
 for j in range(number_repetitions):
-    for i in range(9):
+    for i in range(len(demos_A_new)):
         # A, b = demos_A_xdx[i][0], demos_b_xdx[i][0]
-        demos_A_new, demos_b_new = generate_frame_orientation()
+        demos_A_new, demos_b_new = generate_frame_orientation(filename)
         A, b =demos_A_new[i][0], demos_b_new[i][0]
         start=policy.starting_point_rel[i] + demos_b_new[i][0][0]
         fde, fad = policy.generalize(A, b, start, ax=ax, final_distance_label=policy.final_distance[i], final_angle_label=policy.final_orientation[i])
         results_fde_new.append(fde)
         results_fad_new.append(fad)
 
-np.savez('results/results_tpgmm_out_distribution.npz', 
+np.savez(script_path+ '/results/tpgmm_out_distribution.npz', 
     results_fde=results_fde_new,
     results_fad=results_fad_new)
 # plt.show()

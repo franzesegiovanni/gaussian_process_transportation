@@ -7,18 +7,18 @@ This code is part of TERI (TEaching Robots Interactively) project
 
 #%%
 import numpy as np
-from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
+from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
 from policy_transportation.transportation.multi_layer_perceptron_transportation import MLPTrasportation as Transport
-import pathlib
 from policy_transportation.plot_utils import plot_vector_field 
 from policy_transportation.utils import resample
 import warnings
+import os 
 warnings.filterwarnings("ignore")
 #%% Load the drawings
-
-data =np.load(str(pathlib.Path().resolve())+'/data/'+str('example')+'.npz')
+script_path = str(os.path.dirname(__file__))
+data =np.load(script_path+'/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']

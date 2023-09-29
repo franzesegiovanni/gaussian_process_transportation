@@ -1,10 +1,8 @@
 #If the plot are completely random, please run the code again.
 import numpy as np
 import matplotlib.pyplot as plt
-import pathlib
-from policy_transportation import GaussianProcess as GPR  
 from policy_transportation import AffineTransform
-from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
+from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C
 from policy_transportation.plot_utils import draw_error_band
 from policy_transportation.utils import resample
 
@@ -16,14 +14,15 @@ from policy_transportation.transportation.multi_layer_perceptron_transportation 
 from policy_transportation.transportation.random_forest_transportation import RFTrasportation as RFT
 from policy_transportation.transportation.laplacian_editing_transportation import LaplacianEditingTransportation as LET
 from policy_transportation.transportation.torch.ensamble_bijective_transport import Neural_Transport as BNT
-
+import os
 
 import warnings
 warnings.filterwarnings("ignore")
 
 
 # Load the demonstration and the source and target surface
-data =np.load(str(pathlib.Path().resolve())+'/data/'+str('example')+'.npz')
+script_path = str(os.path.dirname(__file__))
+data =np.load(script_path+'/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
@@ -51,7 +50,7 @@ methods=[RFT, MLP, LET, BNT, GPT]
 names=["Esamble Random Forest", "Ensamble Neural Network", "Laplacian Editing", "Ensamble Neural Flows", "Gaussian Process Regression"]
 
 
-fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(12, 4))
+fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(16, 8))
 fig.subplots_adjust(wspace=0, hspace=0) 
 i=0
 X1_list = []
@@ -102,6 +101,8 @@ fig.tight_layout()
 
 legend=current_ax.legend(loc='upper left', fontsize=12)
 
+#Save figure
+plt.savefig(script_path+'/figs/transportation_comparison', bbox_inches='tight')
 
 divergence=np.zeros((len(X1_list), len(X1_list)))
 
@@ -118,11 +119,13 @@ table = ax.table(cellText=divergence,
 
 ax.set_title("KL Divergence between transported demonstrations")
 
+save_array_as_latex(divergence, script_path+ '/results/divergence.txt')
 distance_euclidean=np.zeros((len(X1_list), len(X1_list)))
 distance=np.zeros((len(X1_list), len(X1_list)))
 for i in range(len(X1_list)):
     for j in range(0, len(X1_list)):
         distance[i,j]=compute_distance(X1_list[i], X1_list[j], std_list[i], std_list[j])
+
 
 fig, ax = plt.subplots()
 
@@ -132,7 +135,7 @@ table = ax.table(cellText=distance,
                  loc='center')    
 
 ax.set_title("Distribution Distance between transported demonstrations")
-save_array_as_latex(distance, 'distance.txt')
+save_array_as_latex(distance, script_path + '/results/distribution_distance.txt')
 
 for i in range(len(X1_list)):
     for j in range(0, len(X1_list)):
@@ -146,7 +149,7 @@ table = ax.table(cellText=distance_euclidean,
                  loc='center')    
 
 ax.set_title("Euclidean Distance between transported demonstrations")
-save_array_as_latex(distance_euclidean, 'euclidean distance.txt')
+save_array_as_latex(distance_euclidean, script_path+ '/results/euclidean distance.txt')
 
 
 

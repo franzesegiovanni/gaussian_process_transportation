@@ -13,6 +13,7 @@ filename = script_path + '/data/' + 'reach_target'
 
 policy=Multiple_Reference_Frames_GPT()
 policy.load_dataset(filename)
+
 fig, ax = plt.subplots()
 ax.grid(color='gray', linestyle='-', linewidth=1)
 # Customize the background color
@@ -27,7 +28,7 @@ for target_index in range(9):
 fig.savefig(script_path + '/figs/gpt.png', dpi=1200, bbox_inches='tight')
 
 # Test on a differnet dataset
-filename = script_path  + '/data/reach_target_new'
+filename = script_path + '/data/' + 'reach_target_new'
 
 frames_new = np.load(filename + '.npy', allow_pickle=True, encoding='latin1')[()]
 

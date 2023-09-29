@@ -8,7 +8,8 @@ warnings.filterwarnings("ignore")
 warnings.filterwarnings( "ignore", module = "matplotlib\..*" )
 np.set_printoptions(precision=2) 
 
-filename = os. getcwd()  + '/data/' + 'reach_target'
+script_path = str(os.path.dirname(__file__))
+filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_reference_frames_HMM()
 policy.load_data(filename)
 policy.train()
@@ -22,14 +23,12 @@ for demo_index in range(9):
     df, area, dtw, fde, fad=policy.reproduce(demo_index, ax=ax, plot=True, compute_metrics=True)
 
 #save figure
-fig.savefig('figs/hmm.png', dpi=1200, bbox_inches='tight')
+fig.savefig(script_path + '/figs/hmm.png', dpi=1200, bbox_inches='tight')
 
 
-filename = 'reach_target_new'
+filename = script_path + '/data/' + 'reach_target_new'
 
-pbd_path = os. getcwd()  + '/data/'
-
-demos = np.load(pbd_path + filename + '.npy', allow_pickle=True, encoding='latin1')[()]
+demos = np.load(filename + '.npy', allow_pickle=True, encoding='latin1')[()]
 
 
 ### Coordinate systems transformation
@@ -54,6 +53,6 @@ for i in range(9):
     start[2:]=vel_new
     policy.generalize(A, b, start, ax=ax)
 
-fig.savefig('figs/hmm_new.png', dpi=1200, bbox_inches='tight')
+fig.savefig(script_path+ '/figs/hmm_new.png', dpi=1200, bbox_inches='tight')
 
 plt.show()

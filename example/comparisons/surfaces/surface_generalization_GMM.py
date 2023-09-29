@@ -11,16 +11,16 @@ import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR 
-import pathlib
 from policy_transportation.plot_utils import plot_vector_field 
 import warnings
 from policy_transportation import AffineTransform
 from policy_transportation.utils import resample
-
+import os
 warnings.filterwarnings("ignore")
 #%% Load the drawings
 
-data =np.load(str(pathlib.Path().resolve())+'/data/'+str('example')+'.npz')
+script_path = str(os.path.dirname(__file__))
+data =np.load(script_path+'/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']

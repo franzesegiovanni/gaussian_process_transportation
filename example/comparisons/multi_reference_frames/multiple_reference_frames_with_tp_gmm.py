@@ -7,7 +7,8 @@ warnings.filterwarnings("ignore")
 warnings.filterwarnings( "ignore", module = "matplotlib\..*" )
 np.set_printoptions(precision=2) 
 
-filename = os. getcwd()  + '/data/' + 'reach_target'
+script_path = str(os.path.dirname(__file__))
+filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_reference_frames_TPGMM()
 policy.load_data(filename)
 policy.train()
@@ -20,15 +21,13 @@ ax.set_ylim(-60, 60)
 policy.reproduce(ax=ax)
 
 #save figure
-fig.savefig('figs/tp_gmm.png', dpi=1200, bbox_inches='tight')
+fig.savefig(script_path+'/figs/tp_gmm.png', dpi=1200, bbox_inches='tight')
 
 # plt.show()
 
-filename = 'reach_target_new'
+filename = script_path + '/data/' + 'reach_target'
 
-pbd_path = os. getcwd()  + '/data/'
-
-demos = np.load(pbd_path + filename + '.npy', allow_pickle=True, encoding='latin1')[()]
+demos = np.load(filename + '.npy', allow_pickle=True, encoding='latin1')[()]
 
 ### Coordinate systems transformation
 
@@ -46,8 +45,7 @@ for i in range(9):
     start=policy.starting_point_rel[i] + demos_b_new[i][0][0]
     policy.generalize(A, b, start, ax=ax)
 
-fig.savefig('figs/tpgmm_new.png', dpi=1200, bbox_inches='tight')
+fig.savefig(script_path+'/figs/tpgmm_new.png', dpi=1200, bbox_inches='tight')
 
 plt.show()
 
-# Experiments
