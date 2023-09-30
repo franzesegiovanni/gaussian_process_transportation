@@ -19,7 +19,8 @@ warnings.filterwarnings("ignore")
 
 #%% Load the drawings
 
-data =np.load(str(pathlib.Path().resolve())+'/data/'+str('demo')+'.npz')
+source_path = str(pathlib.Path(__file__).parent.absolute())  
+data =np.load(source_path+ '/data/'+str('demo')+'.npz')
 X=data['demo'] 
 S= X[(50,len(X)-1),:]+[[1,0],[-1,0]]
 S1= S+[[-10,10],[-10,0]]

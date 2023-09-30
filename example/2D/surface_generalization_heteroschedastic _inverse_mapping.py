@@ -1,6 +1,6 @@
 """
-Authors:  Giovanni Franzese and Ravi Prakash, Dec 2022
-Email: g.franzese@tudelft.nl, r.prakash-1@tudelft.nl
+Authors:  Giovanni Franzese, Dec 2022
+Email: g.franzese@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
@@ -8,23 +8,24 @@ This code is part of TERI (TEaching Robots Interactively) project
 #%%
 import numpy as np
 import sklearn
-if sklearn.__version__!='1.3.0':
-    print('Please install scikit-learn 1.3.0')
+if sklearn.__version__<='1.3.0':
+    print('scikit-learn version: ', sklearn.__version__)
+    print('Please install scikit-learn newer than 1.3.0')
     exit()
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
 # from GILoSA import HeteroschedasticGaussianProcess as HGPR
-from policy_transportation import Transport
+from policy_transportation.transportation.gaussian_process_transportation import GaussianProcessTransportation as Transport
 import pathlib
 from policy_transportation.plot_utils import plot_vector_field_minvar, plot_vector_field 
 import warnings
 warnings.filterwarnings("ignore")
-from utils import resample  
+from policy_transportation.utils import resample  
 #%% Load the drawings
-
-data =np.load(str(pathlib.Path().resolve())+'/data/'+str('example')+'.npz')
+source_path = str(pathlib.Path(__file__).parent.absolute())  
+data =np.load(source_path+ '/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
