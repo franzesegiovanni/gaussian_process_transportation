@@ -6,15 +6,15 @@ from models.model_hmm import Multiple_reference_frames_HMM
 import os
 # Experiments
 number_repetitions=20
-minimum_demonstrations=2 #numbber of demonstrations to use to train the gmm model
-maximum_demonstrations=9 #numbber of demonstrations that are available in total
+minimum_demonstrations=5 #numbber of demonstrations to use to train the gmm model
+maximum_demonstrations=8 # maximum number that can be used to trained the model plus one
 # Create an empty one-dimensional list with demonstrations using list comprehension
 results_df = [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
 results_area= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
 results_dtw= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
 results_fde= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
 results_fad= [[] for _ in range(maximum_demonstrations-minimum_demonstrations)]
-
+name = ['HMM_{}'.format(i) for i in range(minimum_demonstrations, maximum_demonstrations)]
 script_path = str(os.path.dirname(__file__))
 filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_reference_frames_HMM()
@@ -48,7 +48,7 @@ for i in range(maximum_demonstrations-minimum_demonstrations):
         for k in not_in_indices:    
             A, b = demos_A_xdx[k][0], demos_b_xdx[k][0]
             start=demos_xdx[k][0]
-            df, area, dtw, fde, fad= policy.reproduce(k, plot=False, compute_metrics=True)
+            df, area, dtw, fde, fad= policy.reproduce(k, compute_metrics=True)
 
             results_df[i].append(df)
             results_area[i].append(area)
@@ -63,7 +63,8 @@ np.savez(script_path + '/results/hmm_dataset.npz',
     results_area=results_area, 
     results_dtw=results_dtw,
     results_fde=results_fde, 
-    results_fad=results_fad)
+    results_fad=results_fad, 
+    name=name)
 
 # Create random orientation of the frames
 
@@ -72,8 +73,8 @@ results_area=np.zeros(( number_repetitions, len(demos_x)) )
 results_dtw=np.zeros((  number_repetitions, len(demos_x) ))
 results_fde=np.zeros((  number_repetitions , len(demos_x) ))
 
-results_fde_new= []
-results_fad_new= []
+results_fde_new= [[]]
+results_fad_new= [[]]
 #we use always all the demos in the training set and we compute the error to reach the final point in a new situation 
 filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_reference_frames_HMM()
@@ -96,12 +97,13 @@ for j in range(number_repetitions):
         start[2:]=vel_new
 
         fde, fad = policy.generalize(A, b, start, ax=ax, final_distance_label=final_distance[k], final_distance_angle=final_orientation[k])
-        results_fde_new.append(fde)
-        results_fad_new.append(fad)
+        results_fde_new[0].append(fde)
+        results_fad_new[0].append(fad)
 
-
+name = ['HMM_9']
 np.savez(script_path +  '/results/hmm_out_distribution.npz', 
     results_fde=results_fde_new,
-    results_fad=results_fad_new)
+    results_fad=results_fad_new,
+    name=name)
 
-plt.show()
+# plt.show()

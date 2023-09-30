@@ -20,7 +20,8 @@ results_area=[[]]
 results_dtw= [[]]
 results_fde= [[]]
 results_fad= [[]]
-name= ['GPT']
+
+name= ['Aff']
 script_path = str(os.path.dirname(__file__))
 filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_Reference_Frames_GPT()
@@ -32,7 +33,7 @@ for j in range(number_repetitions):
     index_source = random.choice(range(len(policy.demos_x))) 
     vector = [i for i in range(len(policy.demos_x)) if i != index_source] 
     for k in vector:
-        df, area, dtw, fde, fda= policy.reproduce(index_source, index_target=k, compute_metrics=True, ax=ax)
+        df, area, dtw, fde, fda= policy.reproduce(index_source, index_target=k, compute_metrics=True, ax=ax, linear=True)
         results_df[0].append(df)
         results_area[0].append(area)
         results_dtw[0].append(dtw)
@@ -41,7 +42,7 @@ for j in range(number_repetitions):
 
 # plt.show()
 
-np.savez(script_path + '/results/gpt_dataset.npz', 
+np.savez(script_path + '/results/dmp_dataset.npz', 
     results_df=results_df, 
     results_area=results_area, 
     results_dtw=results_dtw,
@@ -59,11 +60,11 @@ for j in range(number_repetitions):
     index_source = random.choice(range(len(policy.demos_A)))  
     policy.load_test_dataset(A_new, b_new)
     for k in range(len(A_new)):
-        fde, fda = policy.generalize(index_source, k,  ax=ax, compute_metrics=True )
+        fde, fda = policy.generalize(index_source, k,  ax=ax, compute_metrics=True, linear=True )
         results_fde_new[0].append(fde)
         results_fda_new[0].append(fda)
 
-np.savez(script_path + '/results/gpt_out_distribution.npz', 
+np.savez(script_path + '/results/dmp_out_distribution.npz', 
     results_fde=results_fde_new,
     results_fad=results_fda_new, 
     name=name)

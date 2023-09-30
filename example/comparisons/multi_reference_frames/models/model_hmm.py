@@ -1,13 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pbdlib as pbd
+from pbdlib.hmm import HMM
+from pbdlib.poglqr import PoGLQR
 import similaritymeasures
 import random
 
 class Multiple_reference_frames_HMM():
     def __init__(self):
         self.nb_states = 5
-        self.model = pbd.HMM(nb_states=self.nb_states, nb_dim=8) # nb_states is the number of Gaussian components
+        self.model = HMM(nb_states=self.nb_states, nb_dim=8) # nb_states is the number of Gaussian components
         
     def load_data(self, filename):
 
@@ -65,7 +66,7 @@ class Multiple_reference_frames_HMM():
         # EM to train model
         self.model.em(self.demos_xdx_augm, reg=1e-3) 
 
-    def reproduce(self, index_in_training_set, ax=None, plot=True, compute_metrics=False):
+    def reproduce(self, index_in_training_set, ax=None, compute_metrics=False):
 
         A, b = self.demos_A_xdx[index_in_training_set][0], self.demos_b_xdx[index_in_training_set][0]
         start=self.demos_xdx[index_in_training_set][0]
@@ -78,7 +79,7 @@ class Multiple_reference_frames_HMM():
         sq = self.model.viterbi(self.demos_xdx_augm_load[index_in_training_set])
         print('Horizon is ')
         print(self.demos_xdx[index_in_training_set].shape[0])
-        lqr = pbd.PoGLQR(nb_dim=2, dt=0.05, horizon=self.demos_xdx[index_in_training_set].shape[0])     
+        lqr = PoGLQR(nb_dim=2, dt=0.05, horizon=self.demos_xdx[index_in_training_set].shape[0])     
         #sq = [i // (n/m) for i in range(n)]
         # solving LQR with Product of Gaussian, see notebook on LQR
         
@@ -92,10 +93,10 @@ class Multiple_reference_frames_HMM():
         
         # pbd.plot_gmm(_mod1.mu, _mod1.sigma, swap=True, ax=ax[index_in_training_set], dim=[0, 1], color='steelblue', alpha=0.3)
         # pbd.plot_gmm(_mod2.mu, _mod2.sigma, swap=True, ax=ax[index_in_training_set], dim=[0, 1], color='orangered', alpha=0.3)
-        if plot==True:
-            ax.grid(color='gray', linestyle='-', linewidth=1)
+        if ax is not None:
+            # ax.grid(color='gray', linestyle='-', linewidth=1)
             # Customize the background color
-            ax.set_facecolor('white')
+            # ax.set_facecolor('white')
             # pbd.plot_gmm(_prod.mu, _prod.sigma, swap=True, ax=ax, dim=[0, 1], color=[255.0/256.0,140.0/256.0,0.0], alpha=0.5)
             
             printing_points=np.zeros((4,2))
@@ -148,7 +149,7 @@ class Multiple_reference_frames_HMM():
         
         # get the most probable sequence of state for this demonstration
         sq = [int(count // (self.horizon_mean/self.nb_states)) for count in range(self.horizon_mean)]
-        lqr = pbd.PoGLQR(nb_dim=2, dt=0.05, horizon=self.horizon_mean)       
+        lqr = PoGLQR(nb_dim=2, dt=0.05, horizon=self.horizon_mean)       
         #sq = [i // (n/m) for i in range(n)]
         # solving LQR with Product of Gaussian, see notebook on LQR
         
@@ -162,9 +163,9 @@ class Multiple_reference_frames_HMM():
         # pbd.plot_gmm(_mod1.mu, _mod1.sigma, swap=True, ax=ax[index_in_training_set], dim=[0, 1], color='steelblue', alpha=0.3)
         # pbd.plot_gmm(_mod2.mu, _mod2.sigma, swap=True, ax=ax[index_in_training_set], dim=[0, 1], color='orangered', alpha=0.3)
         if ax is not None:
-            ax.grid(color='gray', linestyle='-', linewidth=1)
+            # ax.grid(color='gray', linestyle='-', linewidth=1)
             # Customize the background color
-            ax.set_facecolor('white')
+            # ax.set_facecolor('white')
             # pbd.plot_gmm(_prod.mu, _prod.sigma, swap=True, ax=ax, dim=[0, 1], color=[255.0/256.0,140.0/256.0,0.0], alpha=0.5)
             printing_points=np.zeros((4,2))
             print(b[0])

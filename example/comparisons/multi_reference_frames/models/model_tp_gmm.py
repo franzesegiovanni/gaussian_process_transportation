@@ -8,7 +8,7 @@ import os
 import similaritymeasures
 np.set_printoptions(precision=2) 
 class Multiple_reference_frames_TPGMM():
-    def __init__(self, nbVar = 3, nbFrames = 2, nbStates = 3, nbData = 20, total_time=1):
+    def __init__(self, nbVar = 3, nbFrames = 2, nbStates = 3, nbData = 40, total_time=1):
         self.nbVar = nbVar
         self.nbFrames = nbFrames
         self.nbStates = nbStates
@@ -21,9 +21,10 @@ class Multiple_reference_frames_TPGMM():
         demos = np.load(filename + '.npy', allow_pickle=True, encoding='latin1')[()]
         ### Trajectory data
         demos_x = demos['x'] # position
+        demos_x_model = [None] * len(demos_x)
         for i in range(len(demos_x)):
-            demos_x[i] = resample(demos_x[i], self.resample_lenght)
-            demos_x[i] = np.hstack([np.linspace(0, self.total_time,self.resample_lenght).reshape(-1,1), demos_x[i]]) # 
+            demos_x_model[i] = resample(demos_x[i], self.resample_lenght)
+            demos_x_model[i] = np.hstack([np.linspace(0, self.total_time,self.resample_lenght).reshape(-1,1), demos_x_model[i]]) # 
 
         demos_A = demos['A']
         demos_b = demos['b']
@@ -31,7 +32,7 @@ class Multiple_reference_frames_TPGMM():
         self.starting_point_rel=[]
         for i in range(len(demos_A)):
             pmat = np.empty(shape=(2, self.resample_lenght), dtype=object)
-            tempData = demos_x[i].transpose()
+            tempData = demos_x_model[i].transpose()
             for j in range(2):
                 for k in range(self.resample_lenght):
                     A=np.eye(3)
@@ -63,8 +64,8 @@ class Multiple_reference_frames_TPGMM():
 
 
         for i in range(len(demos_x)):
-            self.final_distance[i]=  np.linalg.inv(demos_A[i][0][1]) @ (demos_x[i][-1,1:] - demos_b[i][0][1])
-            final_delta=np.linalg.inv(demos_A[i][0][1]) @ (demos_x[i][-1,1:]-demos_x[i][-5,1:])
+            self.final_distance[i]=  np.linalg.inv(demos_A[i][0][1]) @ (demos_x[i][-1,:] - demos_b[i][0][1])
+            final_delta=np.linalg.inv(demos_A[i][0][1]) @ (demos_x[i][-1,:]-demos_x[i][-5,:])
             self.final_orientation[i]= np.arctan2(final_delta[1],final_delta[0])
 
 
@@ -102,8 +103,8 @@ class Multiple_reference_frames_TPGMM():
                 ax.scatter(self.print_points_frames[i][0,0],self.print_points_frames[i][0,1], linewidth=10, alpha=0.9, c='green')
                 ax.scatter(self.print_points_frames[i][2,0],self.print_points_frames[i][2,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])
                 ax.plot(rnewlist[i].Data[1,:], rnewlist[i].Data[2,:], color=[255.0/256.0,20.0/256.0,147.0/256.0])
-                # ax.plot(self.demos_x[i][:,1].transpose(), self.demos_x[i][:,2].transpose(), 'k--', lw=2)
-                ax.scatter(self.demos_x[i][:,1].transpose(), self.demos_x[i][:,2].transpose())
+                ax.plot(self.demos_x[i][:,0].transpose(), self.demos_x[i][:,1].transpose(), 'k--', lw=2)
+                # ax.scatter(self.demos_x[i][:,1].transpose(), self.demos_x[i][:,2].transpose())
 
         if compute_metrics:
             tot_df=[]
@@ -113,11 +114,11 @@ class Multiple_reference_frames_TPGMM():
             tot_final_angle_distance=[]
             for i in index_partial_dataset:
 
-                df = similaritymeasures.frechet_dist(self.demos_x[i][:,1:].transpose(), rnewlist[i].Data[1:,:])
+                df = similaritymeasures.frechet_dist(self.demos_x[i][:,:], rnewlist[i].Data[1:,:].transpose())
                 # area between two curves
-                area = similaritymeasures.area_between_two_curves(self.demos_x[i][:,1:].transpose(), rnewlist[i].Data[1:,:])
+                area = similaritymeasures.area_between_two_curves(self.demos_x[i][:,:], rnewlist[i].Data[1:,:].transpose())
                 # Dynamic Time Warping distance
-                dtw, d = similaritymeasures.dtw(self.demos_x[i][:,1:].transpose(), rnewlist[i].Data[1:,:])
+                dtw, d = similaritymeasures.dtw(self.demos_x[i][:,:], rnewlist[i].Data[1:,:].transpose() )
                 # Final Displacement Error
                 # fde = np.linalg.norm(demos_x[index_in_training_set][-1] - xi[-1,0:2])
                 fd=  np.linalg.inv(self.demos_A[i][0][1]) @ (rnewlist[i].Data[1:,-1] - self.demos_b[i][0][1])

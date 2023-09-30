@@ -1,41 +1,44 @@
 import matplotlib.pyplot as plt
 from matplotlib.image import imread
+import os
 
+script_path = os.path.dirname(__file__) + '/figs/'
 
-# Load the first two plots from the image files
-plot1 = imread('figs/hmm.png')
-plot2 = imread('figs/transportation.png')
-plot3 = imread('figs/hmm_new.png')
-plot4 = imread('figs/transportation_new.png')
+# Load the plots from the image files
+plots = [
+    imread(script_path + 'hmm.png'),
+    imread(script_path + 'tp_gmm.png'),
+    imread(script_path + 'dmp.png'),
+    imread(script_path + 'gpt.png'),
+    imread(script_path + 'hmm_new.png'),
+    imread(script_path + 'tp_gmm_new.png'),
+    imread(script_path + 'dmp_new.png'),
+    imread(script_path + 'gpt_new.png')
+]
 
-# Create a single subplot with the four plots in a row
-plt.figure(figsize=(12, 4))  # Adjust the figure size as needed
+# Calculate the aspect ratio of the source images
+aspect_ratios = [plot.shape[1] / plot.shape[0] for plot in plots]
 
-# Plot 1
-plt.subplot(2, 2, 1)
-plt.imshow(plot1)
-plt.axis('off')
-plt.title('Plot 1')
+# Calculate the number of rows and columns in the subplot grid
+num_cols = 4
+num_rows = -(-len(plots) // num_cols)  # Round up to the nearest integer
 
-# Plot 2
-plt.subplot(2, 2, 2)
-plt.imshow(plot2)
-plt.axis('off')
-plt.title('Plot 2')
+# Calculate the size of the subplots based on the aspect ratios
+subplot_width = 16 / num_cols
+subplot_height = subplot_width / min(aspect_ratios)
 
-# Plot 3
-plt.subplot(2, 2, 3)
-plt.imshow(plot3)
-plt.axis('off')
-plt.title('Plot 3')
+# Create a subplot with the plots arranged in a grid
+fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=(16, subplot_height * num_rows))
+plt.subplots_adjust(wspace=0, hspace=0.1)
 
-# Plot 4
-plt.subplot(2, 2, 4)
-plt.imshow(plot4)
-plt.axis('off')
-plt.title('Plot 4')
+# Plot each image on a separate subplot
+for i, ax in enumerate(axes.flat):
+    if i < len(plots):
+        ax.imshow(plots[i])
+        ax.axis('off')
 
-plt.tight_layout()  # Adjust the spacing between subplots
+fig.tight_layout()
 
-# Display the combined subplot
+# Save the figure
+fig.savefig(script_path + 'comparison.png', dpi=1200, bbox_inches='tight')
 plt.show()
