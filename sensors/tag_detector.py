@@ -7,6 +7,7 @@ from geometry_msgs.msg import PoseStamped
 import numpy as np
 import quaternion
 from copy import copy
+import pathlib
 class Tag_Detector():
     def __init__(self):
         super(Tag_Detector, self).__init__()
@@ -32,6 +33,10 @@ class Tag_Detector():
     # apriltags detection subscriber
     def april_tags_callback(self, data):
         self.detections=data.detections
+        # transform it in robot frame
+        for tags in self.detections:
+            tags.pose.pose.pose = self.transform_in_base(tags.pose.pose.pose)
+                
     
     def transform_in_base(self, pose_in_camera):
         try:
@@ -52,32 +57,32 @@ class Tag_Detector():
         for detection_source_in_camera in self.source_distribution:
             for detection_target_in_camera in self.target_distribution:
                 if detection_source_in_camera.id[0]==detection_target_in_camera.id[0]:  
-                    detection_target = self.transform_in_base(detection_target_in_camera.pose.pose.pose)
-                    detection_source = self.transform_in_base(detection_source_in_camera.pose.pose.pose)
+                    detection_target = detection_target_in_camera.pose.pose.pose
+                    detection_source = detection_source_in_camera.pose.pose.pose
                     #Center target
                     t=np.array([detection_target.pose.position.x,detection_target.pose.position.y,detection_target.pose.position.z])
                     #Center  source
                     s=np.array([detection_source.pose.position.x,detection_source.pose.position.y,detection_source.pose.position.z])
                     target_array=np.vstack((target_array,t))
                     source_array=np.vstack((source_array,s))
-                    if use_orientation==True:
+                    if use_orientation:
                         #Corners source
-
+                        scale_factor=2
                         quat_s=quaternion.from_float_array(np.array([detection_source.pose.orientation.w, detection_source.pose.orientation.x, detection_source.pose.orientation.y, detection_source.pose.orientation.z]))
                         rot_s=quaternion.as_rotation_matrix(quat_s)
-                        marker_corners=detect_marker_corners(1*detection_source_in_camera.size[0])
+                        marker_corners=detect_marker_corners(scale_factor*detection_source_in_camera.size[0])
                         # Rotate marker's corners based on the quaternion
                         rotated_corners = np.dot(rot_s, marker_corners.T).T + s 
-                        rotated_corners[:,-1]=s[-1]
+                        # rotated_corners[:,-1]=s[-1]
                         source_array=np.vstack((source_array,rotated_corners))
 
                         # Conrners target 
                         quat_t=quaternion.from_float_array(np.array([detection_target.pose.orientation.w, detection_target.pose.orientation.x, detection_target.pose.orientation.y, detection_target.pose.orientation.z]))
                         rot_t=quaternion.as_rotation_matrix(quat_t)
-                        marker_corners=detect_marker_corners(1*detection_target_in_camera.size[0])
+                        marker_corners=detect_marker_corners(scale_factor*detection_target_in_camera.size[0])
                         # Rotate marker's corners based on the quaternion
                         rotated_corners = np.dot(rot_t, marker_corners.T).T + t
-                        rotated_corners[:,-1]=t[-1]
+                        # rotated_corners[:,-1]=t[-1]
                         target_array=np.vstack((target_array,rotated_corners))
 
   
@@ -85,28 +90,46 @@ class Tag_Detector():
         self.target_distribution=target_array
         self.source_distribution=source_array
         
+    # def record_source_distribution(self):
+    #     self.source_distribution=self.detections
+
+    # def record_target_distribution(self):
+    #     self.target_distribution=self.detections
+
     def record_source_distribution(self):
-        for _ in range(20):
             self.source_distribution=[]
             self.source_distribution=self.continuous_record(self.source_distribution)
-            rospy.sleep(0.1)
 
     def record_target_distribution(self):
-        for _ in range(20):
-            self.target_distribution=[]
-            self.target_distribution=self.continuous_record(self.source_distribution)
-            rospy.sleep(0.1)
+        self.target_distribution=[]
+        self.target_distribution=self.continuous_record(self.target_distribution)
 
     def continuous_record(self, distribution):
         detection_copy=copy(self.detections)
-        for tags in detection_copy:
-            for distribution_tag in distribution:
-                if tags.id[0]==distribution_tag.id[0]:
-                    detection_copy=detection_copy.remove(tags) 
-        distribution.append(detection_copy) 
-        return distribution           
+        distribution_copy=copy(distribution)
 
-    def Record_demo_tags(self):
+        if not detection_copy:
+            # print("No detection")
+            return distribution_copy
+        if not distribution_copy:
+            distribution=detection_copy
+            # print(detection_copy)
+            # print("No distribution")
+            return detection_copy
+
+        for i in range(len(distribution_copy)):
+            if detection_copy and distribution_copy:
+                for j in range(len(detection_copy)):
+                    # print(distribution_copy[i].id[0])
+                    # print(detection_copy[j].id[0])
+                    if distribution_copy[i].id[0]==detection_copy[j].id[0]:
+                        # distribution_copy[i]=copy(detection_copy[j])
+                        del detection_copy[j]
+                        break 
+        distribution_copy= distribution_copy + detection_copy 
+        return distribution_copy           
+
+    def Record_traj_tags(self):
         self.Passive()
 
         self.end = False
@@ -114,9 +137,21 @@ class Tag_Detector():
         self.recorded_ori_tag  = self.cart_ori.reshape(1,4)
         while not self.end:
 
-            self.recorded_traj_tag = np.vstack([self.recorded_traj, self.cart_pos])
-            self.recorded_ori_tag  = np.vstack([self.recorded_ori,  self.cart_ori])
+            self.recorded_traj_tag = np.vstack([self.recorded_traj_tag, self.cart_pos])
+            self.recorded_ori_tag  = np.vstack([self.recorded_ori_tag,  self.cart_ori])
             self.r_rec.sleep()
+
+    def save_traj_tags(self, data='traj_tags'):
+
+        np.savez(str(pathlib.Path().resolve())+'/data/'+str(data)+'.npz', 
+        recorded_traj_tag=self.recorded_traj_tag,
+        recorded_ori_tag = self.recorded_ori_tag)
+
+    def load_traj_tags(self, data='traj_tags'):
+
+        data =np.load(str(pathlib.Path().resolve())+'/data/'+str(data)+'.npz')
+        self.recorded_traj_tag=data['recorded_traj_tag']
+        self.recorded_ori_tag=data['recorded_ori_tag']
 
     def Record_tags(self, distribution):
         start = PoseStamped()
@@ -130,16 +165,75 @@ class Tag_Detector():
         start.pose.orientation.y = self.recorded_ori_tag[0,2] 
         start.pose.orientation.z = self.recorded_ori_tag[0,3] 
         self.go_to_pose(start)
-
-        for i in range(self.recorded_traj_tag.shape[0]):
+        j=0
+        for i in range(self.recorded_traj_tag.shape[0]-1):
             self.set_attractor(self.recorded_traj_tag[i,:], self.recorded_ori_tag[i,:])
-            self.continuous_record(distribution)
+            # if i>10 and i < self.recorded_traj_tag.shape[0]-10 and np.linalg.norm(self.recorded_traj_tag[i-10,:]-self.recorded_traj_tag[i+10,:])<0.005: #and j>20:
+                # print("Saving frames")
+            distribution=self.continuous_record(distribution)
+                # print(distribution)
+                # j=0
+            # j=j+1
             self.r_rec.sleep() 
+        return distribution    
+
+    def Record_tags_goto(self, distribution):
+        start = PoseStamped()
+        start.pose.position.x = 0.40375158
+        start.pose.position.y = -0.01048578
+        start.pose.position.z = 0.75245844
+        start.pose.orientation.w =  0.08399367
+        start.pose.orientation.x = 0.68521328
+        start.pose.orientation.y = 0.7230002
+        start.pose.orientation.z = -0.02625647
+        self.go_to_pose(start)
+        rospy.sleep(2)
+        distribution=self.continuous_record(distribution)
+        rospy.sleep(2)
+        # [ 0.40375158, -0.01048578,  0.75245844]
+        # [ 0.08399367,  0.68521328,  0.7230002 , -0.02625647]
+        start.pose.position.x = 0.42474412
+        start.pose.position.y = -0.00146312
+        start.pose.position.z = 0.76038187
+        start.pose.orientation.w =  0.31872356
+        start.pose.orientation.x = 0.63964127
+        start.pose.orientation.y = 0.64930498
+        start.pose.orientation.z = -0.26013055
+        # [ 0.42474412, -0.00146312,  0.76038187]
+        # [ 0.31872356,  0.63964127,  0.64930498, -0.26013055]
+        self.go_to_pose(start)
+        rospy.sleep(2)
+        distribution=self.continuous_record(distribution)
+        rospy.sleep(2)
+        start.pose.position.x = 0.4272796
+        start.pose.position.y =-0.0647395
+        start.pose.position.z = 0.8631258
+        start.pose.orientation.w =  0.51575005
+        start.pose.orientation.x = 0.50598534
+        start.pose.orientation.y =  0.48100053
+        start.pose.orientation.z = -0.49659837
+        rospy.sleep(2)
+        self.go_to_pose(start)
+        rospy.sleep(2)
+        distribution=self.continuous_record(distribution)
+        #[ 0.4272796, -0.0647395,  0.8631258]
+        #[ 0.51575005,  0.50598534,  0.48100053, -0.49659837]
+        return distribution
+
 
 def  detect_marker_corners(marker_dimension):
     marker_corners = np.array([
             [-marker_dimension/2, -marker_dimension/2, 0],
             [-marker_dimension/2, marker_dimension/2, 0],
             [marker_dimension/2, marker_dimension/2, 0],
-            [marker_dimension/2, -marker_dimension/2, 0]])    
+            [marker_dimension/2, -marker_dimension/2, 0],
+             [-marker_dimension/2, -marker_dimension/2, marker_dimension/2],
+            [-marker_dimension/2, marker_dimension/2, marker_dimension/2],
+            [marker_dimension/2, marker_dimension/2, marker_dimension/2],
+            [marker_dimension/2, -marker_dimension/2, marker_dimension/2],
+             [-marker_dimension/2, -marker_dimension/2, -marker_dimension/2],
+            [-marker_dimension/2, marker_dimension/2, -marker_dimension/2],
+            [marker_dimension/2, marker_dimension/2, -marker_dimension/2],
+            [marker_dimension/2, -marker_dimension/2, -marker_dimension/2]
+            ])    
     return marker_corners
