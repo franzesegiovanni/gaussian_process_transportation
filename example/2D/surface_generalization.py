@@ -23,7 +23,7 @@ data =np.load(source_path+ '/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
-X=resample(X, num_points=200)
+X=resample(X, num_points=100)
 source_distribution=resample(S)
 target_distribution=resample(S1)
 
@@ -32,9 +32,6 @@ deltaX = np.zeros((len(X),2))
 for j in range(len(X)-1):
     deltaX[j,:]=(X[j+1,:]-X[j,:])
 
-## Downsample
-X=X[::2,:]
-deltaX=deltaX[::2,:]
 
 #%% Fit a dynamical system to the demo and plot it
 k_deltaX = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=2.5) + WhiteKernel(0.01) 
@@ -60,10 +57,7 @@ transport.training_delta=deltaX
 
 
 k_transport = C(constant_value=np.sqrt(0.1))  * RBF(40*np.ones(2), length_scale_bounds=[0.01, 500]) + WhiteKernel(0.01, noise_level_bounds=[0.01, 0.1] )
-k_transport = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), length_scale_bounds=[20, 500] ,  nu=2.5) + WhiteKernel(0.01,  noise_level_bounds=[0.01, 0.1] ) #this kernel works much better!
 transport.kernel_transport=k_transport
-# print("Optimize the lengthscale to make the mapping to be a diffemorphism")      
-# transport.optimize_diffeomorphism()
 print('Transporting the dynamical system on the new surface')
 transport.fit_transportation()
 transport.apply_transportation()
