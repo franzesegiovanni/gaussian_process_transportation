@@ -116,9 +116,7 @@ class GaussianProcessTransportation():
 
     def diffeomorphism_error(self, trial):
         max_lengthscale = trial.suggest_float("max_lengthscale", 2, 20, log=True)
-        nu= trial.suggest_int("nu", 1, 5)
         self.kernel_transport=C(0.1) * RBF(length_scale=[2, 2], length_scale_bounds=[0.1,max_lengthscale ]) + WhiteKernel(0.0001)
-        self.kernel_transport= C(0.1) * Matern(length_scale=[2, 2], length_scale_bounds=[0.1,max_lengthscale ], nu=nu+0.5) + WhiteKernel(0.0001)
         self.fit_transportation() 
         self.traj_rotated=self.affine_transform.predict(self.training_traj)
         self.delta_map_mean, self.std= self.gp_delta_map.predict(self.traj_rotated, return_std=True)
