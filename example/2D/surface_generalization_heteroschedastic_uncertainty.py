@@ -39,7 +39,8 @@ for j in range(len(X)-1):
     deltaX[j,:]=(X[j+1,:]-X[j,:])
 
 
-fig, axs = plt.subplots(nrows=2, ncols=2)
+fig, axs = plt.subplots(nrows=2, ncols=2,figsize=(12, 12))
+
 axs[0, 0].grid(True, alpha=0.2)
 axs[0, 1].grid(True, alpha=0.2)
 axs[1, 0].grid(True, alpha=0.2)
@@ -153,9 +154,12 @@ axs[1, 1].scatter(X1[:,0],X1[:,1], color=[1,0,0])
 axs[1, 1].scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
 axs[1, 1].set_xticklabels([])
 axs[1, 1].set_yticklabels([])
-
+#save figure
+fig.savefig(source_path+'/pictures/transportation_scheme.pdf',bbox_inches='tight')
 # Plot surface of the norm of ouput uncertainties
-fig=plt.figure()
+
+fig=plt.figure(figsize=(18,6))
+
 ax = fig.add_subplot(131, projection='3d')
 ax.set_title('Aleatoric Uncertainty')
 surf = ax.plot_surface(dataXX, dataYY, np.sum(std_aleatoric,1).reshape(u.shape) , linewidth=0, antialiased=True, cmap=plt.cm.inferno)

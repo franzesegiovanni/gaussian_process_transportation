@@ -66,7 +66,7 @@ current_ax = ax[0,0]
 
 current_ax.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,0], label="New Surface")
 current_ax.scatter(X1[:,0],X1[:,1], label="Tranported demonstration")
-current_ax.set_title("Affine Transformation", fontsize=12, fontweight='bold')
+current_ax.set_title("Affine Transformation", fontsize=18, fontweight='bold')
 current_ax.set_ylim(-20, 80)
 current_ax.grid()
 i+=1
@@ -102,7 +102,7 @@ fig.tight_layout()
 legend=current_ax.legend(loc='upper left', fontsize=12)
 
 #Save figure
-plt.savefig(script_path+'/figs/transportation_comparison', bbox_inches='tight')
+plt.savefig(script_path+'/figs/transportation_comparison.pdf', bbox_inches='tight')
 
 divergence=np.zeros((len(X1_list), len(X1_list)))
 
