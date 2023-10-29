@@ -23,9 +23,12 @@ ax.grid(color='gray', linestyle='-', linewidth=1)
 ax.set_facecolor('white')
 ax.set_xlim(-60, 60)
 ax.set_ylim(-60, 60)
+ax.set_xticks([])
+ax.set_yticks([])
+ax.grid(True)
 ax = fig.gca()
 ax.set_title('Hidden Markov Model', fontsize=18)
-ax.text(-0.15, 0.5, 'Training set', fontfamily='Arial', fontweight='bold', fontsize=22, rotation=90, va='center', transform=ax.transAxes)
+
 for demo_index in range(9):
     df, area, dtw, fde, fad=policy.reproduce(demo_index, ax=ax, compute_metrics=True)
 
@@ -53,7 +56,9 @@ ax.grid(color='gray', linestyle='-', linewidth=1)
 ax.set_facecolor('white')
 ax.set_xlim(-80, 60)
 ax.set_ylim(-80, 60)
-ax.text(-0.15, 0.5, 'Test set', fontfamily='Arial', fontweight='bold', fontsize=22, rotation=90, va='center', transform=ax.transAxes)
+ax.set_xticks([])
+ax.set_yticks([])
+ax.grid(True)
 for spine in ax.spines.values():
     spine.set_linewidth(2)
 for i in range(9):
@@ -65,6 +70,6 @@ for i in range(9):
     start[2:]=vel_new
     policy.generalize(A, b, start, ax=ax)
 
-fig.savefig(script_path+ '/figs/hmm_new.png', dpi=1200, bbox_inches='tight')
+fig.savefig(script_path+ '/figs/hmm_ood.png', dpi=1200, bbox_inches='tight')
 
 plt.show()

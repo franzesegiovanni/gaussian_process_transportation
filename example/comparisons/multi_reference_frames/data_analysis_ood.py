@@ -33,7 +33,7 @@ dataframes = [ fde, fda]
 rankings = [ranking_fde, ranking_fda]
 titles = [ 'Final Position Error', 'Final Orientation Error']
 
-fig, axes = plt.subplots(1, len(rankings), figsize=(20, 5), constrained_layout=True)
+fig, axes = plt.subplots(1, len(rankings), figsize=(8, 6), constrained_layout=True)
 
 for i, (data, ranking, title) in enumerate(zip(dataframes, rankings, titles)):
     data = data.reindex(columns=ranking['group'].tolist())
@@ -45,5 +45,5 @@ for i, (data, ranking, title) in enumerate(zip(dataframes, rankings, titles)):
     axes[i].set_xticklabels(data.columns.to_list(), rotation=90, fontsize=14, fontweight='bold')
 
 
-plt.savefig(source_path + '/figs/Box_plot_ood.png', bbox_inches='tight')
+plt.savefig(source_path + '/figs/Box_plot_ood.pdf', bbox_inches='tight')
 plt.show()

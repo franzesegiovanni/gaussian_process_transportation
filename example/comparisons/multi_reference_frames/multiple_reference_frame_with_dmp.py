@@ -21,6 +21,9 @@ ax.set_title('Affine Transportation', fontsize=18)
 ax.set_facecolor('white')
 ax.set_xlim(-60, 60)
 ax.set_ylim(-60, 60)
+ax.set_xticks([])
+ax.set_yticks([])
+ax.grid(True)
 source_index=2
 for target_index in range(9):
     df, area, dtw, fde, fad=policy.reproduce(source_index, target_index, ax=ax, linear=True, compute_metrics=True)
@@ -46,13 +49,16 @@ ax.grid(color='gray', linestyle='-', linewidth=1)
 ax.set_facecolor('white')
 ax.set_xlim(-80, 60)
 ax.set_ylim(-80, 60)
+ax.set_xticks([])
+ax.set_yticks([])
+ax.grid(True)
 
 for i in range(9):
     policy.generalize(index_source=2, index_target=i,  ax=ax, linear=True)
     
 for spine in ax.spines.values():
     spine.set_linewidth(2)
-fig.savefig(script_path + '/figs/dmp_new.png', dpi=1200, bbox_inches='tight')
+fig.savefig(script_path + '/figs/dmp_ood.png', dpi=1200, bbox_inches='tight')
 
 
 

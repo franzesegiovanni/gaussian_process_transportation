@@ -18,6 +18,9 @@ ax.grid(color='gray', linestyle='-', linewidth=1)
 ax.set_facecolor('white')
 ax.set_xlim(-60, 60)
 ax.set_ylim(-60, 60)
+ax.set_xticks([])
+ax.set_yticks([])
+ax.grid(True)
 ax.set_title('Gaussian Process Transportation', fontsize=18)
 source_index=2
 for target_index in range(9):
@@ -44,12 +47,15 @@ ax.grid(color='gray', linestyle='-', linewidth=1)
 ax.set_facecolor('white')
 ax.set_xlim(-80, 60)
 ax.set_ylim(-80, 60)
+ax.set_xticks([])
+ax.set_yticks([])
+ax.grid(True)
 # ax.set_title('GPT', fontsize=16)
 for i in range(9):
     policy.generalize(index_source=2, index_target=i,  ax=ax)
 for spine in ax.spines.values():
     spine.set_linewidth(2)
-fig.savefig(script_path + '/figs/gpt_new.png', dpi=1200, bbox_inches='tight')
+fig.savefig(script_path + '/figs/gpt_ood.png', dpi=1200, bbox_inches='tight')
 
 
 

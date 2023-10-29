@@ -60,14 +60,14 @@ for i, (data, ranking, title) in enumerate(zip(dataframes, rankings, titles)):
 
 
 # Save the figure without extra space on the sides
-plt.savefig(source_path + '/figs/Box_plot_complete.png', bbox_inches='tight')
+plt.savefig(source_path + '/figs/Box_plot_complete.pdf', bbox_inches='tight')
 
 
 dataframes = [df, fde, fda]
 rankings = [ranking_frenet, ranking_fde, ranking_fda]
 titles = ['Frenet Distance', 'Final Position Error', 'Final Orientation Error']
 
-fig, axes = plt.subplots(1, len(rankings), figsize=(47, 5), constrained_layout=True)
+fig, axes = plt.subplots(1, len(rankings), figsize=(12, 6), constrained_layout=True)
 
 for i, (data, ranking, title) in enumerate(zip(dataframes, rankings, titles)):
     data = data.reindex(columns=ranking['group'].tolist())
@@ -80,7 +80,7 @@ for i, (data, ranking, title) in enumerate(zip(dataframes, rankings, titles)):
 
 
 # Save the figure without extra space on the sides
-plt.savefig(source_path + '/figs/Box_plot_short.png', bbox_inches='tight')
+plt.savefig(source_path + '/figs/Box_plot_short.pdf', bbox_inches='tight')
 
 
 plt.show()
