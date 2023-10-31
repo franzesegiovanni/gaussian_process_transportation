@@ -67,20 +67,26 @@ ax.scatter(traj_demo[-1,0], traj_demo[-1,1], traj_demo[-1,2], c='g', marker='o',
 source_dist , index = sort_points(source_dist)
 source_dist = np.vstack(source_dist)
 ax.plot(source_dist[:,0], source_dist[:,1], source_dist[:,2], '--', c='k')
-ax.scatter(source_dist[0,0], source_dist[0,1], source_dist[0,2], c='b', marker='o', label='hand')
-ax.scatter(source_dist[1,0], source_dist[1,1], source_dist[1,2], c='y', marker='o',label='wrist')
-ax.scatter(source_dist[2,0], source_dist[2,1], source_dist[2,2], c='m', marker='o', label='elbow')
-ax.scatter(source_dist[3,0], source_dist[3,1], source_dist[3,2], c='c', marker='o', label='shoulder')
+ax.scatter(source_dist[0,0], source_dist[0,1], source_dist[0,2], c='c', marker='o', label='shoulder')
+ax.scatter(source_dist[1,0], source_dist[1,1], source_dist[1,2], c='m', marker='o',label='elbow')
+ax.scatter(source_dist[2,0], source_dist[2,1], source_dist[2,2], c='y', marker='o', label='wrist')
+ax.scatter(source_dist[3,0], source_dist[3,1], source_dist[3,2], c='b', marker='o', label='hand')
+ax.set_xlim([0, 0.6])
+ax.set_ylim([-0.4, 0])
+ax.set_zlim([0.2, 1])
+ax.set_box_aspect([1,1,1])
 
 
 
 
 
+fig,axs = plt.subplots(2,5,subplot_kw={'projection': '3d'},figsize=(10, 6))
 
-
+# traj.pop(0)
 for i, trajectory in enumerate(traj):
     # plt.figure()
     # ax = plt.axes(projection='3d')
+    ax = axs[i//5, i%5]  # Select the subplot
     ax.plot(trajectory[:,0], trajectory[:,1], trajectory[:,2])
     ax.scatter(trajectory[0,0], trajectory[0,1], trajectory[0,2], c='r', marker='o')
     ax.scatter(trajectory[-1,0], trajectory[-1,1], trajectory[-1,2], c='g', marker='o')
@@ -91,6 +97,28 @@ for i, trajectory in enumerate(traj):
     ax.scatter(target_sorted[1,0], target_sorted[1,1], target_sorted[1,2], c='y', marker='o')
     ax.scatter(target_sorted[2,0], target_sorted[2,1], target_sorted[2,2], c='m', marker='o')
     ax.scatter(target_sorted[3,0], target_sorted[3,1], target_sorted[3,2], c='c', marker='o')
+    ax.set_xlim([0.1, 0.7])
+    ax.set_ylim([-0.3, 0.4])
+    ax.set_zlim([0, 0.6])
 
-plt.legend()
+    # Set the point of view
+    ax.view_init(elev=40, azim=100)
+
+    # Hide the axes
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)
+    ax.zaxis.set_visible(False)
+    # Make panes transparent
+    ax.xaxis.pane.fill = False
+    ax.yaxis.pane.fill = False
+    ax.zaxis.pane.fill = False
+    # Hide the axes and grid
+    ax.axis('off')
+    ax.grid(False)
+
+plt.subplots_adjust(wspace=-0.1, hspace=-0.6)
+fig_folder =file_dir+ "/figures/"
+plt.savefig(fig_folder+'dressing.pdf', dpi=300, bbox_inches='tight')
+
+# plt.legend()
 plt.show()
