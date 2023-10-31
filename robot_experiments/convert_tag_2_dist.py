@@ -50,3 +50,16 @@ def  detect_marker_corners(marker_dimension):
             [marker_dimension/2, -marker_dimension/2, -marker_dimension/2]
             ])    
     return marker_corners
+
+
+def match_markers(source_distribution, target_distribution):
+    target_array=[]
+    source_array=[]
+    for detection_source_in_camera in source_distribution:
+        for detection_target_in_camera in target_distribution:
+            if detection_source_in_camera.id[0]==detection_target_in_camera.id[0]:  
+                detection_target = detection_target_in_camera.pose.pose.pose
+                detection_source = detection_source_in_camera.pose.pose.pose
+                source_array.append(detection_source)
+                target_array.append(detection_target)
+    return source_array, target_array
