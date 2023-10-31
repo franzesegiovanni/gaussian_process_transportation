@@ -2,6 +2,7 @@ import os
 import pickle 
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
+import itertools
 #load source distribution
 file_dir= os.path.dirname(__file__)
 from convert_tag_2_dist import convert_distribution
@@ -23,7 +24,6 @@ traj_demo_ori= load(file_dir+ "/results/dressing/traj_demo_ori.pkl")
 
 source_tags = load(data_folder + "/source.pkl")
 
-import itertools
 def sort_points(points):
     permutations = list(itertools.permutations(points))
     cost = []
@@ -66,7 +66,15 @@ ax.scatter(traj_demo[0,0], traj_demo[0,1], traj_demo[0,2], c='r', marker='o', la
 ax.scatter(traj_demo[-1,0], traj_demo[-1,1], traj_demo[-1,2], c='g', marker='o', label='end')
 source_dist , index = sort_points(source_dist)
 source_dist = np.vstack(source_dist)
-ax.plot(source_dist[:,0], source_dist[:,1], source_dist[:,2], c='b', marker='o')
+ax.plot(source_dist[:,0], source_dist[:,1], source_dist[:,2], '--', c='k')
+ax.scatter(source_dist[0,0], source_dist[0,1], source_dist[0,2], c='b', marker='o', label='hand')
+ax.scatter(source_dist[1,0], source_dist[1,1], source_dist[1,2], c='y', marker='o',label='wrist')
+ax.scatter(source_dist[2,0], source_dist[2,1], source_dist[2,2], c='m', marker='o', label='elbow')
+ax.scatter(source_dist[3,0], source_dist[3,1], source_dist[3,2], c='c', marker='o', label='shoulder')
+
+
+
+
 
 
 
@@ -79,10 +87,10 @@ for i, trajectory in enumerate(traj):
     selected_target =np.array( target[i])
     target_sorted = selected_target[index,:]
     ax.plot(target_sorted[:,0], target_sorted[:,1], target_sorted[:,2], c='k', marker='o')
-    ax.scatter(target_sorted[0,0], target_sorted[0,1], target_sorted[0,2], c='g', marker='o')
-    ax.scatter(target_sorted[1,0], target_sorted[1,1], target_sorted[1,2], c='b', marker='o')
-    ax.scatter(target_sorted[2,0], target_sorted[2,1], target_sorted[2,2], c='r', marker='o')
-    ax.scatter(target_sorted[3,0], target_sorted[3,1], target_sorted[3,2], c='k', marker='o')
+    ax.scatter(target_sorted[0,0], target_sorted[0,1], target_sorted[0,2], c='b', marker='o')
+    ax.scatter(target_sorted[1,0], target_sorted[1,1], target_sorted[1,2], c='y', marker='o')
+    ax.scatter(target_sorted[2,0], target_sorted[2,1], target_sorted[2,2], c='m', marker='o')
+    ax.scatter(target_sorted[3,0], target_sorted[3,1], target_sorted[3,2], c='c', marker='o')
 
 plt.legend()
 plt.show()
