@@ -1,6 +1,7 @@
 from tf.transformations import euler_from_quaternion, quaternion_multiply, quaternion_inverse
 from geometry_msgs.msg import Pose
 import numpy as np  
+import itertools
 def relative_transformation(pose, relative2pose):
     pose_relative=Pose()
     pose_relative.position.x= pose.position.x - relative2pose.position.x
@@ -17,3 +18,19 @@ def relative_transformation(pose, relative2pose):
     pose_relative.orientation.y=pitch
     pose_relative.orientation.z=yaw
     return pose_relative
+
+def sort_points(points):
+    permutations = list(itertools.permutations(points))
+    cost = []
+    for perm in permutations:
+        perm= np.array(perm)
+        cost.append(np.sum(np.linalg.norm(perm[1:,:]-perm[:-1,:],1)))
+    min_index = np.argmin(cost)
+    permuted_list = permutations[min_index]
+    index = []
+    # print(points)
+    for i in range(len(points)):
+        index.append(int(np.argmin(np.linalg.norm(permuted_list-points[i], axis=1))))
+    # index = [int(x) for x in index]  
+    print(index)  
+    return permuted_list, index
