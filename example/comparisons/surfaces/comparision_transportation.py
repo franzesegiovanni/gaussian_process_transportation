@@ -13,7 +13,7 @@ from policy_transportation.transportation.gaussian_process_transportation import
 from policy_transportation.transportation.multi_layer_perceptron_transportation import MLPTrasportation as MLP
 from policy_transportation.transportation.random_forest_transportation import RFTrasportation as RFT
 from policy_transportation.transportation.laplacian_editing_transportation import LaplacianEditingTransportation as LET
-from policy_transportation.transportation.torch.ensamble_bijective_transport import Neural_Transport as BNT
+from policy_transportation.transportation.torch.ensemble_bijective_transport import Neural_Transport as BNT
 import os
 
 import warnings
@@ -47,7 +47,7 @@ LET=LET()
 BNT=BNT()
 
 methods=[RFT, MLP, LET, BNT, GPT]
-names=["Esamble Random Forest", "Ensamble Neural Network", "Laplacian Editing", "Ensamble Neural Flows", "Gaussian Process Regression"]
+names=["Ensemble Random Forest", "Ensemble Neural Network", "Laplacian Editing", "Ensemble Neural Flows", "Gaussian Process Regression"]
 
 
 fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(16, 8))

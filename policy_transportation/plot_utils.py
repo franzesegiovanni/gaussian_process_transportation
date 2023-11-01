@@ -84,4 +84,4 @@ def draw_error_band(ax, x, y, err, loop=False, **kwargs):
         codes[0] = codes[len(xp)] = Path.MOVETO
     codes[0] = Path.MOVETO
     path = Path(vertices, codes)
-    ax.add_patch(PathPatch(path, label='Uncertanites',  **kwargs))
+    ax.add_patch(PathPatch(path, label='Uncertainty',  **kwargs))

@@ -5,7 +5,7 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 from policy_transportation import AffineTransform
-from policy_transportation.models.ensamble_random_forest import Ensemble_RF
+from policy_transportation.models.ensemble_random_forest import Ensemble_RF
 class RFTrasportation():
     def __init__(self):
         super(RFTrasportation, self).__init__()

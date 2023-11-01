@@ -5,7 +5,7 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 from policy_transportation import AffineTransform
-from policy_transportation.models.ensamble_nerual_network import Ensamble_NN
+from policy_transportation.models.ensemble_nerual_network import Ensemble_NN
 import numpy as np
 class MLPTrasportation():
     def __init__(self):
@@ -19,7 +19,7 @@ class MLPTrasportation():
  
         self.delta_distribution = self.target_distribution - source_distribution
 
-        self.gp_delta_map=Ensamble_NN(n_estimators=10)
+        self.gp_delta_map=Ensemble_NN(n_estimators=10)
      
         self.gp_delta_map.fit(source_distribution, self.delta_distribution)  
 

@@ -1,7 +1,7 @@
 from sklearn.neural_network import MLPRegressor
 import random 
 import numpy as np
-class Ensamble_NN():
+class Ensemble_NN():
     def __init__ (self, n_estimators, hidden_layer_sizes=(100, 100, 100,100)):
         self.ensemble = [MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, random_state=random.randint(0, 2**32 - 1), alpha=1, solver='adam') for _ in range(n_estimators)]
     

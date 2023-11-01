@@ -5,14 +5,13 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 from policy_transportation import AffineTransform
-# from policy_transportation.models.torch.neural_network import NeuralNetwork
-from policy_transportation.models.torch.ensamble_neural_network import EnsambleNeuralNetwork as NeuralNetwork
+from policy_transportation.models.torch.ensemble_bijective_network import EnsembleBijectiveNetwork as BiJectiveNetwork
 import pickle
 import numpy as np
 import quaternion
-class Ensamble_Neural_Transport():
+class Neural_Transport():
     def __init__(self):
-        super(Ensamble_Neural_Transport, self).__init__()
+        super(Neural_Transport, self).__init__()
 
 
     def save_distributions(self):
@@ -20,7 +19,6 @@ class Ensamble_Neural_Transport():
         f = open("distributions/source.pkl","wb")
         # write the python object (dict) to pickle file
         pickle.dump(self.source_distribution,f)
-        # close file
         f.close()
 
     # create a binary pickle file 
@@ -55,24 +53,26 @@ class Ensamble_Neural_Transport():
 
         source_distribution=self.affine_transform.predict(self.source_distribution)  
  
-        delta_distribution = self.target_distribution - source_distribution
+        # delta_distribution = self.target_distribution - source_distribution
 
-        self.gp_delta_map=NeuralNetwork(source_distribution, delta_distribution)
-        self.gp_delta_map.fit(source_distribution, delta_distribution, num_epochs=num_epochs)  
+        # self.gp_delta_map=NeuralNetwork(source_distribution, self.target_distribution)
+        self.gp_delta_map=BiJectiveNetwork(source_distribution, self.target_distribution)
+
+        self.gp_delta_map.fit(source_distribution, self.target_distribution , num_epochs=num_epochs)  
 
     def apply_transportation(self):
               
         #Deform Trajactories 
-        traj_rotated=self.affine_transform.predict(self.training_traj)
-        delta_map_mean= self.gp_delta_map.predict(traj_rotated)
+        self.traj_rotated=self.affine_transform.predict(self.training_traj)
+        map_mean, self.std= self.gp_delta_map.predict(self.traj_rotated, return_std=True)
         # print(delta_map_mean)
-        transported_traj = traj_rotated + delta_map_mean 
+        transported_traj =  map_mean 
 
         #Deform Deltas and orientation
         new_delta = np.ones_like(self.training_delta)
         for i in range(len(self.training_traj[:,0])):
             if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
-                pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
+                pos=(np.array(self.traj_rotated[i,:]).reshape(1,-1))
                 # print(type(pos))
                 Jacobian=self.gp_delta_map.derivative(pos)
                 #print(Jacobian.shape)
@@ -80,7 +80,7 @@ class Ensamble_Neural_Transport():
                 Jacobian=Jacobian.reshape(self.training_delta.shape[1],pos.shape[1])
                 #print(Jacobian)
                 # Jacobian=np.zeros(pos.shape[1])
-                rot_gp= np.eye(pos.shape[1]) + Jacobian 
+                rot_gp= Jacobian 
                 rot_affine= self.affine_transform.rotation_matrix
                 if  hasattr(self, 'training_delta'):
                     new_delta[i]= rot_affine @ self.training_delta[i]
@@ -101,16 +101,7 @@ class Ensamble_Neural_Transport():
         if  hasattr(self, 'training_delta'):
             self.training_delta=new_delta
 
+    def sample_transportation(self):
+        training_traj_samples= self.gp_delta_map.samples(self.traj_rotated)
+        return training_traj_samples
 
-def is_rotation_matrix(matrix):
-    # Check if the matrix is orthogonal
-    is_orthogonal = np.allclose(np.eye(matrix.shape[0]), matrix @ matrix.T)
-    if not is_orthogonal:
-        return False
-
-    # Check if the determinant of the matrix is 1
-    det = np.linalg.det(matrix)
-    if not np.isclose(det, 1.0):
-        return False
-
-    return True

@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
-from policy_transportation.transportation.torch.ensamble_neural_network_transport import Ensamble_Neural_Transport as Transport
+from policy_transportation.transportation.torch.ensemble_neural_network_transport import Ensemble_Neural_Transport as Transport
 import pathlib
 from policy_transportation.plot_utils import plot_vector_field 
 from policy_transportation.utils import resample
