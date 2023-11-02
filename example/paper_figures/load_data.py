@@ -2,7 +2,10 @@ import os
 import numpy as np
 from scipy.io import loadmat
 from utilities  import plot_model
-DATASET_PATH_ = os.getcwd() + "/DataSet"
+
+#file directory 
+current_file_directory = os.path.dirname(os.path.realpath(__file__))
+DATASET_PATH_ = current_file_directory + "/DataSet"
 
 NAMES_ = [f[:-4] for f in os.listdir(DATASET_PATH_) if f[-4:] == ".mat"]
 

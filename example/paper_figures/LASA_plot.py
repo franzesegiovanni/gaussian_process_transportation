@@ -1,11 +1,12 @@
 # Load the LASA data
 from load_data import _PyLasaDataSet
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from policy_transportation import GaussianProcess as GPR
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
-from policy_transportation import Transport
+from policy_transportation import GaussianProcessTransportation as Transport
 DataSet = _PyLasaDataSet()
 # from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 def surface_equations(u, v):
@@ -21,7 +22,7 @@ def surface_equations(u, v):
     z =1+ ((u-u_mean)/(u_max-u_mean))**2 - ((v-v_mean)/(u_max-u_mean))**2  # Modify the equation to create your desired surface
     return x, y, z
 
-
+current_file_directory = os.path.dirname(os.path.realpath(__file__))
 angle_data = DataSet.BendedLine
 demos = angle_data.demos # list of 7 Demo objects, each corresponding to a 
                          # repetition of the pattern
@@ -60,13 +61,13 @@ X_pred=np.vstack((XX_flat, YY_flat, ZZ_flat)).T
 mean, std=gp.predict(X_pred)
 [_,grad]=gp.derivative(X_pred)
 vect=np.sqrt(grad[:,0,0]**2+grad[:,1,0]**2+grad[:,2,0]**2)
-dX=mean[:,0]-2*std*grad[:,0,0]/vect
-dY=mean[:,1]-2*std*grad[:,1,0]/vect
+dX=mean[:,0]-2*std[:,0]*grad[:,0,0]/vect
+dY=mean[:,1]-2*std[:,1]*grad[:,1,0]/vect
 dZ=mean[:,2]#-2*std*grad[:,2,0]/vect
 fig = plt.figure()
-ax = fig.gca(projection='3d')
+ax = fig.add_subplot(111, projection='3d')
 # ax = plt.figure().add_subplot(projection='3d')
-ax.quiver(XX_flat, YY_flat, ZZ_flat, dX, dY, dZ, color='b', arrow_length_ratio=0.05)
+ax.quiver(XX_flat, YY_flat, ZZ_flat, dX, dY, dZ, color='b', arrow_length_ratio=0.08)
 ax.scatter(X[:,0], X[:,1], X[:,2], color='r')
 # ax.set_zlim(-0.2, 0.2)
 
@@ -116,14 +117,15 @@ X1_pred=transport.target_distribution
 mean, _=gp_deltaX1.predict(X1_pred)
 [_,grad]=gp.derivative(X1_pred)
 vect=np.sqrt(grad[:,0,0]**2+grad[:,1,0]**2+grad[:,2,0]**2)
-dX=mean[:,0]-2*std*grad[:,0,0]/vect
-dY=mean[:,1]-2*std*grad[:,1,0]/vect
+dX=mean[:,0]-2*std[:,0]*grad[:,0,0]/vect
+dY=mean[:,1]-2*std[:,1]*grad[:,1,0]/vect
 dZ=mean[:,2]#-2*std*grad[:,2,0]/vect
 # fig = plt.figure()
 # ax = fig.gca(projection='3d')
 # ax = plt.figure().add_subplot(projection='3d')
-ax.quiver(target_distribution[:,0], target_distribution[:,1], target_distribution[:,2], dX, dY, dZ, color='g', arrow_length_ratio=0.05)
+ax.quiver(target_distribution[:,0], target_distribution[:,1], target_distribution[:,2], dX, dY, dZ, color='k', arrow_length_ratio=0.08)
 ax.scatter(X1[:,0], X1[:,1], X1[:,2], color='r')
+ax.view_init(elev=36, azim=-80)
 # ax.set_zlim(-0.2, 0.2)
-plt.savefig('plot_without_whitespace.png', bbox_inches='tight', pad_inches=0, dpi=600)
+plt.savefig(current_file_directory+'/pdf/LASE_deformed.pdf', bbox_inches='tight', pad_inches=0, dpi=600)
 plt.show()
