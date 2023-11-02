@@ -28,9 +28,27 @@ def sort_points(points):
     min_index = np.argmin(cost)
     permuted_list = permutations[min_index]
     index = []
-    # print(points)
     for i in range(len(points)):
         index.append(int(np.argmin(np.linalg.norm(permuted_list-points[i], axis=1))))
-    # index = [int(x) for x in index]  
-    print(index)  
     return permuted_list, index
+
+def calculate_elbow_angle(shoulder, elbow, wrist):
+
+    # Calculate the upper arm and forearm vectors
+    upper_arm_vector = elbow - shoulder
+    forearm_vector = wrist - elbow
+
+    # Normalize the vectors
+    normalized_upper_arm = upper_arm_vector / np.linalg.norm(upper_arm_vector)
+    normalized_forearm = forearm_vector / np.linalg.norm(forearm_vector)
+
+    # Calculate the dot product of the normalized vectors
+    dot_product = np.dot(normalized_upper_arm, normalized_forearm)
+
+    # Calculate the angle in radians
+    angle_radians = np.arccos(dot_product)
+
+    # Convert the angle to degrees
+    angle_degrees = 180- np.degrees(angle_radians)
+
+    return angle_degrees
