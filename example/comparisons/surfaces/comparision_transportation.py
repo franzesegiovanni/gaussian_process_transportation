@@ -14,6 +14,7 @@ from policy_transportation.transportation.multi_layer_perceptron_transportation 
 from policy_transportation.transportation.random_forest_transportation import RFTrasportation as RFT
 from policy_transportation.transportation.laplacian_editing_transportation import LaplacianEditingTransportation as LET
 from policy_transportation.transportation.torch.ensemble_bijective_transport import Neural_Transport as BNT
+from policy_transportation.transportation.kernelized_movement_primitives_transportation import KMP_transportation as KMP
 import os
 
 import warnings
@@ -45,31 +46,31 @@ MLP=MLP()
 RFT=RFT()
 LET=LET()
 BNT=BNT()
-
-methods=[RFT, MLP, LET, BNT, GPT]
-names=["Ensemble Random Forest", "Ensemble Neural Network", "Laplacian Editing", "Ensemble Neural Flows", "Gaussian Process Regression"]
-
+KMP=KMP()
+methods=[KMP, RFT, MLP, LET, BNT, GPT]
+names=["Kernelized Movement Primitives","Ensemble Random Forest", "Ensemble Neural Network", "Laplacian Editing", "Ensemble Neural Flows", "Gaussian Process Regression"]
 
 fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(16, 8))
 fig.subplots_adjust(wspace=0, hspace=0) 
-i=0
+# i=0
 X1_list = []
 std_list = []
 
-print("Fitting Linear Transformation...")
-Affine.fit(source_distribution, target_distribution)
-X1=Affine.predict(X)
-X1_list.append(X1)
-eps=1e-5
-std_list.append(eps*np.ones_like(X1))
-current_ax = ax[0,0]
+# print("Fitting Linear Transformation...")
+# Affine.fit(source_distribution, target_distribution)
+# X1=Affine.predict(X)
+# X1_list.append(X1)
+# eps=1e-5
+# std_list.append(eps*np.ones_like(X1))
+# current_ax = ax[0,0]
 
-current_ax.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,0], label="New Surface")
-current_ax.scatter(X1[:,0],X1[:,1], label="Tranported demonstration")
-current_ax.set_title("Affine Transformation", fontsize=18, fontweight='bold')
-current_ax.set_ylim(-20, 80)
-current_ax.grid()
-i+=1
+# current_ax.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,0], label="New Surface")
+# current_ax.scatter(X1[:,0],X1[:,1], label="Tranported demonstration")
+# current_ax.set_title("Affine Transformation", fontsize=18, fontweight='bold')
+# current_ax.set_ylim(-20, 80)
+# current_ax.grid()
+# i+=1
+i=0
 
 for model , name in zip(methods, names):
     print("Fitting "+name+"...")
