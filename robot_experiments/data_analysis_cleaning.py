@@ -102,8 +102,64 @@ plt.grid(True)
 #     plt.plot(time, execution[i]['recorded_force_torque'][j,:])
 # plt.legend()
 plt.savefig(file_dir+ "/figures/force_norm.pdf", dpi=300, bbox_inches='tight') 
-plt.show()
+# plt.show()
 
 # plot of the forces 
 
+
+import numpy as np
+from scipy.spatial import distance
+from sklearn.decomposition import PCA
+
+target.insert(0,source_dist)
+
+
+hausdorff_dist=np.zeros((len(target), len(target)))
+chamfer_dist=np.zeros((len(target), len(target)))
+pca_dist=np.zeros((len(target), len(target)))
+mse=np.zeros((len(target), len(target)))
+
+
+
+for i, source_points in enumerate(target):
+    for j, target_points in enumerate(target):
+
+        # 1. Hausdorff Distance
+        hausdorff_dist[i,j] = distance.directed_hausdorff(source_points.tolist(), target_points.tolist())[0]
+
+        # 2. Chamfer Distance
+        chamfer_dist[i,j]  = np.mean(np.min(distance.cdist(source_points, target_points), axis=1)) + np.mean(np.min(distance.cdist(target_points, source_points), axis=1))
+
+        # 3. Mean Square Error (MSE)
+        mse[i,j]  = np.max(np.square(np.linalg.norm(source_points - target_points, axis=1)))
+
+        # 4 Principal Component Analysis (PCA)
+        source_pca = PCA(n_components=3).fit_transform(source_points)
+        target_pca = PCA(n_components=3).fit_transform(target_points)
+        pca_dist[i,j]  = np.mean(np.square(np.linalg.norm(source_pca - target_pca, axis=1)))
+
+
+#Printing 
+print('Hausdorff Distance')
+print(np.max(hausdorff_dist))
+print('Chamfer Distance')
+print(np.max(chamfer_dist))
+#print heat map of the distances
+import seaborn as sns
+plt.figure()
+sns.heatmap(hausdorff_dist, annot=True, cmap='viridis')
+plt.title('Hausdorff Distance', fontsize=20)
+
+plt.figure()
+sns.heatmap(chamfer_dist, annot=True, cmap='viridis')
+plt.title('Chamfer Distance', fontsize=20)
+
+plt.figure()
+sns.heatmap(mse, annot=True, cmap='viridis')
+plt.title('MSE', fontsize=20)
+
+plt.figure()
+sns.heatmap(pca_dist, annot=True, cmap='viridis')
+plt.title('PCA', fontsize=20)
+plt.show()
 

@@ -16,7 +16,7 @@ policy.load_dataset(filename)
 
 fig, ax = plt.subplots()
 ax.grid(color='gray', linestyle='-', linewidth=1)
-ax.set_title('Affine Transportation', fontsize=18)
+ax.set_title('Dynamic Movement Primitives', fontsize=18)
 # Customize the background color
 ax.set_facecolor('white')
 ax.set_xlim(-60, 60)

@@ -42,10 +42,6 @@ for filename in sorted(os.listdir(data_folder)):
             name_traj.append(os.path.splitext(filename)[0])
 
 
-# print(name_target)
-# print(name_traj)
-# print(name_traj_ori)
-
 plt.figure()
 ax = plt.axes(projection='3d')
 ax.set_xlabel('X')

@@ -21,7 +21,7 @@ results_dtw= [[]]
 results_fde= [[]]
 results_fad= [[]]
 
-name= ['Aff']
+name= ['DMP']
 script_path = str(os.path.dirname(__file__))
 filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_Reference_Frames_GPT()

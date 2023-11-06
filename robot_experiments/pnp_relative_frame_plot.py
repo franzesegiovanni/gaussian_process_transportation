@@ -4,7 +4,7 @@ import sys
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 from convert_tag_2_dist import match_markers
-from panda_ros.pose_transform_functions import orientation_2_quaternion, array_quat_2_pose, list_2_quaternion
+from panda_ros.pose_transform_functions import array_quat_2_pose, list_2_quaternion
 from utils import relative_transformation
 import numpy as np
 # compute relative 
@@ -47,6 +47,49 @@ for filename in sorted(os.listdir(data_folder)):
             traj.append(load(data_folder+filename))
             name_traj.append(os.path.splitext(filename)[0])
 
+# compute the range of variability in x,y,z of target and object frame
+pos_x=[]
+pos_y=[]
+pos_z=[]
+yaw=[]
+pos_x2=[]
+pos_y2=[]
+pos_z2=[]
+yaw2=[]
+
+for i in range(len(target)):
+    if len(target[i])>1:
+        # print("target", target[i][0].pose.position)
+        pos_x.append(target[i][0].pose.position.x)
+        pos_y.append(target[i][0].pose.position.y)
+        pos_z.append(target[i][0].pose.position.z)
+        q=target[i][0].pose.orientation
+        yaw.append(np.arctan2(2.0 * (q.w * q.z + q.x * q.y), 1-2*( q.y * q.y + q.z * q.z)))
+
+        pos_x2.append(target[i][1].pose.position.x)
+        pos_y2.append(target[i][1].pose.position.y)
+        pos_z2.append(target[i][1].pose.position.z)
+        q=target[i][1].pose.orientation
+
+pos_x=np.array(pos_x)
+pos_y=np.array(pos_y)
+pos_z=np.array(pos_z)
+yaw=np.array(yaw)
+
+pos_x2=np.array(pos_x2)
+pos_y2=np.array(pos_y2)
+pos_z2=np.array(pos_z2)
+
+#Compute range of variability of eacho of the previous variables
+print("Range of variability of the object frame")
+print("pos_x:", np.ptp(pos_x), "meters")
+print("pos_y:", np.ptp(pos_y), "meters")
+print("pos_z:", np.ptp(pos_z), "meters")
+print("yaw:", np.ptp(yaw)*180/np.pi, "degrees")
+print("Range of variability of the goal frame")
+print("pos_x2:", np.ptp(pos_x2), "meters")
+print("pos_y2:", np.ptp(pos_y2), "meters")
+print("pos_z2:", np.ptp(pos_z2), "meters")
 
 pose_trajectories=[]
 pose_trajectories_relative_0=[]
@@ -118,19 +161,19 @@ for i in range(len(pose_trajectories_relative_0)):
     axs[2, 1].plot(time, relative_1[i,2,:], c='b')
 
 axs[0, 0].plot(time, relative_0_demo[0,:], c='r', linewidth=2, label='demo')
-axs[0,0].set_title('Relative to the object')
-axs[0,0].set_ylabel('X', fontsize=12)
+axs[0,0].set_title('Relative to the object', fontsize=20)
+axs[0,0].set_ylabel('X', fontsize=20)
 axs[1, 0].plot(time, relative_0_demo[1,:], c='r',linewidth=2)
-axs[1,0].set_ylabel('Y',fontsize=12)
+axs[1,0].set_ylabel('Y',fontsize=20)
 axs[2, 0].plot(time, relative_0_demo[2,:], c='r',linewidth=2)
 axs[2,0].set_ylabel('Z', fontsize=12)
-axs[2,0].set_xlabel('Time', fontsize=12)
+axs[2,0].set_xlabel('Time', fontsize=20)
 
 axs[0, 1].plot(time, relative_1_demo[0,:], c='r',linewidth=2)
-axs[0,1].set_title('Relative to the goal')
+axs[0,1].set_title('Relative to the goal', fontsize=20)
 axs[1, 1].plot(time, relative_1_demo[1,:], c='r',linewidth=2)
 axs[2, 1].plot(time, relative_1_demo[2,:], c='r',linewidth=2)
-axs[2,1].set_xlabel('Time', fontsize=12)
+axs[2,1].set_xlabel('Time', fontsize=20)
 
 axs[0, 0].legend()
 ymin = -0.9  # replace with your desired minimum
@@ -154,11 +197,11 @@ text = ['Pick', 'Place']  # replace with your desired text
 for ax in axs.flat:
     for x in x_value:
         ax.axvline(x=x, color='k', linestyle='--')  
-axs[0, 0].text(x_value[0]-0.05, ymax, text[0], va='top',rotation=90)
-axs[0, 0].text(x_value[1]-0.05, ymax, text[1], va='top',rotation=90)
+axs[0, 0].text(x_value[0]-0.05, ymax, text[0], va='top',rotation=90, fontsize=10)
+axs[0, 0].text(x_value[1]-0.05, ymax, text[1], va='top',rotation=90, fontsize=10)
 
-axs[0, 1].text(x_value[0]-0.05, ymax, text[0], va='top',rotation=90)
-axs[0, 1].text(x_value[1]-0.05, ymax, text[1], va='top',rotation=90)
+axs[0, 1].text(x_value[0]-0.05, ymax, text[0], va='top',rotation=90, fontsize=10)
+axs[0, 1].text(x_value[1]-0.05, ymax, text[1], va='top',rotation=90, fontsize=10)
 
 plt.subplots_adjust(wspace=0.05, hspace=0)
 plt.savefig(fig_folder+'relative_pose.pdf', dpi=300, bbox_inches='tight')

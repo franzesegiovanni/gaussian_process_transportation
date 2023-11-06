@@ -161,23 +161,47 @@ fig.savefig(source_path+'/pictures/transportation_scheme.pdf',bbox_inches='tight
 fig=plt.figure(figsize=(18,6))
 
 ax = fig.add_subplot(131, projection='3d')
-ax.set_title('Aleatoric Uncertainty')
+ax.set_title('Transportation Uncertainty', fontsize=20)
 surf = ax.plot_surface(dataXX, dataYY, np.sum(std_aleatoric,1).reshape(u.shape) , linewidth=0, antialiased=True, cmap=plt.cm.inferno)
 Z=np.sum(GP_aleatoric.Y,1)
-plt.plot(X1[:,0],X1[:,1], Z , 'o', color='black', markersize=2)
-
+# plt.plot(X1[:,0],X1[:,1], Z , 'o', color='red', markersize=10)
+#set the point of view 
+ax.view_init(elev=30, azim=-20)
+ax.set_facecolor('none')
+ax.grid(False)
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
 ax.set_zlim(np.max(std_hetero), np.min(Z))
 ax.set_ylim(np.max(dataYY), np.min(dataYY))
 ax = fig.add_subplot(132, projection='3d')
-ax.set_title('Episthemic Uncertainty')
+
+ax.set_title('Episthemic Uncertainty', fontsize=20)
 Z=np.sum(std_epi,1).reshape(u.shape)
 surf = ax.plot_surface(dataXX, dataYY, Z , linewidth=0, antialiased=True, cmap=plt.cm.inferno)
 ax.set_zlim(np.max(std_hetero), np.min(Z))
 ax.set_ylim(np.max(dataYY), np.min(dataYY))
+ax.view_init(elev=30, azim=-20)
+ax.set_facecolor('none')
+ax.grid(False)
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
 ax = fig.add_subplot(133, projection='3d')
-ax.set_title('Heteroschedastic Uncertainty')
+
+ax.set_title('Heteroschedastic Uncertainty', fontsize=20)
 surf = ax.plot_surface(dataXX, dataYY, std_hetero , linewidth=0, antialiased=True, cmap=plt.cm.inferno)
 ax.set_zlim(np.max(std_hetero), np.min(std_hetero))
 ax.set_ylim(np.max(dataYY), np.min(dataYY))
+ax.view_init(elev=30, azim=-20)
+ax.set_facecolor('none')
+ax.grid(False)
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
+fig.subplots_adjust(hspace=0, wspace=0.2) # set the space between subplots
+
+# rest of the code
+fig.savefig(source_path+'/pictures/uncertainty_surface.pdf',bbox_inches='tight')
 plt.show()
 

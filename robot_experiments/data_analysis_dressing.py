@@ -2,7 +2,7 @@ import os
 import pickle 
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-from utils import sort_points, calculate_elbow_angle
+from utils import sort_points, calculate_elbow_angle, calculate_elbow_angle2
 #load source distribution
 file_dir= os.path.dirname(__file__)
 from convert_tag_2_dist import convert_distribution
@@ -85,7 +85,8 @@ ax.grid(False)
 fig,axs = plt.subplots(2,5,subplot_kw={'projection': '3d'},figsize=(10, 6))
 
 shoulder_pos = []
-albow_angle = []
+elbow_angle = []
+elbow_angle2 = []
 for i, trajectory in enumerate(traj):
     # plt.figure()
     # ax = plt.axes(projection='3d')
@@ -101,8 +102,10 @@ for i, trajectory in enumerate(traj):
     ax.scatter(target_sorted[2,0], target_sorted[2,1], target_sorted[2,2], c='m', marker='o')
     ax.scatter(target_sorted[3,0], target_sorted[3,1], target_sorted[3,2], c='c', marker='o')
     angle_elbow=calculate_elbow_angle(target_sorted[3,:], target_sorted[2,:], target_sorted[1,:])
+    angle_elbow2=calculate_elbow_angle2(target_sorted[3,:], target_sorted[2,:], target_sorted[1,:])
     shoulder_pos.append(target_sorted[3,:])
-    albow_angle.append(angle_elbow)
+    elbow_angle.append(angle_elbow)
+    elbow_angle2.append(angle_elbow2)
     # print("Shoulder position: ", target_sorted[3,:])    
 
     ax.set_xlim([0.1, 0.7])
@@ -136,18 +139,21 @@ plt.savefig(fig_folder+'dressing.pdf', dpi=300, bbox_inches='tight')
 
 
 shoulder_pos=np.array(shoulder_pos)
-albow_angle=np.array(albow_angle)
+elbow_angle=np.array(elbow_angle)
+elbow_angle2=np.array(elbow_angle2)
 import numpy as np
 
 # your existing code
 
 shoulder_pos=np.array(shoulder_pos)
-albow_angle=np.array(albow_angle)
+elbow_angle=np.array(elbow_angle)
 # compute value range and print it
 shoulder_pos=shoulder_pos.reshape(-1,3)
 print("Shoulder position value range_x: ", np.ptp(shoulder_pos[:,0]))
 print("Shoulder position value range_y: ", np.ptp(shoulder_pos[:,1]))
 print("Shoulder position value range_z: ", np.ptp(shoulder_pos[:,2]))
-print("Elbow angle value range: ", np.ptp(albow_angle))
+
+print("Elbow angle value range: ", np.ptp(elbow_angle))
+print("Elbow angle value range2: ", np.ptp(elbow_angle2))
 # plt.legend()
 plt.show()

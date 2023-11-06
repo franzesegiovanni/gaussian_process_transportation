@@ -46,5 +46,5 @@ fig.tight_layout()
 axes[0, 0].text(-0.05, 0.5, 'Training set',fontsize=18,  transform=axes[0, 0].transAxes, rotation=90, va='center')
 axes[1, 0].text(-0.05, 0.5, 'Test set',fontsize=18,  transform=axes[1, 0].transAxes, rotation=90, va='center')
 # Save the figure
-fig.savefig(script_path + 'comparison.pdf', dpi=1200, bbox_inches='tight')
+fig.savefig(script_path + 'multi_reference_frames_comparison.pdf', dpi=1200, bbox_inches='tight')
 # plt.show()

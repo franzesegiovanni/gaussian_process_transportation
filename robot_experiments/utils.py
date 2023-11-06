@@ -52,3 +52,24 @@ def calculate_elbow_angle(shoulder, elbow, wrist):
     angle_degrees = 180- np.degrees(angle_radians)
 
     return angle_degrees
+
+def calculate_elbow_angle2(shoulder, elbow, wrist):
+
+    # Calculate the upper arm and forearm vectors
+    upper_arm_vector = elbow - shoulder
+    forearm_vector = wrist - shoulder
+
+    # Normalize the vectors
+    normalized_upper_arm = upper_arm_vector / np.linalg.norm(upper_arm_vector)
+    normalized_forearm = forearm_vector / np.linalg.norm(forearm_vector)
+
+    # Calculate the dot product of the normalized vectors
+    dot_product = np.dot(normalized_upper_arm, normalized_forearm)
+
+    # Calculate the angle in radians
+    angle_radians = np.arccos(dot_product)
+
+    # Convert the angle to degrees
+    angle_degrees = 180- np.degrees(angle_radians)
+
+    return angle_degrees
