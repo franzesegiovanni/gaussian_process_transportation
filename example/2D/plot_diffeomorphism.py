@@ -26,7 +26,7 @@ S1=data['newfloor']
 source_distribution=resample(S, num_points=100)
 target_distribution=resample(S1, num_points=100)
 
-fig = plt.figure(figsize = (12, 7))
+fig = plt.figure()
 plt.xlim([-50, 50-1])
 plt.ylim([-50, 50-1])
 plt.scatter(X[:,0],X[:,1], color=[1,0,0]) 
@@ -47,7 +47,9 @@ x_lim=[np.min(X[:,0]-10), np.max(X[:,0]+20)]
 y_lim=[np.min(X[:,1]-5), np.max(X[:,1]+30)]
 ## Plot diffeomorphism
 
-fig = plt.figure(figsize = (12, 7))
+fig, axs = plt.subplots(1, 3, figsize=(21, 8))
+
+
 num_points=15
 x_grid=np.linspace(-40, 30, num_points)
 y_grid=np.linspace(-30, 0, num_points)
@@ -56,33 +58,56 @@ X, Y = np.meshgrid(x_grid, y_grid)
 
 grid=np.hstack((X.reshape(-1,1),Y.reshape(-1,1)))
 
-plt.scatter(grid[:,0],grid[:,1], color=[1,0,0])
+axs[0].scatter(grid[:,0],grid[:,1], color=[1,0,0])
 
 for i in range(num_points):
-        plt.plot(X[i,:],Y[i,:], color=[0,0,0])
-        plt.plot(X[:,i],Y[:,i], color=[0,0,0])
-plt.scatter(source_distribution[:,0],source_distribution[:,1], color=[0,1,0])
-plt.xlim(x_lim)
-plt.ylim(y_lim)
+        axs[0].plot(X[i,:],Y[i,:], color=[0,0,0])
+        axs[0].plot(X[:,i],Y[:,i], color=[0,0,0])
+axs[0].scatter(source_distribution[:,0],source_distribution[:,1], color=[0,1,0])
+axs[0].set_xlim(x_lim)
+axs[0].set_ylim(y_lim)
 # plt.axis('equal')
+
 transport.training_traj=grid
 # transport.training_delta=None
-fig = plt.figure(figsize = (12, 7))
+
+transport.apply_transportation_linear()
+grid_new=transport.training_traj
+X=grid_new[:,0].reshape(num_points,num_points)
+Y=grid_new[:,1].reshape(num_points,num_points)
+# plt.contourf(X, Y, cmap='viridis', levels=20) 
+axs[1].scatter(grid_new[:,0],grid_new[:,1], color=[1,0,0])
+
+
+axs[1].set_xlim(x_lim)
+axs[1].set_ylim(y_lim)
+# plt.axis('equal')
+for i in range(num_points):
+        axs[1].plot(X[i,:],Y[i,:], color=[0,0,0])
+        axs[1].plot(X[:,i],Y[:,i], color=[0,0,0])
+
+axs[1].scatter(target_distribution[:,0],target_distribution[:,1], color=[0,1,0])
+
+
+transport.training_traj=grid
+# transport.training_delta=None
+
 transport.apply_transportation()
 grid_new=transport.training_traj
 X=grid_new[:,0].reshape(num_points,num_points)
 Y=grid_new[:,1].reshape(num_points,num_points)
 # plt.contourf(X, Y, cmap='viridis', levels=20) 
-plt.scatter(grid_new[:,0],grid_new[:,1], color=[1,0,0])
+
+axs[2].scatter(grid_new[:,0],grid_new[:,1], color=[1,0,0])
 
 
-plt.xlim(x_lim)
-plt.ylim(y_lim)
+axs[2].set_xlim(x_lim)
+axs[2].set_ylim(y_lim)
 # plt.axis('equal')
 for i in range(num_points):
-        plt.plot(X[i,:],Y[i,:], color=[0,0,0])
-        plt.plot(X[:,i],Y[:,i], color=[0,0,0])
+        axs[2].plot(X[i,:],Y[i,:], color=[0,0,0])
+        axs[2].plot(X[:,i],Y[:,i], color=[0,0,0])
 
-plt.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,1,0])
+axs[2].scatter(target_distribution[:,0],target_distribution[:,1], color=[0,1,0])
 
 plt.show()
