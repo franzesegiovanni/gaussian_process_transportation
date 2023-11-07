@@ -174,6 +174,9 @@ ax.yaxis.pane.fill = False
 ax.zaxis.pane.fill = False
 ax.set_zlim(np.max(std_hetero), np.min(Z))
 ax.set_ylim(np.max(dataYY), np.min(dataYY))
+ax.set_ylabel('X [m]', fontsize=20)
+ax.set_xlabel('Y [m]', fontsize=20)
+ax.set_zlabel('std [m]', fontsize=20)
 ax = fig.add_subplot(132, projection='3d')
 
 ax.set_title('Episthemic Uncertainty', fontsize=20)
@@ -187,6 +190,9 @@ ax.grid(False)
 ax.xaxis.pane.fill = False
 ax.yaxis.pane.fill = False
 ax.zaxis.pane.fill = False
+ax.set_ylabel('X [m]', fontsize=20)
+ax.set_xlabel('Y [m]', fontsize=20)
+ax.set_zlabel('std [m]', fontsize=20)
 ax = fig.add_subplot(133, projection='3d')
 
 ax.set_title('Heteroschedastic Uncertainty', fontsize=20)
@@ -199,6 +205,10 @@ ax.grid(False)
 ax.xaxis.pane.fill = False
 ax.yaxis.pane.fill = False
 ax.zaxis.pane.fill = False
+ax.set_ylabel('X [m]', fontsize=20)
+ax.set_xlabel('Y [m]', fontsize=20)
+ax.set_zlabel('std [m]', fontsize=20)
+
 fig.subplots_adjust(hspace=0, wspace=0.2) # set the space between subplots
 
 # rest of the code
