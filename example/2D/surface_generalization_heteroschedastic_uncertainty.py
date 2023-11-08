@@ -158,7 +158,7 @@ axs[1, 1].set_yticklabels([])
 fig.savefig(source_path+'/pictures/transportation_scheme.pdf',bbox_inches='tight')
 # Plot surface of the norm of ouput uncertainties
 
-fig=plt.figure(figsize=(18,6))
+fig=plt.figure(figsize=(20,6))
 
 ax = fig.add_subplot(131, projection='3d')
 ax.set_title('Transportation Uncertainty', fontsize=20)
@@ -207,11 +207,10 @@ ax.yaxis.pane.fill = False
 ax.zaxis.pane.fill = False
 ax.set_ylabel('X [m]', fontsize=20)
 ax.set_xlabel('Y [m]', fontsize=20)
-ax.set_zlabel('std [m]', fontsize=20)
+# ax.set_zlabel('std [m]', fontsize=20)
 
-fig.subplots_adjust(hspace=0, wspace=0.2) # set the space between subplots
-
+fig.subplots_adjust(hspace=0, wspace=0.1) # set the space between subplots
 # rest of the code
-fig.savefig(source_path+'/pictures/uncertainty_surface.pdf',bbox_inches='tight')
+fig.savefig(source_path+'/pictures/uncertainty_surface.pdf', bbox_inches='tight')
 plt.show()
 
