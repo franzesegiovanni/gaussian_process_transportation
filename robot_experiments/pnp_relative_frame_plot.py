@@ -148,7 +148,7 @@ for i in range(len(pose_trajectories_relative_0)):
 
 
 fig, axs = plt.subplots(3, 2,figsize=(10, 6))
-time= np.linspace(0, 1,len(pose_trajectories_relative_0[0]))
+time= np.linspace(0, len(pose_trajectories_relative_0[0])/20, len(pose_trajectories_relative_0[0]))
 
 
 for i in range(len(pose_trajectories_relative_0)):
@@ -162,18 +162,18 @@ for i in range(len(pose_trajectories_relative_0)):
 
 axs[0, 0].plot(time, relative_0_demo[0,:], c='r', linewidth=2, label='demo')
 axs[0,0].set_title('Relative to the object', fontsize=20)
-axs[0,0].set_ylabel('X', fontsize=20)
+axs[0,0].set_ylabel('X [m]', fontsize=20)
 axs[1, 0].plot(time, relative_0_demo[1,:], c='r',linewidth=2)
-axs[1,0].set_ylabel('Y',fontsize=20)
+axs[1,0].set_ylabel('Y [m]',fontsize=20)
 axs[2, 0].plot(time, relative_0_demo[2,:], c='r',linewidth=2)
-axs[2,0].set_ylabel('Z', fontsize=12)
-axs[2,0].set_xlabel('Time', fontsize=20)
+axs[2,0].set_ylabel('Z [m]', fontsize=20)
+axs[2,0].set_xlabel('Time [s]', fontsize=20)
 
 axs[0, 1].plot(time, relative_1_demo[0,:], c='r',linewidth=2)
 axs[0,1].set_title('Relative to the goal', fontsize=20)
 axs[1, 1].plot(time, relative_1_demo[1,:], c='r',linewidth=2)
 axs[2, 1].plot(time, relative_1_demo[2,:], c='r',linewidth=2)
-axs[2,1].set_xlabel('Time', fontsize=20)
+axs[2,1].set_xlabel('Time [s]', fontsize=20)
 
 axs[0, 0].legend()
 ymin = -0.9  # replace with your desired minimum
@@ -181,7 +181,7 @@ ymax = 0.9  # replace with your desired maximum
 
 for ax in axs.flat:
     ax.set_ylim([ymin, ymax])
-    ax.set_xlim([0, 1])
+    ax.set_xlim([0, np.max(time)])
 
 axs[0, 0].set_xticks([])
 axs[0, 1].set_xticks([])
@@ -191,7 +191,8 @@ axs[0, 1].set_yticks([])
 axs[1, 1].set_yticks([])
 axs[2, 1].set_yticks([])
 
-x_value = [0.3,0.7]  # replace with the x-coordinate of the vertical line
+final_time=len(pose_trajectories_relative_0[0])/20
+x_value = [0.3* final_time,0.7* final_time]# replace with the x-coordinate of the vertical line
 text = ['Pick', 'Place']  # replace with your desired text
 
 for ax in axs.flat:
