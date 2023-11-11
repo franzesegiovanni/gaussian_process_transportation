@@ -6,7 +6,7 @@ directory = os.path.dirname(__file__)
 
 print(directory)
 # Set the path to the folder containing the screenshots
-folder_path =directory + "/video_frames/reshelving/place/"
+folder_path =directory + "/video_frames/reshelving/pick/"
 files = os.listdir(folder_path)
 image_files = [f for f in files if f.endswith(".png") and not(f.startswith("template"))]
 image_files.sort()

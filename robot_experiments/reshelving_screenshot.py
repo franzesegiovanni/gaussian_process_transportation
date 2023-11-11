@@ -7,7 +7,7 @@ directory = os.path.dirname(__file__)
 
 print(directory)
 # Set the path to the folder containing the screenshots
-folder_path =directory + "/video_frames/reshelving/place/cropped/"
+folder_path =directory + "/video_frames/reshelving/pick/cropped/"
 
 # Get a list of all the files in the folder
 files = os.listdir(folder_path)
@@ -16,8 +16,8 @@ image_template = Image.open(folder_path + "template.png")
 # Convert images to grayscale
 left = 200
 top = 0
-right = image_template.width-1000
-bottom = image_template.height-300
+right = image_template.width
+bottom = image_template.height
 image_template = image_template.crop((left, top, right, bottom))
 image_files = [f for f in files if f.endswith(".png") and not(f.startswith("template"))]
 
@@ -37,8 +37,8 @@ for i, image_file in enumerate(image_files):
     image_array[:,:,-1][mask]=0
     image = Image.fromarray(image_array)
     image=image.crop((left, top, right, bottom))
-    plt.imshow(image)
+    plt.imshow(image, alpha=1)
     plt.axis('off')
-plt.savefig(directory+"/figures/reshelving_screenshot.pdf", bbox_inches='tight', pad_inches=0)    
+plt.savefig(directory+"/figures/pick_screenshot.pdf", dpi=600, bbox_inches='tight', pad_inches=0)
 plt.show()
     
