@@ -32,13 +32,19 @@ print(ranking_fda)
 dataframes = [ fde, fda]
 rankings = [ranking_fde, ranking_fda]
 titles = [ 'Final Position Error', 'Final Orientation Error']
-
+color_palette = sns.color_palette("husl", n_colors=len(dataframes[0].columns))
+df_color = pd.DataFrame(color_palette).transpose()
+df_color = df_color.set_axis(list(dataframes[0].columns.tolist()), axis=1) 
 fig, axes = plt.subplots(1, len(rankings), figsize=(8, 6), constrained_layout=True)
 
 for i, (data, ranking, title) in enumerate(zip(dataframes, rankings, titles)):
     data = data.reindex(columns=ranking['group'].tolist())
-    sns.boxplot(data=data, orient='v', ax=axes[i])
-    sns.stripplot(data=data, color="black", jitter=True, size=3, ax=axes[i])
+    # sns.boxplot(data=data, orient='v', ax=axes[i])
+    data_color = df_color.reindex(columns=ranking['group'].tolist())
+    color_palette_order = data_color.values.transpose()
+    color_palette_order_list= [tuple(row) for row in color_palette_order]
+    sns.boxplot(data=data, orient='v', ax=axes[i], palette=color_palette_order_list)
+    # sns.stripplot(data=data, color="black", jitter=True, size=3, ax=axes[i])
     for j, number in enumerate(ranking['rank'].tolist()):
         axes[i].text(j, data.max().max(), str(number), ha='center', va='bottom', fontweight='bold', fontsize=14)
     axes[i].set_title(title, fontsize=20, fontweight='bold')

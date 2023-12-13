@@ -88,13 +88,21 @@ plt.subplots_adjust(wspace=-0.1, hspace=-0.6)
 plt.savefig(file_dir+ "/figures/cleaning.pdf", dpi=300, bbox_inches='tight') 
 plt.figure()
 
-for trajectory in execution:
+trajectory=execution[0]
+time=np.arange(0, len(trajectory['recorded_force_torque'][0,:]))/20
+force_norm=np.linalg.norm(trajectory['recorded_force_torque'][0:3,:], axis=0)
+plt.plot(time, force_norm, '--',label='D')
+i=1
+for trajectory in execution[1:]:
     time=np.arange(0, len(trajectory['recorded_force_torque'][0,:]))/20
     force_norm=np.linalg.norm(trajectory['recorded_force_torque'][0:3,:], axis=0)
-    plt.plot(time, force_norm)
-
-plt.title('Force norm', fontsize=20)
+    plt.plot(time, force_norm, label=str(i))
+    i=i+1
+plt.legend()
+plt.title('Cleaning surface generalization', fontsize=16)
 plt.grid(True)
+plt.xlabel('Time [s]', fontsize=14)
+plt.ylabel('Force [N]', fontsize=14)
 # plt.figure()
 # for j in range(3):
 #     time=np.arange(0, len(execution[i]['recorded_force_torque'][j,:]))/20

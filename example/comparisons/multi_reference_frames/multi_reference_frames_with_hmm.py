@@ -29,6 +29,7 @@ ax.grid(True)
 ax = fig.gca()
 ax.set_title('Hidden Markov Model', fontsize=18)
 
+policy.find_the_most_probable_sequence()
 for demo_index in range(9):
     df, area, dtw, fde, fad=policy.reproduce(demo_index, ax=ax, compute_metrics=True)
 

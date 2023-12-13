@@ -72,12 +72,21 @@ class Multiple_Reference_Frames_GPT:
         self.test_A=test_A
         self.test_b=test_b
 
-    def reproduce(self, index_source, index_target, ax=None, compute_metrics=False, linear=False):
+    def reproduce(self, index_source, index_target, ax=None, compute_metrics=False, linear=False, plot_bounds=True):
         X=self.demos_x[index_source]
 
         self.transport.source_distribution=self.distribution_training_set[index_source,:,:]
         self.transport.target_distribution=self.distribution_training_set[index_target,:,:]
         self.transport.training_traj=X
+
+        # X=np.empty((0,2)) 
+        # self.transport.source_distribution=np.empty((0,2))
+        # self.transport.target_distribution=np.empty((0,2))
+        # for i in index_source:
+        #     X=np.vstack((X,self.demos_x[i]))
+        #     self.transport.source_distribution=np.vstack((self.transport.source_distribution,self.distribution_training_set[i,:,:]))
+        #     self.transport.target_distribution=np.vstack((self.transport.target_distribution,self.distribution_training_set[index_target,:,:]))
+        # self.transport.training_traj=X
         if linear==True:
             self.transport.fit_transportation_linear()
             self.transport.apply_transportation_linear()
@@ -91,7 +100,7 @@ class Multiple_Reference_Frames_GPT:
         
 
         if ax is not None:
-            self.plot(X1, std, self.distribution_training_set[index_target,:,:], ax)
+            self.plot(X1, std, self.distribution_training_set[index_target,:,:], ax, plot_bounds=plot_bounds)
             ax.plot(self.demos_x[index_target][:,0],self.demos_x[index_target][:,1], 'k--')
 
         if compute_metrics==True:    
@@ -124,10 +133,10 @@ class Multiple_Reference_Frames_GPT:
             return df, area, dtw, fde, final_angle_distance[0]
 
     def generalize(self, index_source, index_target, ax=None, compute_metrics=False, linear=False):
-        X=self.demos_x[index_source]
+        X=self.demos_x[index_source].reshape(-1,2)
 
-        self.transport.source_distribution=self.distribution_training_set[index_source,:,:]
-        self.transport.target_distribution=self.distribution_test_set[index_target,:,:]
+        self.transport.source_distribution=self.distribution_training_set[index_source,:,:].reshape(-1,2)
+        self.transport.target_distribution=self.distribution_test_set[index_target,:,:].reshape(-1,2)
         self.transport.training_traj=X
         if linear==True:
             self.transport.fit_transportation_linear()
@@ -157,8 +166,9 @@ class Multiple_Reference_Frames_GPT:
             print("Final Angle Distance  : ", final_angle_distance[0])
             return fde, final_angle_distance[0]
     
-    def plot(self, X1, std, distribution, ax=None):
-        draw_error_band(ax, X1[:,0], X1[:,1], err=std, facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.8)
+    def plot(self, X1, std, distribution, ax=None, plot_bounds=True):
+        if plot_bounds==True:
+            draw_error_band(ax, X1[:,0], X1[:,1], err=std, facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.8)
         ax.plot(distribution[0:2,0],distribution[0:2,1], linewidth=10, alpha=0.9, c='green')
         ax.scatter(distribution[0,0],distribution[0,1], linewidth=10, alpha=0.9, c='green')
         ax.plot(distribution[2:4,0],distribution[2:4,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])

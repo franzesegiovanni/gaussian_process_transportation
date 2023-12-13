@@ -53,18 +53,24 @@ class Multiple_reference_frames_HMM():
             final_delta=np.linalg.inv(demos_A[i][0][1]) @ (self.demos_x[i][-1,:]-self.demos_x[i][-2,:])
             self.final_orientation[i]= np.arctan2(final_delta[1],final_delta[0])
     
-        horizon_mean=0
+        horizon_max=0
         for i in range(len(self.demos_xdx)):
-            horizon_mean=np.max([horizon_mean, self.demos_xdx[i].shape[0]])
+            if self.demos_xdx[i].shape[0]>horizon_max:
+                horizon_max=self.demos_xdx[i].shape[0]
+                index_max=i
 
-        self.horizon_mean=horizon_mean
-
+        self.horizon_max=horizon_max
+        self.index_max=index_max
     def train(self):
 
         self.model.init_hmm_kbins(self.demos_xdx_augm) # initializing model
 
         # EM to train model
         self.model.em(self.demos_xdx_augm, reg=1e-3) 
+
+    def find_the_most_probable_sequence(self):
+
+        self.sq_longest = self.model.viterbi(self.demos_xdx_augm_load[self.index_max])
 
     def reproduce(self, index_in_training_set, ax=None, compute_metrics=False):
 
@@ -82,7 +88,6 @@ class Multiple_reference_frames_HMM():
         lqr = PoGLQR(nb_dim=2, dt=0.05, horizon=self.demos_xdx[index_in_training_set].shape[0])     
         #sq = [i // (n/m) for i in range(n)]
         # solving LQR with Product of Gaussian, see notebook on LQR
-        
 
         lqr.mvn_xi = _prod.concatenate_gaussian(sq) # augmented version of gaussian
         lqr.mvn_u = -4.
@@ -148,8 +153,10 @@ class Multiple_reference_frames_HMM():
         _prod = _mod1 * _mod2
         
         # get the most probable sequence of state for this demonstration
-        sq = [int(count // (self.horizon_mean/self.nb_states)) for count in range(self.horizon_mean)]
-        lqr = PoGLQR(nb_dim=2, dt=0.05, horizon=self.horizon_mean)       
+        # sq = [int(count // (self.horizon_mean/self.nb_states)) for count in range(self.horizon_mean)]
+        # sq = self.model.viterbi(self.demos_xdx_augm_load[0])
+        sq=self.sq_longest
+        lqr = PoGLQR(nb_dim=2, dt=0.05, horizon=self.horizon_max)       
         #sq = [i // (n/m) for i in range(n)]
         # solving LQR with Product of Gaussian, see notebook on LQR
         

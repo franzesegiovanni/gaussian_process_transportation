@@ -42,11 +42,6 @@ def generate_ranking(df):
     groups = df.columns.tolist()
     rankings = pd.DataFrame({'group': groups, 'rank': len(groups)})
 
-    # Perform Kruskal-Wallis test
-    # stat, p_value = stats.kruskal(*[df[group] for group in groups])
-
-    # # If p-value is significant, perform post-hoc tests
-    # if p_value < 0.05:
     for i in range(len(groups)):
         for j in range(len(groups)):
             group1 = groups[i]

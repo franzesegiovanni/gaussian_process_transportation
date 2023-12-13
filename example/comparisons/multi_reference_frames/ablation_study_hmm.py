@@ -80,7 +80,7 @@ filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_reference_frames_HMM()
 policy.load_data(filename)
 policy.train()
-
+policy.find_the_most_probable_sequence()
 for j in range(number_repetitions):
     # fig, ax = plt.subplots()
     ax=None

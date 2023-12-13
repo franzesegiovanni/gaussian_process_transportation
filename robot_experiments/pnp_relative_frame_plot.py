@@ -1,3 +1,4 @@
+#source_april_tags_ravi
 import os
 import pickle 
 import sys
@@ -150,6 +151,7 @@ for i in range(len(pose_trajectories_relative_0)):
 fig, axs = plt.subplots(3, 2,figsize=(10, 6))
 time= np.linspace(0, len(pose_trajectories_relative_0[0])/20, len(pose_trajectories_relative_0[0]))
 
+axs[0, 0].plot(time, relative_0[0,0,:], c='b', label='executions')
 
 for i in range(len(pose_trajectories_relative_0)):
     axs[0, 0].plot(time, relative_0[i,0,:], c='b')
@@ -198,11 +200,11 @@ text = ['Pick', 'Place']  # replace with your desired text
 for ax in axs.flat:
     for x in x_value:
         ax.axvline(x=x, color='k', linestyle='--')  
-axs[0, 0].text(x_value[0]-0.05, ymax, text[0], va='top',rotation=90, fontsize=10)
-axs[0, 0].text(x_value[1]-0.05, ymax, text[1], va='top',rotation=90, fontsize=10)
+axs[0, 0].text(x_value[0]+0.1, ymax, text[0], va='top',rotation=90, fontsize=10)
+axs[0, 0].text(x_value[1]+0.1, ymax, text[1], va='top',rotation=90, fontsize=10)
 
-axs[0, 1].text(x_value[0]-0.05, ymax, text[0], va='top',rotation=90, fontsize=10)
-axs[0, 1].text(x_value[1]-0.05, ymax, text[1], va='top',rotation=90, fontsize=10)
+axs[0, 1].text(x_value[0]+0.1, ymax, text[0], va='top',rotation=90, fontsize=10)
+axs[0, 1].text(x_value[1]+0.1, ymax, text[1], va='top',rotation=90, fontsize=10)
 
 plt.subplots_adjust(wspace=0.05, hspace=0)
 plt.savefig(fig_folder+'relative_pose.pdf', dpi=300, bbox_inches='tight')

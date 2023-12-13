@@ -1,6 +1,6 @@
 import os
 import matplotlib.pyplot as plt
-from PIL import Image
+from PIL import Image, ImageEnhance
 import os
 directory = os.path.dirname(__file__)
 
@@ -33,7 +33,10 @@ for i, image_file in enumerate(image_files):
     right = image.width
     bottom = image.height
     image = image.crop((left, top, right, bottom))
-    axs[i].imshow(image)
+    enhancer = ImageEnhance.Brightness(image)
+    brightness_factor = 1.3  # Adjust the value as needed (1.0 means no change)
+    image_brightened = enhancer.enhance(brightness_factor)
+    axs[i].imshow(image_brightened)
     axs[i].axis("off")
     if i==0:
 
