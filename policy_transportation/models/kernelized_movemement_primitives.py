@@ -51,7 +51,7 @@ class KMP():
         
         if return_std:
             self.mean, std= self.gp.predict(self.time.reshape(-1,1), return_std=True)
-            return self.mean, std+np.sqrt(self.gp.kernel.get_params()['k2__noise_level'])
+            return self.mean, std#+np.sqrt(self.gp.kernel.get_params()['k2__noise_level'])
         else:
             self.mean, _ = self.gp.predict(self.time.reshape(-1,1), return_std=True)
             return self.mean
