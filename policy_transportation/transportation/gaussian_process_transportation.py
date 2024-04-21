@@ -69,6 +69,9 @@ class GaussianProcessTransportation():
         self.delta_map_mean, self.std= self.gp_delta_map.predict(self.traj_rotated, return_std=True)
         self.training_traj = self.traj_rotated + self.delta_map_mean 
 
+        J_var= self.std**2/self.gp_delta_map.kernel_params_[0]**2
+        self.var_vel_transported= np.zeros_like(self.training_delta)
+
         #Deform Deltas and orientation
         for i in range(len(self.training_traj[:,0])):
             if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
@@ -79,6 +82,7 @@ class GaussianProcessTransportation():
                 derivative_affine= self.affine_transform.derivative(pos)
                 if  hasattr(self, 'training_delta'):
                     self.training_delta[i]= derivative_affine @ self.training_delta[i]
+                    self.var_vel_transported[i]=J_var[i] * self.training_delta[i]**2
                     self.training_delta[i]= rot_gp @ self.training_delta[i]
                 if  hasattr(self, 'training_ori'):
                     rot_gp_norm=rot_gp/np.linalg.det(rot_gp)

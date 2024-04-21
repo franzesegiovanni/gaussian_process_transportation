@@ -40,6 +40,10 @@ deltaX = np.zeros((len(X),2))
 for j in range(len(X)-1):
     deltaX[j,:]=(X[j+1,:]-X[j,:])
 
+X=X[:-1,:]
+deltaX=deltaX[:-1,:]
+
+
 
 fig, axs = plt.subplots(nrows=2, ncols=2,figsize=(12, 12))
 
@@ -146,7 +150,16 @@ axs[1, 0].text(0.05, 0.95, latex_symbol, transform=axs[1, 0].transAxes, fontsize
 #We should fit a gp for the aleatoric noise. 
 kernel_uncertainty=C(constant_value=np.sqrt(0.1))  * RBF(4*np.ones(2), length_scale_bounds=[0.01, 500]) + WhiteKernel(0.01, noise_level_bounds=[0.01, 0.1] )
 GP_aleatoric=GPR(kernel=kernel_uncertainty)
-GP_aleatoric.fit(X1, std/transport.gp_delta_map.kernel_params_[0])
+
+# J_var= std**2/transport.gp_delta_map.kernel_params_[0]
+# var_aleatoric= np.sum(J_var,1)* deltaX
+# std_transportation=np.sqrt(var_aleatoric)
+# std_transportation_vector=np.tile(std_transportation, (2,1)).T
+var_aleatoric=transport.var_vel_transported
+std_aleatoric=np.sqrt(var_aleatoric)
+GP_aleatoric.fit(X1, std_aleatoric)
+
+
 
 dataXX, dataYY = np.meshgrid(x_grid, y_grid)
 pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
@@ -206,8 +219,8 @@ ax.yaxis.pane.fill = False
 ax.zaxis.pane.fill = False
 ax.set_zlim(np.max(std_hetero), np.min(Z))
 ax.set_ylim(np.max(dataYY), np.min(dataYY))
-ax.set_ylabel('X [m]', fontsize=20)
-ax.set_xlabel('Y [m]', fontsize=20)
+ax.set_xlabel('X [m]', fontsize=20)
+ax.set_ylabel('Y [m]', fontsize=20)
 ax.set_zlabel('std [m/s]', fontsize=20)
 ax = fig.add_subplot(132, projection='3d')
 
@@ -222,8 +235,8 @@ ax.grid(False)
 ax.xaxis.pane.fill = False
 ax.yaxis.pane.fill = False
 ax.zaxis.pane.fill = False
-ax.set_ylabel('X [m]', fontsize=20)
-ax.set_xlabel('Y [m]', fontsize=20)
+ax.set_xlabel('X [m]', fontsize=20)
+ax.set_ylabel('Y [m]', fontsize=20)
 ax.set_zlabel('std [m/s]', fontsize=20)
 ax = fig.add_subplot(133, projection='3d')
 
@@ -237,8 +250,8 @@ ax.grid(False)
 ax.xaxis.pane.fill = False
 ax.yaxis.pane.fill = False
 ax.zaxis.pane.fill = False
-ax.set_ylabel('X [m]', fontsize=20)
-ax.set_xlabel('Y [m]', fontsize=20)
+ax.set_xlabel('X [m]', fontsize=20)
+ax.set_ylabel('Y [m]', fontsize=20)
 ax.set_zlabel('std [m/s]', fontsize=20)
 
 fig.subplots_adjust(hspace=0, wspace=0.1) # set the space between subplots
