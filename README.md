@@ -17,7 +17,9 @@ In the example folder you can find the code to reproduce the experiments in the 
 The transportation function are all in the `transportation` folder.
 
 
-If you find my research useful or insightful, please consider citing the paper, star the code and send me an email with your feedback and questions. 
+If you find my research useful or insightful, please consider citing the paper, star the repo, follow me on GitHub and send me an email with your feedback and questions at G.Franzese@tudelft.nl
+
+The paper is currently under review in an IEEE journal but you can already cite the arxiv version:
 
 ```
 Franzese, G., Prakash, R. and Kober, J., 2024. Generalization of Task Parameterized Dynamical Systems using Gaussian Process Transportation. arXiv preprint arXiv:2404.13458.
