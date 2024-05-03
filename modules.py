@@ -4,32 +4,24 @@ Email: g.franzese@tudelft.nl, r.prakash@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
-
-from ILoSA import ILoSA
 from policy_transportation import GaussianProcessTransportation as Transport
 from sensors.tag_detector import Tag_Detector
 from sensors.surface_pointcloud_detector import Surface_PointCloud_Detector
-from sensors.read_pose_arm import LeftArmPose
+from SIMPLe import SIMPLe
 import rospy
 
-
-class Surface_Trasportation(Transport,Surface_PointCloud_Detector, ILoSA):
+class GPT_surface(Transport,Surface_PointCloud_Detector,SIMPLe):
     def __init__(self):
-        rospy.init_node('GILoSA', anonymous=True)
+        rospy.init_node('GPT', anonymous=True)
         rospy.sleep(2)
-        super(Surface_Trasportation,self).__init__()
+        super(GPT_surface,self).__init__()
+              
         
-class Dressing_Trasportation(Transport, LeftArmPose, ILoSA):
+class GPT_tag(Transport, Tag_Detector, SIMPLe):
     def __init__(self):
-        rospy.init_node('GILoSA', anonymous=True)
+        rospy.init_node('GPT', anonymous=True)
         rospy.sleep(2)
-        super(Dressing_Trasportation,self).__init__()        
-        
-class Tag_Transportation(Transport, Tag_Detector, ILoSA):
-    def __init__(self):
-        rospy.init_node('GILoSA', anonymous=True)
-        rospy.sleep(2)
-        super(Tag_Transportation,self).__init__()
+        super(GPT_tag,self).__init__()
 
 
         

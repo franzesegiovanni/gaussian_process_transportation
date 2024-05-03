@@ -26,10 +26,10 @@ class Surface_PointCloud_Detector():
         self.listener = tf2_ros.TransformListener(self.tf_buffer)
         self.base_frame = "panda_link0"
 
-        # camera and tags
-        self.view_marker = PoseStamped()
+        
 
         # For Cleaning experiment
+        self.view_marker = PoseStamped()
         self.view_marker.header.frame_id = "panda_link0"
         self.view_marker.pose.position.x = 0.37216857
         self.view_marker.pose.position.y = -0.07206429

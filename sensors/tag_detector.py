@@ -16,16 +16,6 @@ class Tag_Detector():
         self.base_frame = "panda_link0"
         self._tf_listener = tf.TransformListener()
 
-        # camera and tags
-        self.view_marker = PoseStamped()
-        self.view_marker.header.frame_id = "panda_link0"
-        self.view_marker.pose.position.x = 0.4585609490798406
-        self.view_marker.pose.position.y = -0.04373075604079746
-        self.view_marker.pose.position.z = 0.6862181406538658
-        self.view_marker.pose.orientation.w = 0.03724672277393113
-        self.view_marker.pose.orientation.x =  0.9986700943869168
-        self.view_marker.pose.orientation.y =  0.03529063207161849
-        self.view_marker.pose.orientation.z = -0.004525063460755314
         self.tfBuffer = tf2_ros.Buffer()
         self.transform_listener = tf2_ros.TransformListener(self.tfBuffer)
 
@@ -54,13 +44,6 @@ class Tag_Detector():
         
         self.source_distribution, self.target_distribution= convert_distribution(self.source_distribution, self.target_distribution, use_orientation=use_orientation)
         
-        
-    # def record_source_distribution(self):
-    #     self.source_distribution=self.detections
-
-    # def record_target_distribution(self):
-    #     self.target_distribution=self.detections
-
     def record_source_distribution(self):
             self.source_distribution=[]
             self.source_distribution=self.continuous_record(self.source_distribution)
@@ -74,27 +57,21 @@ class Tag_Detector():
         distribution_copy=copy(distribution)
 
         if not detection_copy:
-            # print("No detection")
             return distribution_copy
         if not distribution_copy:
             distribution=detection_copy
-            # print(detection_copy)
-            # print("No distribution")
             return detection_copy
 
         for i in range(len(distribution_copy)):
             if detection_copy and distribution_copy:
                 for j in range(len(detection_copy)):
-                    # print(distribution_copy[i].id[0])
-                    # print(detection_copy[j].id[0])
                     if distribution_copy[i].id[0]==detection_copy[j].id[0]:
-                        # distribution_copy[i]=copy(detection_copy[j])
                         del detection_copy[j]
                         break 
         distribution_copy= distribution_copy + detection_copy 
         return distribution_copy           
 
-    def Record_traj_tags(self):
+    def record_traj_tags(self):
         self.Passive()
 
         self.end = False
@@ -118,7 +95,7 @@ class Tag_Detector():
         self.recorded_traj_tag=data['recorded_traj_tag']
         self.recorded_ori_tag=data['recorded_ori_tag']
 
-    def Record_tags(self, distribution):
+    def record_tags(self, distribution):
         start = PoseStamped()
 
         start.pose.position.x = self.recorded_traj_tag[0,0]
@@ -133,58 +110,9 @@ class Tag_Detector():
         j=0
         for i in range(self.recorded_traj_tag.shape[0]-1):
             self.set_attractor(self.recorded_traj_tag[i,:], self.recorded_ori_tag[i,:])
-            # if i>10 and i < self.recorded_traj_tag.shape[0]-10 and np.linalg.norm(self.recorded_traj_tag[i-10,:]-self.recorded_traj_tag[i+10,:])<0.005: #and j>20:
-                # print("Saving frames")
             distribution=self.continuous_record(distribution)
-                # print(distribution)
-                # j=0
-            # j=j+1
             self.r_rec.sleep() 
         return distribution    
-
-    def Record_tags_goto(self, distribution):
-        start = PoseStamped()
-        start.pose.position.x = 0.40375158
-        start.pose.position.y = -0.01048578
-        start.pose.position.z = 0.75245844
-        start.pose.orientation.w =  0.08399367
-        start.pose.orientation.x = 0.68521328
-        start.pose.orientation.y = 0.7230002
-        start.pose.orientation.z = -0.02625647
-        self.go_to_pose(start)
-        rospy.sleep(2)
-        distribution=self.continuous_record(distribution)
-        rospy.sleep(2)
-        # [ 0.40375158, -0.01048578,  0.75245844]
-        # [ 0.08399367,  0.68521328,  0.7230002 , -0.02625647]
-        start.pose.position.x = 0.42474412
-        start.pose.position.y = -0.00146312
-        start.pose.position.z = 0.76038187
-        start.pose.orientation.w =  0.31872356
-        start.pose.orientation.x = 0.63964127
-        start.pose.orientation.y = 0.64930498
-        start.pose.orientation.z = -0.26013055
-        # [ 0.42474412, -0.00146312,  0.76038187]
-        # [ 0.31872356,  0.63964127,  0.64930498, -0.26013055]
-        self.go_to_pose(start)
-        rospy.sleep(2)
-        distribution=self.continuous_record(distribution)
-        rospy.sleep(2)
-        start.pose.position.x = 0.4272796
-        start.pose.position.y =-0.0647395
-        start.pose.position.z = 0.8631258
-        start.pose.orientation.w =  0.51575005
-        start.pose.orientation.x = 0.50598534
-        start.pose.orientation.y =  0.48100053
-        start.pose.orientation.z = -0.49659837
-        rospy.sleep(2)
-        self.go_to_pose(start)
-        rospy.sleep(2)
-        distribution=self.continuous_record(distribution)
-        #[ 0.4272796, -0.0647395,  0.8631258]
-        #[ 0.51575005,  0.50598534,  0.48100053, -0.49659837]
-        return distribution
-
 
 def convert_distribution(source_distribution, target_distribution, use_orientation=False):
     target_array=np.array([], dtype=np.int64).reshape(0,3)
@@ -208,7 +136,6 @@ def convert_distribution(source_distribution, target_distribution, use_orientati
                     marker_corners=detect_marker_corners(scale_factor*detection_source_in_camera.size[0])
                     # Rotate marker's corners based on the quaternion
                     rotated_corners = np.dot(rot_s, marker_corners.T).T + s 
-                    # rotated_corners[:,-1]=s[-1]
                     source_array=np.vstack((source_array,rotated_corners))
 
                     # Conrners target 
@@ -217,7 +144,6 @@ def convert_distribution(source_distribution, target_distribution, use_orientati
                     marker_corners=detect_marker_corners(scale_factor*detection_target_in_camera.size[0])
                     # Rotate marker's corners based on the quaternion
                     rotated_corners = np.dot(rot_t, marker_corners.T).T + t
-                    # rotated_corners[:,-1]=t[-1]
                     target_array=np.vstack((target_array,rotated_corners))
     return source_array, target_array
 

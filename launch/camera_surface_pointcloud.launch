@@ -1,6 +1,8 @@
 <?xml version="1.0" ?>
 <launch>
 	<include file="$(find realsense2_camera)/launch/rs_rgbd.launch" />
-	<node pkg="tf" type="static_transform_publisher" name="camera_tf_publisher" args="0.052919967754720576 -0.033570038292216664 0.06589512674208958 0.0003503695064328269 -0.014442296422120693 0.6997366670003037 0.7142547823925087 panda_hand camera_color_optical_frame 100" />
+	<include file="$(find policy_transportation)/launch/transform.launch"/>
 </launch>
+
+
 
