@@ -45,8 +45,8 @@ class GaussianProcessTransportation():
             print("No target distribution saved")    
 
 
-    def fit_transportation(self, optimize=True):
-        self.affine_transform=AffineTransform(do_scale=False, do_rotation=True)
+    def fit_transportation(self, optimize=True, do_scale=False, do_rotation=True):
+        self.affine_transform=AffineTransform(do_scale=do_scale, do_rotation=do_rotation)
         self.affine_transform.fit(self.source_distribution, self.target_distribution)
 
         source_distribution=self.affine_transform.predict(self.source_distribution)  
@@ -70,7 +70,7 @@ class GaussianProcessTransportation():
         self.training_traj = self.traj_rotated + self.delta_map_mean 
 
         J_var= self.std**2/self.gp_delta_map.kernel_params_[0]**2
-        self.var_vel_transported= np.zeros_like(self.training_delta)
+        self.var_vel_transported= np.zeros_like(self.training_traj)
 
         #Deform Deltas and orientation
         for i in range(len(self.training_traj[:,0])):
