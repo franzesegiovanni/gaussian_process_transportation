@@ -8,12 +8,8 @@ This is the code used for the experiment of reshalving
 #%%
 from modules import GPT_tag
 import time
-from geometry_msgs.msg import PoseStamped
-import rospy
-from sklearn.gaussian_process.kernels import RBF, Matern,WhiteKernel, ConstantKernel as C
-import numpy as np
-import pickle
-from sensors.tag_detector import save_source, save_target, load_multiple_sources, load_target
+from sklearn.gaussian_process.kernels import RBF,WhiteKernel, ConstantKernel as C
+from sensors.tag_detector import save_source, save_target, find_closest_source_to_target
 #%%
 if __name__ == '__main__':
     gpt=GPT_tag()
@@ -46,6 +42,7 @@ if __name__ == '__main__':
     save_target(gpt.target_distribution)
     #%%
     source_distribution, target_distribution, index= find_closest_source_to_target(use_orientation=False)
+    print("Closest source to target", index)
 
     #%% 
     gpt.source_distribution = source_distribution
@@ -61,8 +58,7 @@ if __name__ == '__main__':
     gpt.go_to_start()
     #%%
     print("Interactive Control Starting")
-    gpt.control()
-    i=i+1    
+    gpt.control()  
     #%% Make the robot passive and reset the environment 
     gpt.Passive()
 # %%

@@ -154,7 +154,9 @@ def convert_distribution(source_distribution, target_distribution, use_orientati
                     rotated_corners = np.dot(rot_t, marker_corners.T).T + t
                     target_array=np.vstack((target_array,rotated_corners))
     
-    distance=np.linalg.norm(target_array-source_array, axis=1)
+    distance=np.sum(np.linalg.norm(target_array-source_array, axis=1))
+    print("Distance")
+    print(distance)
     return source_array, target_array, distance
 
 def load_target(index=''):
@@ -164,18 +166,14 @@ def load_target(index=''):
     return target
 
 def save_target(target):
-    folder_path = "distributions"
-    file_prefix = "source_"
-    file_suffix = ".pkl" 
+    # create a binary pickle file 
+    f = open("distributions/target.pkl","wb")
+    # write the python object (dict) to pickle file
+    pickle.dump(target,f)
+    # close file
+    f.close()
 
-    # Ensure the folder exists
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
 
-    with open(new_file_path, "wb") as f:
-        pickle.dump(target, f)
-    
-    print(f"Target saved as {new_filename}")
 
 
 def save_source(source):
@@ -221,12 +219,19 @@ def load_multiple_sources():
     file_suffix = ".pkl"
     
     # List all files in the directory
-    for filename in os.listdir(folder_path):
-        # Check if the file matches the pattern
-        if filename.startswith(file_prefix) and filename.endswith(file_suffix):
-            file_path = os.path.join(folder_path, filename)
-            with open(file_path, "rb") as f:
-                sources.append(pickle.load(f))
+    filenames = os.listdir(folder_path)
+    
+    # Filter and sort files that match the pattern
+    filtered_sorted_filenames = sorted(
+        [filename for filename in filenames if filename.startswith(file_prefix) and filename.endswith(file_suffix)]
+    )
+    
+    # Load each file
+    for filename in filtered_sorted_filenames:
+        file_path = os.path.join(folder_path, filename)
+        with open(file_path, "rb") as f:
+            print(f"Loading {filename}")
+            sources.append(pickle.load(f))
 
     print(f"Loaded {len(sources)} sources")
     return sources
@@ -236,15 +241,15 @@ def find_closest_source_to_target(use_orientation=False):
     distances = []
     sources = load_multiple_sources()
     target= load_target()
-    sources_array = []
-    target_array = []
+    sources_list = []
+    target_list = []
     for source in sources:
         source_array, target_array, distance=convert_distribution(source, target, use_orientation=use_orientation)
-        sources_array.append(source_array)
-        target_array.append(target_array)
+        sources_list.append(source_array)
+        target_list.append(target_array)
         distances.append(distance)
     index = np.argmin(distances)
-    return sources_array[index], target_array[index], index
+    return sources_list[index], target_list[index], index
 
 def  detect_marker_corners(marker_dimension):
     marker_corners = np.array([
