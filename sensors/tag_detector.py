@@ -8,6 +8,11 @@ import rospy
 from geometry_msgs.msg import PoseStamped
 from apriltag_ros.msg import AprilTagDetectionArray # remeber to souce the workspace with april tags
 from tf2_geometry_msgs import do_transform_pose
+
+import os
+import pickle
+import re
+
 class Tag_Detector():
     def __init__(self):
         super(Tag_Detector, self).__init__()
@@ -39,10 +44,13 @@ class Tag_Detector():
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
             print(e)
       
-    
+    def select_source_and_target(self, source, target):
+        self.source_distribution=source
+        self.target_distribution=target
+
     def convert_distribution_to_array(self, use_orientation=False):
         
-        self.source_distribution, self.target_distribution= convert_distribution(self.source_distribution, self.target_distribution, use_orientation=use_orientation)
+        self.source_distribution, self.target_distribution, _ =convert_distribution(self.source_distribution, self.target_distribution, use_orientation=use_orientation)
         
     def record_source_distribution(self):
             self.source_distribution=[]
@@ -66,7 +74,7 @@ class Tag_Detector():
             if detection_copy and distribution_copy:
                 for j in range(len(detection_copy)):
                     if distribution_copy[i].id[0]==detection_copy[j].id[0]:
-                        del detection_copy[j]
+                        del detection_copy[j] # if you already have that id in the distribution you remove it from the detection
                         break 
         distribution_copy= distribution_copy + detection_copy 
         return distribution_copy           
@@ -145,8 +153,103 @@ def convert_distribution(source_distribution, target_distribution, use_orientati
                     # Rotate marker's corners based on the quaternion
                     rotated_corners = np.dot(rot_t, marker_corners.T).T + t
                     target_array=np.vstack((target_array,rotated_corners))
-    return source_array, target_array
+    
+    distance=np.sum(np.linalg.norm(target_array-source_array, axis=1))
+    print("Distance")
+    print(distance)
+    return source_array, target_array, distance
 
+def load_target(index=''):
+    f = open("distributions/target.pkl","rb")  
+    target=pickle.load(f)
+    f.close()
+    return target
+
+def save_target(target):
+    # create a binary pickle file 
+    f = open("distributions/target.pkl","wb")
+    # write the python object (dict) to pickle file
+    pickle.dump(target,f)
+    # close file
+    f.close()
+
+
+
+
+def save_source(source):
+    folder_path = "distributions"
+    file_prefix = "source_"
+    file_suffix = ".pkl"
+    
+    # Ensure the folder exists
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    
+    # List all files in the directory
+    existing_files = os.listdir(folder_path)
+    
+    # Extract numbers from filenames
+    existing_numbers = []
+    for filename in existing_files:
+        match = re.match(rf"{file_prefix}(\d+){file_suffix}", filename)
+        if match:
+            existing_numbers.append(int(match.group(1)))
+    
+    # Find the smallest available number
+    if existing_numbers:
+        smallest_available_number = min(set(range(len(existing_numbers) + 1)) - set(existing_numbers))
+    else:
+        smallest_available_number = 0
+    
+    # Create the new filename
+    new_filename = f"{file_prefix}{smallest_available_number}{file_suffix}"
+    new_file_path = os.path.join(folder_path, new_filename)
+    
+    # Save the source to the new file
+    with open(new_file_path, "wb") as f:
+        pickle.dump(source, f)
+    
+    print(f"Source saved as {new_filename}")
+
+
+def load_multiple_sources():
+    sources = []
+    folder_path = "distributions"
+    file_prefix = "source_"
+    file_suffix = ".pkl"
+    
+    # List all files in the directory
+    filenames = os.listdir(folder_path)
+    
+    # Filter and sort files that match the pattern
+    filtered_sorted_filenames = sorted(
+        [filename for filename in filenames if filename.startswith(file_prefix) and filename.endswith(file_suffix)]
+    )
+    
+    # Load each file
+    for filename in filtered_sorted_filenames:
+        file_path = os.path.join(folder_path, filename)
+        with open(file_path, "rb") as f:
+            print(f"Loading {filename}")
+            sources.append(pickle.load(f))
+
+    print(f"Loaded {len(sources)} sources")
+    return sources
+
+def find_closest_source_to_target(use_orientation=False):
+    # return  source and index
+    distances = []
+    sources = load_multiple_sources()
+    target= load_target()
+    sources_list = []
+    target_list = []
+    for source in sources:
+        source_array, target_array, distance=convert_distribution(source, target, use_orientation=use_orientation)
+        sources_list.append(source_array)
+        target_list.append(target_array)
+        distances.append(distance)
+    index = np.argmin(distances)
+    return sources_list[index], target_list[index], index
 
 def  detect_marker_corners(marker_dimension):
     marker_corners = np.array([

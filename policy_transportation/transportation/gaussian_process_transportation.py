@@ -45,8 +45,8 @@ class GaussianProcessTransportation():
             print("No target distribution saved")    
 
 
-    def fit_transportation(self, optimize=True):
-        self.affine_transform=AffineTransform(do_scale=False, do_rotation=True)
+    def fit_transportation(self, optimize=True, do_scale=False, do_rotation=True):
+        self.affine_transform=AffineTransform(do_scale=do_scale, do_rotation=do_rotation)
         self.affine_transform.fit(self.source_distribution, self.target_distribution)
 
         source_distribution=self.affine_transform.predict(self.source_distribution)  
