@@ -61,6 +61,8 @@ class GaussianProcessTransportation():
             self.gp_delta_map=GaussianProcess(kernel=self.kernel_transport, optimizer=None)    
         self.gp_delta_map.fit(source_distribution, self.delta_distribution)  
         self.kernel_transport=self.gp_delta_map.kernel
+
+
     def apply_transportation(self):
               
         #Deform Trajactories 
@@ -69,34 +71,33 @@ class GaussianProcessTransportation():
         self.delta_map_mean, self.std= self.gp_delta_map.predict(self.traj_rotated, return_std=True)
         self.training_traj = self.traj_rotated + self.delta_map_mean 
 
-        J_var= self.std**2/self.gp_delta_map.kernel_params_[0]**2
+        # J_var= self.std**2/self.gp_delta_map.kernel_params_[0]**2
         self.var_vel_transported= np.zeros_like(self.training_delta)
 
         #Deform Deltas and orientation
-        for i in range(len(self.training_traj[:,0])):
-            if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
-                pos=(np.array(self.traj_rotated[i,:]).reshape(1,-1))
-                [Jacobian,_]=self.gp_delta_map.derivative(pos)
-                rot_gp= np.eye(Jacobian[0].shape[0]) + np.transpose(Jacobian[0]) 
-                rot_affine= self.affine_transform.rotation_matrix
-                derivative_affine= self.affine_transform.derivative(pos)
-                if  hasattr(self, 'training_delta'):
-                    self.training_delta[i]= derivative_affine @ self.training_delta[i]
-                    self.var_vel_transported[i]=J_var[i] * self.training_delta[i]**2
-                    self.training_delta[i]= rot_gp @ self.training_delta[i]
-                if  hasattr(self, 'training_ori'):
-                    rot_gp_norm=rot_gp/np.linalg.det(rot_gp)
-                    quat_i=quaternion.from_float_array(self.training_ori[i,:])
-                    rot_i=quaternion.as_rotation_matrix(quat_i)
-                    rot_final=rot_gp_norm @ rot_affine @ rot_i
-                    product_quat=quaternion.from_rotation_matrix(rot_final)
-                    if quat_i.w*product_quat.w  + quat_i.x * product_quat.x+ quat_i.y* product_quat.y + quat_i.z * product_quat.z < 0:
-                        product_quat = - product_quat
-                    self.training_ori[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])
-                if hasattr(self, 'training_stiff_ori'):
-                    rot_stiff=rot_gp_norm @ rot_affine
-                    quat_stiff=quaternion.from_rotation_matrix(rot_stiff)
-                    self.training_stiff_ori[i,:]=np.array([quat_stiff.w, quat_stiff.x, quat_stiff.y, quat_stiff.z])
+        if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
+            pos=(np.array(self.traj_rotated))
+            Jacobian, Jacobain_std=self.gp_delta_map.derivative(pos, return_var=True)
+            Jacobian = Jacobian.transpose(0,2,1)
+            J_var = Jacobain_std.transpose(0,2,1)[:,0,:]
+            rot_gp= np.eye(Jacobian[0].shape[0]) + Jacobian
+            rot_affine= self.affine_transform.rotation_matrix
+            derivative_affine= self.affine_transform.derivative(pos)
+
+
+        if  hasattr(self, 'training_delta'):
+            self.training_delta = self.training_delta[:,:,np.newaxis]
+            self.training_delta= rot_gp @ derivative_affine @ self.training_delta
+            self.training_delta=self.training_delta[:,:,0]
+            self.var_vel_transported=J_var * self.training_delta**2
+
+
+        if  hasattr(self, 'training_ori'):   
+            quat_demo=quaternion.from_float_array(self.training_ori)
+            quat_affine= quaternion.from_rotation_matrix(rot_affine)
+            quat_gp = quaternion.from_rotation_matrix(rot_gp, nonorthogonal=True)
+            quat_transport=quat_gp * (quat_affine * quat_demo)
+            self.training_ori= quaternion.as_float_array(quat_transport)
 
     def sample_transportation(self):
         delta_map_samples= self.gp_delta_map.samples(self.traj_rotated)

@@ -29,7 +29,7 @@ class GaussianProcess():
             self.kernel= self.gp.kernel_
             self.kernel_params_= [self.kernel.get_params()['k1__k2__length_scale'], self.kernel.get_params()['k1']]
             self.noise_var_ = self.gp.alpha + self.kernel.get_params()['k2__noise_level']
-            self.max_var   = self.kernel.get_params()['k1__k1__constant_value']+ self.noise_var_
+            self.prior_var   = self.kernel.get_params()['k1__k1__constant_value']
             K_ = self.kernel(self.X, self.X) + (self.noise_var_ * np.eye(len(self.X)))
             self.K_inv = np.linalg.inv(K_)
             print('lenghtscales', self.kernel.get_params()['k1__k2__length_scale'] )
@@ -44,25 +44,42 @@ class GaussianProcess():
         samples_transpose=np.transpose(samples, (2, 0, 1))
         return samples_transpose
     
-    def derivative(self, x): # GP with RBF kernel 
+    
+    def derivative(self, x, return_var=False): # here we predict p(f'*| f, y). 
         """Input has shape n_query x n_features. 
         There are two outputs,
-        1. derivative of the mean
-        2. derivative of the predicted variance 
-        Each utput has shape n_query x n_features x n_outputs.
-        The output in position i,j,k has the derivative respect to the j-th feature of the k-th output, in position of the i-th data point.
-        For the derivative of sigma n_outputs is equal to 1"""
+        1. mean of the derivative function 
+        2. predicted standar deviation of the first derivative
+        Each output has shape  batch_dimension x n_features x n_outputs.
+        The output in position i,j,k has the derivative respect to the k-th feature of the i-th output, in position of the j-th data point.
+        For the derivative of sigma n_outputs is equal to 1
+        When computing the covariance matrix the output has shape  n_outputs x n_query x n_query x n_features.
+        """
         lscale=self.kernel_params_[0].reshape(-1,1)
-        lscale_stack= np.hstack([lscale]*self.n_samples)
-        alfa= np.matmul(self.K_inv, self.Y)
-        dy_dx=[]
-        dsigma_dx=[]
-        for i in range(np.shape(x)[0]):
-            k_star= self.kernel(self.X, x[i,:].reshape(1,-1))
-            k_star_T=k_star.transpose()
-            k_star_stack= np.vstack([k_star_T]*self.n_features)
-            beta = -2 * np.matmul(self.K_inv, k_star)
-            dk_star_dX= k_star_stack * (self.X- x[i,:]).transpose()/ (lscale_stack** 2)
-            dy_dx.append(np.matmul(dk_star_dX, alfa))
-            dsigma_dx.append(np.matmul(dk_star_dX, beta))
-        return np.array(dy_dx), np.array(dsigma_dx)
+        alfa=  self.K_inv @ self.Y 
+        k_star= self.kernel(x, self.X)
+        X_T= (self.X).transpose()
+        x_T = x.transpose()
+        X_reshaped = X_T[:,  np.newaxis,:]
+        x_reshaped = x_T[:,  :, np.newaxis]
+        lascale_rehaped= lscale[ :,  :, np.newaxis]
+
+        # Calculate the difference
+        difference_matrix =  X_reshaped - x_reshaped
+        
+        coefficient= difference_matrix/ ( lascale_rehaped** 2) 
+
+        #coefficient of dk_dx_prime that multiplies the kernel itself  (x - x_prime)/sigma_l**2
+        dk_star_dx=  coefficient * k_star
+
+        dk_star_dx= dk_star_dx.transpose(1,0,2)
+        df_dx = dk_star_dx @ alfa 
+
+        if return_var==True:
+            #dk2_dx_dx_prime : Sigma_v/sigma_l**2
+            dk_star_dx_K_inv_= dk_star_dx @  self.K_inv
+            diag_k_K_inv_k = np.sum(dk_star_dx_K_inv_ * dk_star_dx, axis=2)
+            var= self.prior_var/(lascale_rehaped**2) - diag_k_K_inv_k
+            Sigma_df_dx= var.transpose(1,0,2)
+            return df_dx, Sigma_df_dx
+        return df_dx

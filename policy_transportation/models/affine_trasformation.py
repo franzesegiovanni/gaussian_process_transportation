@@ -49,8 +49,6 @@ class AffineTransform():
         return transported_x
         
     def derivative(self,x):
-        transport_derivative=[]  
-        for i in range(np.shape(x)[0]):
-            transport_derivative.append(self.scale*self.rotation_matrix)
-        return np.array(transport_derivative)
+        affine_derivative=np.repeat(self.rotation_matrix[np.newaxis, :, :], x.shape[0], axis=0)
+        return affine_derivative
     
