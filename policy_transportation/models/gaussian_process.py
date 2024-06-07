@@ -25,6 +25,7 @@ class GaussianProcess():
             self.Y=Y
             self.n_features=np.shape(self.X)[1]
             self.n_samples=np.shape(self.X)[0]
+            self.n_outputs=np.shape(self.Y)[1]
             self.gp.fit(self.X,self.Y)
             self.kernel= self.gp.kernel_
             self.kernel_params_= [self.kernel.get_params()['k1__k2__length_scale'], self.kernel.get_params()['k1']]
@@ -51,9 +52,8 @@ class GaussianProcess():
         1. mean of the derivative function 
         2. predicted standar deviation of the first derivative
         Each output has shape  batch_dimension x n_features x n_outputs.
-        The output in position i,j,k has the derivative respect to the k-th feature of the i-th output, in position of the j-th data point.
-        For the derivative of sigma n_outputs is equal to 1
-        When computing the covariance matrix the output has shape  n_outputs x n_query x n_query x n_features.
+        The output in position i,j,k has the derivative respect to the k-th feature of the j-th output, in position of the i-th data point.
+        The uncertinaty is the variance of each element of the Jacobian matrix.
         """
         lscale=self.kernel_params_[0].reshape(-1,1)
         alfa=  self.K_inv @ self.Y 
@@ -74,12 +74,16 @@ class GaussianProcess():
 
         dk_star_dx= dk_star_dx.transpose(1,0,2)
         df_dx = dk_star_dx @ alfa 
+        df_dx= df_dx.transpose(0,2,1)
 
         if return_var==True:
             #dk2_dx_dx_prime : Sigma_v/sigma_l**2
-            dk_star_dx_K_inv_= dk_star_dx @  self.K_inv
-            diag_k_K_inv_k = np.sum(dk_star_dx_K_inv_ * dk_star_dx, axis=2)
-            var= self.prior_var/(lascale_rehaped**2) - diag_k_K_inv_k
-            Sigma_df_dx= var.transpose(1,0,2)
+            dk_star_dx_transpose= dk_star_dx.transpose(1,0,2)
+            dk_star_dx_K_inv_= dk_star_dx_transpose @  self.K_inv
+
+            diag_k_K_inv_k = np.sum(dk_star_dx_K_inv_ * dk_star_dx_transpose, axis=2)
+            var= self.prior_var/(lscale**2) - diag_k_K_inv_k
+            Sigma_df_dx= np.repeat(var[np.newaxis, :,:], self.n_outputs, axis=0)
+            Sigma_df_dx= Sigma_df_dx.transpose(2,0,1)
             return df_dx, Sigma_df_dx
         return df_dx

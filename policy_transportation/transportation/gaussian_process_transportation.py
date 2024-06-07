@@ -78,8 +78,7 @@ class GaussianProcessTransportation():
         if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
             pos=(np.array(self.traj_rotated))
             Jacobian, Jacobain_std=self.gp_delta_map.derivative(pos, return_var=True)
-            Jacobian = Jacobian.transpose(0,2,1)
-            J_var = Jacobain_std.transpose(0,2,1)[:,0,:]
+            J_var = Jacobain_std[:,0,:]
             rot_gp= np.eye(Jacobian[0].shape[0]) + Jacobian
             rot_affine= self.affine_transform.rotation_matrix
             derivative_affine= self.affine_transform.derivative(pos)
