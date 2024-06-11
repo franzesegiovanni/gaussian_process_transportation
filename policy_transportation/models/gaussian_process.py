@@ -71,17 +71,16 @@ class GaussianProcess():
 
         #coefficient of dk_dx_prime that multiplies the kernel itself  (x - x_prime)/sigma_l**2
         dk_star_dx=  coefficient * k_star
-
-        dk_star_dx= dk_star_dx.transpose(1,0,2)
-        df_dx = dk_star_dx @ alfa 
+        dk_star_dx_transpose= dk_star_dx.transpose(1,0,2)
+        df_dx = dk_star_dx_transpose @ alfa 
         df_dx= df_dx.transpose(0,2,1)
 
         if return_var==True:
             #dk2_dx_dx_prime : Sigma_v/sigma_l**2
-            dk_star_dx_transpose= dk_star_dx.transpose(1,0,2)
-            dk_star_dx_K_inv_= dk_star_dx_transpose @  self.K_inv
+            # dk_star_dx_transpose= dk_star_dx.transpose(1,0,2)
+            dk_star_dx_K_inv_= dk_star_dx @  self.K_inv
 
-            diag_k_K_inv_k = np.sum(dk_star_dx_K_inv_ * dk_star_dx_transpose, axis=2)
+            diag_k_K_inv_k = np.sum(dk_star_dx_K_inv_ * dk_star_dx, axis=2)
             var= self.prior_var/(lscale**2) - diag_k_K_inv_k
             Sigma_df_dx= np.repeat(var[np.newaxis, :,:], self.n_outputs, axis=0)
             Sigma_df_dx= Sigma_df_dx.transpose(2,0,1)
