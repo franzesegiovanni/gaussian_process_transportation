@@ -13,7 +13,7 @@ class Multiple_Reference_Frames_LA:
         self.transport=Transport()
 
     def generate_distribution_from_frames(self, A,b):
-        distribution_training_set=np.zeros((len(A), 10,2))
+        distribution_training_set=np.zeros((len(A), 4,2))
         frame_dim=5
         for i in range(len(A)):
             distribution_training_set[i,0,:]=b[i][0][0]
@@ -21,13 +21,13 @@ class Multiple_Reference_Frames_LA:
             distribution_training_set[i,2,:]=b[i][0][1]
             distribution_training_set[i,3,:]=b[i][0][1]+A[i][0][1] @ np.array([ 0, -frame_dim])
             #Extra points
-            distribution_training_set[i,4,:]=b[i][0][0]+A[i][0][0] @ np.array([ 0, -frame_dim])
-            distribution_training_set[i,5,:]=b[i][0][1]+A[i][0][1] @ np.array([ 0, frame_dim])
+            # distribution_training_set[i,4,:]=b[i][0][0]+A[i][0][0] @ np.array([ 0, -frame_dim])
+            # distribution_training_set[i,5,:]=b[i][0][1]+A[i][0][1] @ np.array([ 0, frame_dim])
 
-            distribution_training_set[i,6,:]=b[i][0][0]+A[i][0][0] @ np.array([ + frame_dim, 0])
-            distribution_training_set[i,7,:]=b[i][0][1]+A[i][0][1] @ np.array([ +frame_dim, 0])
-            distribution_training_set[i,8,:]=b[i][0][0]+A[i][0][0] @ np.array([ - frame_dim, 0])
-            distribution_training_set[i,9,:]=b[i][0][1]+A[i][0][1] @ np.array([ - frame_dim, 0])
+            # distribution_training_set[i,6,:]=b[i][0][0]+A[i][0][0] @ np.array([ + frame_dim, 0])
+            # distribution_training_set[i,7,:]=b[i][0][1]+A[i][0][1] @ np.array([ +frame_dim, 0])
+            # distribution_training_set[i,8,:]=b[i][0][0]+A[i][0][0] @ np.array([ - frame_dim, 0])
+            # distribution_training_set[i,9,:]=b[i][0][1]+A[i][0][1] @ np.array([ - frame_dim, 0])
         return distribution_training_set   
     
     def load_dataset(self, filename = 'reach_target'):

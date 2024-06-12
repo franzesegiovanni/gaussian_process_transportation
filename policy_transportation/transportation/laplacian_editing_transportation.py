@@ -21,7 +21,7 @@ class LaplacianEditingTransportation():
  
         self.training_traj= self.affine_transform.predict(self.training_traj)
         
-        self.transportation.fit(source_distribution, self.target_distribution, self.training_traj, threshold_distance=threshold_distance) 
+        self.transportation.fit(source_distribution, self.target_distribution, self.training_traj) 
 
 
     def apply_transportation(self):

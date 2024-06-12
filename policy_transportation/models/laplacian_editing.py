@@ -1,7 +1,8 @@
 import networkx as nx
 import numpy as np
 from scipy.spatial import cKDTree
-
+import numpy as np
+from scipy.optimize import linear_sum_assignment
 class Laplacian_Editing():
     def __init__(self):
         pass
@@ -27,7 +28,7 @@ class Laplacian_Editing():
 
         return self.L, self.DELTA
 
-    def find_matching_waypoints(self, source_distribution, training_traj, threshold_distance = 5.0):
+    def find_matching_waypoints_old(self, source_distribution, training_traj, threshold_distance = 5.0):
         # Threshold distance
         
 
@@ -55,37 +56,21 @@ class Laplacian_Editing():
         self.mask_dist=np.array(list(matched_indices))
 
         return self.mask_traj, self.mask_dist
-
-    def find_matching_waypoints2(self, source_distribution, training_traj, threshold_distance = 5.0):
-        # Threshold distance
-        
-
-        # Create KDTree for array2
-        tree = cKDTree(training_traj)
-
-        # List to store pairs
-        pairs = []
-        matched_indices = set()  # To keep track of matched indices from array2
-        self.mask_traj=np.zeros(len(training_traj), dtype=bool)
-        # Iterate through each element in array1
-        for i, element in enumerate(source_distribution):
-            # Query the KDTree for the nearest neighbor
-            distance, idx = tree.query(element)
-            
-            # Check if the nearest neighbor has already been matched and if the distance is within threshold
-            if distance <= threshold_distance and idx not in matched_indices:
-                nearest_neighbor = training_traj[idx]
-                
-                # Store the pair and mark the neighbor as matched
-                pairs.append(( nearest_neighbor, element))
-                matched_indices.add(i)
-                self.mask_traj[idx]=True
-
-        self.mask_dist=np.array(list(matched_indices))
-
-        return self.mask_traj, self.mask_dist
     
-    def fit(self, source_distribution, target_distribution, training_traj, threshold_distance = 5.0):
+    def find_matching_waypoints(self, source_distribution, training_traj):
+
+
+       # ceate cdist matrix
+        distance_matrix = np.linalg.norm(training_traj[:, None] - source_distribution, axis=2)
+
+
+        # Apply the Hungarian algorithm
+        row_ind, col_ind = linear_sum_assignment(distance_matrix)
+
+        return row_ind, col_ind
+
+    
+    def fit(self, source_distribution, target_distribution, training_traj):
         self.training_traj=training_traj
 
         diff=np.zeros_like(training_traj)
@@ -93,13 +78,19 @@ class Laplacian_Editing():
 
         L, DELTA= self.create_graph(training_traj)
 
-        mask_traj, mask_dist= self.find_matching_waypoints2(source_distribution, training_traj, threshold_distance)
+        mask_traj, mask_dist= self.find_matching_waypoints(source_distribution, training_traj)
        
         diff[mask_traj]=target_distribution[mask_dist] - source_distribution[mask_dist]
         
         constraint[mask_traj]= training_traj[mask_traj]+ diff[mask_traj]
 
-        P_hat=np.diag(1*mask_traj)
+        # make a vector that has 1 in the index of mask_traj
+
+        vect= np.zeros(len(training_traj))
+
+        vect[mask_traj]=1
+        P_hat=np.diag(vect)
+
 
         A= np.vstack([L, P_hat])
 
