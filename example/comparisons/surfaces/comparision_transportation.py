@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from policy_transportation import AffineTransform
-from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C
+from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C, RBF
 from policy_transportation.plot_utils import draw_error_band
 from policy_transportation.utils import resample
 
@@ -40,7 +40,7 @@ for j in range(len(X)-1):
 
 # initialize the models
 Affine=AffineTransform()
-k_transport = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(1), [1,10], nu=2.5) + WhiteKernel(0.0001)
+k_transport = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(2), [1,500]) + WhiteKernel(0.0001)
 GPT=GPT(kernel_transport=k_transport)
 MLP=MLP()
 RFT=RFT()

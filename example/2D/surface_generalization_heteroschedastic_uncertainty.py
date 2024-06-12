@@ -148,13 +148,9 @@ axs[1, 0].text(0.05, 0.95, latex_symbol, transform=axs[1, 0].transAxes, fontsize
 
 
 #We should fit a gp for the aleatoric noise. 
+print('Fitting the GP for the aleatoric noise')
 kernel_uncertainty=C(constant_value=np.sqrt(0.1))  * RBF(4*np.ones(1), length_scale_bounds=[0.01, 500]) + WhiteKernel(0.01, noise_level_bounds=[0.01, 0.1] )
 GP_aleatoric=GPR(kernel=kernel_uncertainty)
-
-# J_var= std**2/transport.gp_delta_map.kernel_params_[0]
-# var_aleatoric= np.sum(J_var,1)* deltaX
-# std_transportation=np.sqrt(var_aleatoric)
-# std_transportation_vector=np.tile(std_transportation, (2,1)).T
 var_aleatoric=transport.var_vel_transported
 std_aleatoric_labels=np.sqrt(var_aleatoric)
 GP_aleatoric.fit(X1, std_aleatoric_labels)
@@ -165,9 +161,7 @@ dataXX, dataYY = np.meshgrid(x_grid, y_grid)
 pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
 std_aleatoric, _ = GP_aleatoric.predict(pos)
 var_aleatoric=std_aleatoric**2
-# var_aleatoric=std_aleatoric**2
 
-# std_aleatoric=np.sqrt(var_aleatoric)
 
 print('Fitting the GP dynamical system on the transported trajectory')
 k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=2.5) + WhiteKernel(0.01 )    
@@ -210,7 +204,6 @@ ax = fig.add_subplot(131, projection='3d')
 ax.set_title('Transportation Uncertainty', fontsize=20, y=-0.15)
 surf = ax.plot_surface(dataXX, dataYY, std_aleatoric , linewidth=0, antialiased=True, cmap=plt.cm.inferno)
 Z=np.sum(GP_aleatoric.Y,1)
-# plt.plot(X1[:,0],X1[:,1], Z , 'o', color='red', markersize=10)
 #set the point of view 
 ax.view_init(elev=30, azim=-20)
 ax.set_facecolor('none')

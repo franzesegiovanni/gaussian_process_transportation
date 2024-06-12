@@ -1,7 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C, RBF
-from policy_transportation import GaussianProcessTransportation as Transport
+from policy_transportation.transportation.laplacian_editing_transportation import LaplacianEditingTransportation as Transport
 from generate_random_frame_orientation import generate_frame_orientation
 from policy_transportation.plot_utils import draw_error_band
 import warnings
@@ -9,14 +8,12 @@ import os
 import similaritymeasures
 import random
 warnings.filterwarnings("ignore")
-class Multiple_Reference_Frames_GPT:
+class Multiple_Reference_Frames_LA:
     def __init__(self):
         self.transport=Transport()
-        k_transport = C(constant_value=np.sqrt(10))  * RBF(20*np.ones(1), [10,50]) + WhiteKernel(0.01 , [0.0000001, 0.000001])
-        self.transport.kernel_transport=k_transport
 
     def generate_distribution_from_frames(self, A,b):
-        distribution_training_set=np.zeros((len(A),10,2))
+        distribution_training_set=np.zeros((len(A), 10,2))
         frame_dim=5
         for i in range(len(A)):
             distribution_training_set[i,0,:]=b[i][0][0]
@@ -27,10 +24,10 @@ class Multiple_Reference_Frames_GPT:
             distribution_training_set[i,4,:]=b[i][0][0]+A[i][0][0] @ np.array([ 0, -frame_dim])
             distribution_training_set[i,5,:]=b[i][0][1]+A[i][0][1] @ np.array([ 0, frame_dim])
 
-            distribution_training_set[i,6,:]=b[i][0][0]+A[i][0][0] @ np.array([ +frame_dim, 0])
+            distribution_training_set[i,6,:]=b[i][0][0]+A[i][0][0] @ np.array([ + frame_dim, 0])
             distribution_training_set[i,7,:]=b[i][0][1]+A[i][0][1] @ np.array([ +frame_dim, 0])
-            distribution_training_set[i,8,:]=b[i][0][0]+A[i][0][0] @ np.array([ -frame_dim, 0])
-            distribution_training_set[i,9,:]=b[i][0][1]+A[i][0][1] @ np.array([ -frame_dim, 0])
+            distribution_training_set[i,8,:]=b[i][0][0]+A[i][0][0] @ np.array([ - frame_dim, 0])
+            distribution_training_set[i,9,:]=b[i][0][1]+A[i][0][1] @ np.array([ - frame_dim, 0])
         return distribution_training_set   
     
     def load_dataset(self, filename = 'reach_target'):
@@ -72,35 +69,23 @@ class Multiple_Reference_Frames_GPT:
         self.test_A=test_A
         self.test_b=test_b
 
-    def reproduce(self, index_source, index_target, ax=None, compute_metrics=False, linear=False, plot_bounds=True):
+    def reproduce(self, index_source, index_target, ax=None, compute_metrics=False):
         X=self.demos_x[index_source]
 
         self.transport.source_distribution=self.distribution_training_set[index_source,:,:]
         self.transport.target_distribution=self.distribution_training_set[index_target,:,:]
         self.transport.training_traj=X
 
-        # X=np.empty((0,2)) 
-        # self.transport.source_distribution=np.empty((0,2))
-        # self.transport.target_distribution=np.empty((0,2))
-        # for i in index_source:
-        #     X=np.vstack((X,self.demos_x[i]))
-        #     self.transport.source_distribution=np.vstack((self.transport.source_distribution,self.distribution_training_set[i,:,:]))
-        #     self.transport.target_distribution=np.vstack((self.transport.target_distribution,self.distribution_training_set[index_target,:,:]))
-        # self.transport.training_traj=X
-        if linear==True:
-            self.transport.fit_transportation_linear()
-            self.transport.apply_transportation_linear()
-            std= np.zeros_like(self.transport.training_traj)
-        else:
-            self.transport.fit_transportation()
-            self.transport.apply_transportation()
-            std=self.transport.std
+        
+        self.transport.fit_transportation(threshold_distance=10000)
+        self.transport.apply_transportation()
+        std=self.transport.std
 
         X1=self.transport.training_traj
         
 
         if ax is not None:
-            self.plot(X1, std, self.distribution_training_set[index_target,:,:], ax, plot_bounds=plot_bounds)
+            self.plot(X1, std, self.distribution_training_set[index_target,:,:], ax)
             ax.plot(self.demos_x[index_target][:,0],self.demos_x[index_target][:,1], 'k--')
 
         if compute_metrics==True:    
@@ -166,9 +151,7 @@ class Multiple_Reference_Frames_GPT:
             print("Final Angle Distance  : ", final_angle_distance[0])
             return fde, final_angle_distance[0]
     
-    def plot(self, X1, std, distribution, ax=None, plot_bounds=True):
-        if plot_bounds==True:
-            draw_error_band(ax, X1[:,0], X1[:,1], err=std, facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.8)
+    def plot(self, X1, std, distribution, ax=None):
         ax.plot(distribution[0:2,0],distribution[0:2,1], linewidth=10, alpha=0.9, c='green')
         ax.scatter(distribution[0,0],distribution[0,1], linewidth=10, alpha=0.9, c='green')
         ax.plot(distribution[2:4,0],distribution[2:4,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])

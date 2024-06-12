@@ -72,7 +72,7 @@ class GaussianProcessTransportation():
         self.training_traj = self.traj_rotated + self.delta_map_mean 
 
         # J_var= self.std**2/self.gp_delta_map.kernel_params_[0]**2
-        self.var_vel_transported= np.zeros_like(self.training_delta)
+        # self.var_vel_transported= np.zeros_like(self.training_delta)
 
         #Deform Deltas and orientation
         if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
@@ -87,8 +87,11 @@ class GaussianProcessTransportation():
 
         if  hasattr(self, 'training_delta'):
             self.training_delta = self.training_delta[:,:,np.newaxis]
-            self.training_delta= rot_gp @ derivative_affine @ self.training_delta
+
+            self.training_delta=  derivative_affine @ self.training_delta
             self.var_vel_transported=Jacobain_var @ self.training_delta**2
+
+            self.training_delta= rot_gp @ self.training_delta
             self.training_delta=self.training_delta[:,:,0]
             self.var_vel_transported=self.var_vel_transported[:,:,0]
 

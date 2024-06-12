@@ -27,9 +27,9 @@ class Laplacian_Editing():
 
         return self.L, self.DELTA
 
-    def find_matching_waypoints(self, source_distribution, training_traj):
+    def find_matching_waypoints(self, source_distribution, training_traj, threshold_distance = 5.0):
         # Threshold distance
-        threshold_distance = 5.0
+        
 
         # Create KDTree for array2
         tree = cKDTree(source_distribution)
@@ -56,7 +56,36 @@ class Laplacian_Editing():
 
         return self.mask_traj, self.mask_dist
 
-    def fit(self, source_distribution, target_distribution, training_traj):
+    def find_matching_waypoints2(self, source_distribution, training_traj, threshold_distance = 5.0):
+        # Threshold distance
+        
+
+        # Create KDTree for array2
+        tree = cKDTree(training_traj)
+
+        # List to store pairs
+        pairs = []
+        matched_indices = set()  # To keep track of matched indices from array2
+        self.mask_traj=np.zeros(len(training_traj), dtype=bool)
+        # Iterate through each element in array1
+        for i, element in enumerate(source_distribution):
+            # Query the KDTree for the nearest neighbor
+            distance, idx = tree.query(element)
+            
+            # Check if the nearest neighbor has already been matched and if the distance is within threshold
+            if distance <= threshold_distance and idx not in matched_indices:
+                nearest_neighbor = training_traj[idx]
+                
+                # Store the pair and mark the neighbor as matched
+                pairs.append(( nearest_neighbor, element))
+                matched_indices.add(i)
+                self.mask_traj[idx]=True
+
+        self.mask_dist=np.array(list(matched_indices))
+
+        return self.mask_traj, self.mask_dist
+    
+    def fit(self, source_distribution, target_distribution, training_traj, threshold_distance = 5.0):
         self.training_traj=training_traj
 
         diff=np.zeros_like(training_traj)
@@ -64,7 +93,7 @@ class Laplacian_Editing():
 
         L, DELTA= self.create_graph(training_traj)
 
-        mask_traj, mask_dist= self.find_matching_waypoints(source_distribution, training_traj)
+        mask_traj, mask_dist= self.find_matching_waypoints2(source_distribution, training_traj, threshold_distance)
        
         diff[mask_traj]=target_distribution[mask_dist] - source_distribution[mask_dist]
         
