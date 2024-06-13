@@ -27,35 +27,6 @@ class Laplacian_Editing():
         self.DELTA= self.L @ training_traj
 
         return self.L, self.DELTA
-
-    def find_matching_waypoints_old(self, source_distribution, training_traj, threshold_distance = 5.0):
-        # Threshold distance
-        
-
-        # Create KDTree for array2
-        tree = cKDTree(source_distribution)
-
-        # List to store pairs
-        pairs = []
-        matched_indices = set()  # To keep track of matched indices from array2
-        self.mask_traj=np.zeros(len(training_traj), dtype=bool)
-        # Iterate through each element in array1
-        for i, element in enumerate(training_traj):
-            # Query the KDTree for the nearest neighbor
-            distance, idx = tree.query(element)
-            
-            # Check if the nearest neighbor has already been matched and if the distance is within threshold
-            if distance <= threshold_distance and idx not in matched_indices:
-                nearest_neighbor = source_distribution[idx]
-                
-                # Store the pair and mark the neighbor as matched
-                pairs.append((element, nearest_neighbor))
-                matched_indices.add(idx)
-                self.mask_traj[i]=True
-
-        self.mask_dist=np.array(list(matched_indices))
-
-        return self.mask_traj, self.mask_dist
     
     def find_matching_waypoints(self, source_distribution, training_traj):
 

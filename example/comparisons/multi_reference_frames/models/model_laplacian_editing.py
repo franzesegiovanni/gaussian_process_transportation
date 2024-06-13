@@ -20,14 +20,6 @@ class Multiple_Reference_Frames_LA:
             distribution_training_set[i,1,:]=b[i][0][0]+A[i][0][0] @ np.array([ 0, frame_dim])
             distribution_training_set[i,2,:]=b[i][0][1]
             distribution_training_set[i,3,:]=b[i][0][1]+A[i][0][1] @ np.array([ 0, -frame_dim])
-            #Extra points
-            # distribution_training_set[i,4,:]=b[i][0][0]+A[i][0][0] @ np.array([ 0, -frame_dim])
-            # distribution_training_set[i,5,:]=b[i][0][1]+A[i][0][1] @ np.array([ 0, frame_dim])
-
-            # distribution_training_set[i,6,:]=b[i][0][0]+A[i][0][0] @ np.array([ + frame_dim, 0])
-            # distribution_training_set[i,7,:]=b[i][0][1]+A[i][0][1] @ np.array([ +frame_dim, 0])
-            # distribution_training_set[i,8,:]=b[i][0][0]+A[i][0][0] @ np.array([ - frame_dim, 0])
-            # distribution_training_set[i,9,:]=b[i][0][1]+A[i][0][1] @ np.array([ - frame_dim, 0])
         return distribution_training_set   
     
     def load_dataset(self, filename = 'reach_target'):
@@ -77,7 +69,7 @@ class Multiple_Reference_Frames_LA:
         self.transport.training_traj=X
 
         
-        self.transport.fit_transportation(threshold_distance=10000)
+        self.transport.fit_transportation()
         self.transport.apply_transportation()
         std=self.transport.std
 
