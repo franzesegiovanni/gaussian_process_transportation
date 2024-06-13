@@ -1,6 +1,6 @@
 import networkx as nx
 import numpy as np
-from scipy.spatial import cKDTree
+from scipy.optimize import linear_sum_assignment
 from policy_transportation import GaussianProcess as GPR
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKernel
 class KMP():
@@ -9,42 +9,37 @@ class KMP():
 
     def find_matching_waypoints(self, source_distribution, training_traj):
 
-        # Create KDTree for array2
-        tree = cKDTree(source_distribution)
 
-        # List to store pairs
-        pairs = []
-        matched_indices = set()  # To keep track of matched indices from array2
-        self.mask_traj=np.zeros(len(training_traj), dtype=bool)
-        # Iterate through each element in array1
-        for i, element in enumerate(training_traj):
-            # Query the KDTree for the nearest neighbor
-            distance, idx = tree.query(element)
-            
-            # Check if the nearest neighbor has already been matched and if the distance is within threshold
-            if distance <= self.treshold_distance and idx not in matched_indices:
-                nearest_neighbor = source_distribution[idx]
-                
-                # Store the pair and mark the neighbor as matched
-                pairs.append((element, nearest_neighbor))
-                matched_indices.add(idx)
-                self.mask_traj[i]=True
+       # ceate cdist matrix
+        distance_matrix = np.linalg.norm(training_traj[:, None] - source_distribution, axis=2)
 
-        self.mask_dist=np.array(list(matched_indices))
 
-        return self.mask_traj, self.mask_dist
+        # Apply the Hungarian algorithm
+        row_ind, col_ind = linear_sum_assignment(distance_matrix)
+
+        return row_ind, col_ind
 
     def fit(self, source_distribution, target_distribution, training_traj):
         self.training_traj=training_traj
         self.time=np.linspace(0,1, self.training_traj.shape[0])
-        diff=np.zeros_like(training_traj)
-       
-        diff[self.mask_traj]=target_distribution[self.mask_dist] - source_distribution[self.mask_dist]
-        
-        self.training_traj[self.mask_traj]= self.training_traj[self.mask_traj]+ diff[self.mask_traj]
-        kernel=C(0.1) * RBF(length_scale=[0.1]) + WhiteKernel(3, [3, 1000])
+
+        kernel=C(0.1) * RBF(length_scale=[0.1], length_scale_bounds=[0.3, 1]) + WhiteKernel(0.00001)
         self.gp=GPR(kernel, n_targets=self.training_traj.shape[1])
         self.gp.fit(self.time.reshape(-1,1), self.training_traj)
+        self.noise_var_ = self.gp.alpha + self.gp.kernel.get_params()['k2__noise_level']
+
+        # diff=np.zeros_like(training_traj)
+       
+        k_star= self.gp.kernel(self.time.reshape(-1,1), self.time[self.mask_traj].reshape(-1,1))
+        K_star_star = self.gp.kernel(self.time[self.mask_traj].reshape(-1,1), self.time[self.mask_traj].reshape(-1,1))
+        K_star_star_noise = K_star_star + np.eye(K_star_star.shape[0])*self.noise_var_
+        self.noise_var_ = self.gp.alpha + self.gp.kernel.get_params()['k2__noise_level']
+        self.training_traj = self.training_traj + k_star @ np.linalg.inv(K_star_star_noise) @ (target_distribution[self.mask_dist] - source_distribution[self.mask_dist])
+        
+        self.gp.fit(self.time.reshape(-1,1), self.training_traj)
+        # self.training_traj[self.mask_traj]= self.training_traj[self.mask_traj]+ diff[self.mask_traj]
+
+        
 
     
     def predict(self, X, return_std=False):

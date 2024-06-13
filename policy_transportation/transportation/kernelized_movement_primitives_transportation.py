@@ -13,7 +13,7 @@ class KMP_transportation():
         self.transportation=KMP(treshold_distance=treshold_distance)
     
     def fit_transportation(self):
-        self.transportation.find_matching_waypoints(self.source_distribution, self.training_traj)
+        self.transportation.mask_traj, self.transportation.mask_dist= self.transportation.find_matching_waypoints(self.source_distribution, self.training_traj)
         
         self.affine_transform.fit(self.source_distribution, self.target_distribution)
 
