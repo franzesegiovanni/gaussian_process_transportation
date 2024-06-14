@@ -10,7 +10,7 @@ from policy_transportation.models.laplacian_editing import Laplacian_Editing
 class LaplacianEditingTransportation():
     def __init__(self):
         super(LaplacianEditingTransportation, self).__init__()
-        self.affine_transform=AffineTransform(do_scale=False, do_rotation=True)
+        self.affine_transform=AffineTransform(do_scale=True, do_rotation=True)
         self.transportation=Laplacian_Editing()
     
     def fit_transportation(self):

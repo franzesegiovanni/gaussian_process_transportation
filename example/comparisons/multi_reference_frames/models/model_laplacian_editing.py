@@ -148,5 +148,5 @@ class Multiple_Reference_Frames_LA:
         ax.scatter(distribution[0,0],distribution[0,1], linewidth=10, alpha=0.9, c='green')
         ax.plot(distribution[2:4,0],distribution[2:4,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])
         ax.scatter(distribution[2,0],distribution[2,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])
-        ax.plot(distribution[:,0],distribution[:,1], 'b*',  linewidth=0.2)
+        # ax.plot(distribution[:,0],distribution[:,1], 'b*',  linewidth=0.2)
         ax.plot(X1[:,0],X1[:,1], c= [255.0/256.0,20.0/256.0,147.0/256.0])

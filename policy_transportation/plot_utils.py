@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
+from tqdm import tqdm
 
 def plot_vector_field(model,datax_grid,datay_grid,demo,surface):
     dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
@@ -41,12 +42,12 @@ def plot_traj_evolution(model,x_grid,y_grid,z_grid,demo, surface):
     start_pos = np.random.uniform([x_grid[0], y_grid[0], z_grid[0]], [x_grid[-1], y_grid[-1], z_grid[-1]], size=(1, 3))
     traj = np.zeros((1000,3))
     pos=np.array(start_pos).reshape(1,-1)   
-    for i in range(1000):
+    for i in tqdm(range(300)):
         pos=np.array(pos).reshape(1,-1)
 
         [vel, std]=model.predict(pos)
-        [_,grad]=model.derivative(pos)
-        f_stable=np.array([grad[0,0,0],grad[0,1,0],grad[0,2,0]])/np.sqrt(grad[0,0,0]**2+grad[0,1,0]**2+grad[0,2,0]**2)
+        grad=model.derivative_of_variance(pos)
+        f_stable=np.array([grad[0,0],grad[1,0],grad[2,0]])/np.sqrt(grad[0,0]**2+grad[1,0]**2+grad[2,0]**2)
         pos = pos+vel.reshape(1,-1)-std[0]*f_stable
 
         traj[i,:]= pos

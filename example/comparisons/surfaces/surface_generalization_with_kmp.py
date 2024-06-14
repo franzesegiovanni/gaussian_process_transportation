@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
 from policy_transportation.transportation.kernelized_movement_primitives_transportation import KMP_transportation as Transport
 from policy_transportation.plot_utils import plot_vector_field 
+from policy_transportation.plot_utils import draw_error_band
 from policy_transportation.utils import resample
 import warnings
 import os
@@ -52,7 +53,7 @@ transport.training_traj=X
 transport.training_delta=deltaX
 
 print('Transporting the dynamical system on the new surface')
-transport.fit_transportation()
+transport.fit_transportation(C(0.1, constant_value_bounds=[0.1,2]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01]))
 transport.apply_transportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 
@@ -65,4 +66,11 @@ gp_deltaX1.fit(X1, deltaX1)
 x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 200)
 y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 200)
 plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,target_distribution)
+X_samples=transport.sample_transportation()
+
+fig, ax = plt.subplots()
+ax.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,0], label="New Surface")
+ax.plot(X_samples[:,:,0].T, X_samples[:,:,1].T, alpha=0.5)
+draw_error_band(ax, X1[:,0], X1[:,1], err=2*transport.std[:], facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.4, loop=True)
+ax.scatter(X1[:,0],X1[:,1], label="Tranported demonstration")
 plt.show()

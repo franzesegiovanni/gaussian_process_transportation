@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel as C
 from policy_transportation.transportation.kernelized_movement_primitives_transportation import KMP_transportation as Transport
 from generate_random_frame_orientation import generate_frame_orientation
 from policy_transportation.plot_utils import draw_error_band
@@ -11,9 +11,7 @@ import random
 warnings.filterwarnings("ignore")
 class Multiple_Reference_Frames_KMP:
     def __init__(self):
-        self.transport=Transport(do_scale=True, treshold_distance=5.0)
-        # k_transport = C(constant_value=np.sqrt(10))  * Matern(20*np.ones(1), [10,50], nu=2.5) + WhiteKernel(0.01 , [0.0000001, 0.000001])
-        # self.transport.kernel_transport=k_transport
+        self.transport=Transport(do_scale=True)
 
     def generate_distribution_from_frames(self, A,b):
         distribution_training_set=np.zeros((len(A),4,2))
@@ -70,7 +68,7 @@ class Multiple_Reference_Frames_KMP:
         self.transport.source_distribution=self.distribution_training_set[index_source,:,:]
         self.transport.target_distribution=self.distribution_training_set[index_target,:,:]
         self.transport.training_traj=X
-        self.transport.fit_transportation()
+        self.transport.fit_transportation(C(0.1, constant_value_bounds=[0.1,5]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01]))
         self.transport.apply_transportation()
         std=self.transport.std
 
@@ -121,7 +119,7 @@ class Multiple_Reference_Frames_KMP:
             self.transport.apply_transportation_linear()
             std= np.zeros_like(self.transport.training_traj)
         else:
-            self.transport.fit_transportation()
+            self.transport.fit_transportation(C(0.1, constant_value_bounds=[0.1,5]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01]))
             self.transport.apply_transportation()
             std=self.transport.std
         X1=self.transport.training_traj
@@ -150,5 +148,5 @@ class Multiple_Reference_Frames_KMP:
         ax.scatter(distribution[0,0],distribution[0,1], linewidth=10, alpha=0.9, c='green')
         ax.plot(distribution[2:4,0],distribution[2:4,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])
         ax.scatter(distribution[2,0],distribution[2,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])
-        ax.plot(distribution[:,0],distribution[:,1], 'b*',  linewidth=0.2)
+        # ax.plot(distribution[:,0],distribution[:,1], 'b*',  linewidth=0.2)
         ax.plot(X1[:,0],X1[:,1], c= [255.0/256.0,20.0/256.0,147.0/256.0])
