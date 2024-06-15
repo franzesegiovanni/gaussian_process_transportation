@@ -34,7 +34,8 @@ class KMP_transportation():
  
     
         J = (self.training_traj[1:,:,np.newaxis]- self.training_traj[:-1,:,np.newaxis]) @ np.linalg.pinv(self.training_traj_old[1:,:,np.newaxis]- self.training_traj_old[:-1,:,np.newaxis])
-        self.training_delta[:-1,:]= (J @ self.training_delta[:-1,:,np.newaxis])[:,:,0]
+        J = np.concatenate((J, J[-1:,:,:]), axis=0)
+        self.training_delta= (J @ self.training_delta[:,:,np.newaxis])[:,:,0]
 
     def sample_transportation(self):
         training_traj_samples= self.transportation.samples(self.traj_rotated)
