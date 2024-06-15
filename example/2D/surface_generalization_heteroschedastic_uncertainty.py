@@ -124,8 +124,7 @@ transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
 
-
-k_transport = C(constant_value=np.sqrt(0.1))  * RBF(4*np.ones(1), length_scale_bounds=[0.01, 500]) + WhiteKernel(0.01, noise_level_bounds=[0.01, 0.1] )
+k_transport = C(constant_value=np.sqrt(0.1), constant_value_bounds=[0.1,5])  * RBF(1*np.ones(1), [1,500]) + WhiteKernel(0.0001)
 transport.kernel_transport=k_transport
 print('Transporting the dynamical system on the new surface')
 transport.fit_transportation()
