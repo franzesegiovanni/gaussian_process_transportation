@@ -148,19 +148,26 @@ class StocasticVariationalGaussianProcess():
 
     def mean_fun(self,x):
         predictions = self.gp.likelihood(self.gp(x))
-        return predictions.mean
+        mean=predictions.mean
+        mean_sum= torch.sum(mean, dim=0)
+        return mean_sum
     def variance_fun(self,x):
         predictions = self.gp.likelihood(self.gp(x))
         return predictions.variance
-    def predict(self,x):
+    def predict(self,x, return_std=False):
         x=torch.from_numpy(x).float()
         if self.use_cuda:
             x=x.cuda()
         predictions = self.gp.likelihood(self.gp(x))
-        return predictions.mean.detach().cpu().numpy(), predictions.variance.cpu().detach().numpy()
+        if return_std:
+            return predictions.mean.detach().cpu().numpy(), predictions.stddev.cpu().detach().numpy() 
+        else:
+            return predictions.mean.detach().cpu().numpy()
          
     def derivative(self, x): 
         x=torch.from_numpy(x).float()
         if self.use_cuda:
             x=x.cuda()
-        return jacobian(self.mean_fun, x).cpu().detach().numpy()#, jacobian(self.variance_fun, x).detach().numpy()
+        J= jacobian(self.mean_fun, x).cpu().detach().numpy()
+        J= J.transpose(1,0,2)    
+        return J

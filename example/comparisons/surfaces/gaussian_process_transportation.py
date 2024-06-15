@@ -39,14 +39,13 @@ for j in range(len(X)-1):
 
 
 # initialize the models
-k_transport = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(2), [1,500]) + WhiteKernel(0.0001)
+k_transport = C(constant_value=np.sqrt(0.1), constant_value_bounds=[0.1,2])  * RBF(1*np.ones(2), [10,500]) + WhiteKernel(0.0001)
 model=GPT(kernel_transport=k_transport)
 
 
 
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(16, 8))
 fig.subplots_adjust(wspace=0, hspace=0) 
-# i=0
 X1_list = []
 std_list = []
 
@@ -68,18 +67,11 @@ ax.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,0], lab
 ax.plot(X_samples[:,:,0].T, X_samples[:,:,1].T, alpha=0.5)
 draw_error_band(ax, X1[:,0], X1[:,1], err=2*std[:], facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.4, loop=True)
 ax.scatter(X1[:,0],X1[:,1], label="Tranported demonstration")
-# ax.set_title(name, fontsize=18, fontweight='bold')
 ax.set_ylim(-20, 80)
 ax.grid()
-# legend=ax.legend(loc='upper left', fontsize=12)
-# i+=1
 fig.tight_layout()
 
 legend=ax.legend(loc='upper left', fontsize=12)
-
-#Save figure
-
-
 
 plt.show()    
 

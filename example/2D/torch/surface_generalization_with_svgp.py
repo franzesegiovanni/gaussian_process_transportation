@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
-from policy_transportation.transportation.torch.gaussian_process_transport import SVGPTransport as Transport
+from policy_transportation.transportation.torch.stocastic_variational_gaussian_process_transportation import SVGPTransport as Transport
 import pathlib
 from policy_transportation.plot_utils import plot_vector_field 
 from policy_transportation.utils import resample

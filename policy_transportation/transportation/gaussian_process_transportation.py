@@ -71,9 +71,6 @@ class GaussianProcessTransportation():
         self.delta_map_mean, self.std= self.gp_delta_map.predict(self.traj_rotated, return_std=True)
         self.training_traj = self.traj_rotated + self.delta_map_mean 
 
-        # J_var= self.std**2/self.gp_delta_map.kernel_params_[0]**2
-        # self.var_vel_transported= np.zeros_like(self.training_delta)
-
         #Deform Deltas and orientation
         if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
             pos=(np.array(self.traj_rotated))
@@ -197,16 +194,3 @@ class GaussianProcessTransportation():
                     rot_stiff= rot_affine
                     quat_stiff=quaternion.from_rotation_matrix(rot_stiff)
                     self.training_stiff_ori[i,:]=np.array([quat_stiff.w, quat_stiff.x, quat_stiff.y, quat_stiff.z])
-
-def is_rotation_matrix(matrix):
-    # Check if the matrix is orthogonal
-    is_orthogonal = np.allclose(np.eye(matrix.shape[0]), matrix @ matrix.T)
-    if not is_orthogonal:
-        return False
-
-    # Check if the determinant of the matrix is 1
-    det = np.linalg.det(matrix)
-    if not np.isclose(det, 1.0):
-        return False
-
-    return True
