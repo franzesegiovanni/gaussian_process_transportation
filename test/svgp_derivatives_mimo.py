@@ -2,14 +2,11 @@ import tqdm
 import torch
 import gpytorch
 from matplotlib import pyplot as plt
-import matplotlib.pyplot as plt
-from  torch.autograd.functional import jacobian, hessian
-from  torch.autograd.functional import jacobian, hessian
 from torch.utils.data import TensorDataset, DataLoader
 
 from models import MultitaskGPModel
 
-x = torch.linspace(-4,4,1000).reshape(-1,1)
+x = torch.linspace(-4,4,100).reshape(-1,1)
 y_1 = torch.cos(x) + torch.randn_like(x) * 0.2
 y_2 = torch.sin(x) + torch.randn_like(x) * 0.2
 y = torch.cat([y_1, y_2], dim=1)
@@ -27,14 +24,14 @@ if torch.cuda.is_available():
 
 
 
-number_inducing_points = 5
+number_inducing_points = 20
 inducing_points = torch.linspace(-2,2,number_inducing_points).reshape(-1,1)
 model = MultitaskGPModel(inducing_points=inducing_points, num_tasks=y.size(1))
 
 
 
 
-num_epochs = 100
+num_epochs = 1000
 
 model.train()
 
@@ -78,6 +75,8 @@ model.convert_to_exact_gp()
 
 posterior_f, std_f=model.posterior_f(train_x, return_std=True)
 posterior_f_prime, std_f_prime=model.posterior_f_prime(train_x, return_std=True)
+posterior_f_prime=posterior_f_prime.squeeze()
+std_f_prime=std_f_prime.squeeze()
 print("posterior_f")
 print(posterior_f.shape)
 print("std_f")
@@ -87,14 +86,14 @@ print(posterior_f_prime.shape)
 print("std_f_prime")
 print(std_f_prime.shape)
 
-#plot the data and the derivatives
-# with torch.no_grad():
-#     plt.scatter(train_x.cpu().numpy(), train_y.cpu().numpy(), label='Train')
-#     plt.plot(train_x.cpu().numpy(), posterior_f.cpu().numpy(), label='Posterior f')
-#     plt.fill_between(train_x.cpu().numpy().reshape(-1), (posterior_f-std_f).cpu().numpy().reshape(-1), (posterior_f+std_f).cpu().numpy().reshape(-1), alpha=0.5)
+# plot the data and the derivatives
+with torch.no_grad():
+    plt.scatter(train_x.cpu().numpy(), train_y[:,0].cpu().numpy(), label='Train')
+    plt.plot(train_x.cpu().numpy(), posterior_f[0,:].cpu().numpy(), label='Posterior f')
+    plt.fill_between(train_x.cpu().numpy().reshape(-1), (posterior_f[0,:]-std_f[0,:]).cpu().numpy().reshape(-1), (posterior_f[0,:]+std_f[0,:]).cpu().numpy().reshape(-1), alpha=0.5)
 
-#     plt.plot(train_x.cpu().numpy(), posterior_f_prime.cpu().numpy(), label='Posterior f prime')
-#     plt.fill_between(train_x.cpu().numpy().reshape(-1), (posterior_f_prime-std_f_prime).cpu().numpy().reshape(-1), (posterior_f_prime+std_f_prime).cpu().numpy().reshape(-1), alpha=0.5)
-#     plt.legend()
-#     plt.show()
+    plt.plot(train_x.cpu().numpy(), posterior_f_prime[0,:].cpu().numpy(), label='Posterior f prime')
+    plt.fill_between(train_x.cpu().numpy().reshape(-1), (posterior_f_prime[0,:]-std_f_prime[0,:]).cpu().numpy().reshape(-1), (posterior_f_prime[0,:]+std_f_prime[0,:]).cpu().numpy().reshape(-1), alpha=0.5)
+    plt.legend()
+    plt.show()
 
