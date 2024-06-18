@@ -26,6 +26,10 @@ class GaussianProcess():
             self.n_features=np.shape(self.X)[1]
             self.n_samples=np.shape(self.X)[0]
             self.n_outputs=np.shape(self.Y)[1]
+            # filter out the nan values
+            mask = np.isnan(self.Y).any(axis=1)
+            self.X=self.X[~mask]
+            self.Y=self.Y[~mask]
             self.gp.fit(self.X,self.Y)
             self.kernel= self.gp.kernel_
             self.kernel_params_= [self.kernel.get_params()['k1__k2__length_scale'], self.kernel.get_params()['k1']]

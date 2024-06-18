@@ -41,8 +41,9 @@ class SVGP(gpytorch.models.ApproximateGP):
             gpytorch.kernels.RBFKernel(batch_shape=torch.Size([num_tasks]), ard_num_dims=X.shape[1]),
             batch_shape=torch.Size([num_tasks]))
          
-        interval=gpytorch.constraints.Interval(0.00000001,0.000001)        
-        self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=Y.shape[1], noise_constraint=interval)
+        # interval=gpytorch.constraints.Interval(0.00000001,0.000001)        
+        # self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=Y.shape[1], noise_constraint=interval)
+        self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=Y.shape[1])
         self.X=torch.from_numpy(X).float()
         self.Y=torch.from_numpy(Y).float()
 
