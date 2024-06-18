@@ -24,9 +24,9 @@ if torch.cuda.is_available():
 
 
 
-number_inducing_points = 20
+number_inducing_points = 5
 inducing_points = torch.linspace(-2,2,number_inducing_points).reshape(-1,1)
-model = MultitaskGPModel(inducing_points=inducing_points, num_tasks=y.size(1))
+model = MultitaskGPModel(inducing_points=inducing_points, num_tasks=y.size(1), batch_indipendent_kernel=True)
 
 
 
@@ -35,13 +35,16 @@ num_epochs = 1000
 
 model.train()
 
-optimizer = torch.optim.Adam([
-    {'params': model.parameters()}
-], lr=0.01)
-
 likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=y.size(1))
 # Our loss object. We're using the VariationalELBO
 mll = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=train_y.size(0))
+
+optimizer = torch.optim.Adam([
+    {'params': model.parameters()},
+    {'params': likelihood.parameters()},
+], lr=0.01)
+
+
 
 
 if torch.cuda.is_available():
@@ -69,31 +72,35 @@ for i in epochs_iter:
 
 model.convert_to_exact_gp()
 
-# J= model.kernel_10(train_x)
-
-# H = model.kernel_11(train_x)
-
 posterior_f, std_f=model.posterior_f(train_x, return_std=True)
 posterior_f_prime, std_f_prime=model.posterior_f_prime(train_x, return_std=True)
 posterior_f_prime=posterior_f_prime.squeeze()
 std_f_prime=std_f_prime.squeeze()
-print("posterior_f")
-print(posterior_f.shape)
-print("std_f")
-print(std_f.shape)
-print("posterior_f_prime")
-print(posterior_f_prime.shape)
-print("std_f_prime")
-print(std_f_prime.shape)
+# print("posterior_f")
+# print(posterior_f.shape)
+# print("std_f")
+# print(std_f.shape)
+# print("posterior_f_prime")
+# print(posterior_f_prime.shape)
+# print("std_f_prime")
+# print(std_f_prime.shape)
 
 # plot the data and the derivatives
 with torch.no_grad():
     plt.scatter(train_x.cpu().numpy(), train_y[:,0].cpu().numpy(), label='Train')
     plt.plot(train_x.cpu().numpy(), posterior_f[0,:].cpu().numpy(), label='Posterior f')
     plt.fill_between(train_x.cpu().numpy().reshape(-1), (posterior_f[0,:]-std_f[0,:]).cpu().numpy().reshape(-1), (posterior_f[0,:]+std_f[0,:]).cpu().numpy().reshape(-1), alpha=0.5)
+    plt.scatter(model.x_inducing.cpu().numpy(), model.y_inducing[0].cpu().numpy(), label='Inducing points')
 
     plt.plot(train_x.cpu().numpy(), posterior_f_prime[0,:].cpu().numpy(), label='Posterior f prime')
     plt.fill_between(train_x.cpu().numpy().reshape(-1), (posterior_f_prime[0,:]-std_f_prime[0,:]).cpu().numpy().reshape(-1), (posterior_f_prime[0,:]+std_f_prime[0,:]).cpu().numpy().reshape(-1), alpha=0.5)
     plt.legend()
+    plt.figure()
+    plt.scatter(train_x.cpu().numpy(), train_y[:,1].cpu().numpy(), label='Train')
+    plt.plot(train_x.cpu().numpy(), posterior_f[1,:].cpu().numpy(), label='Posterior f')
+    plt.fill_between(train_x.cpu().numpy().reshape(-1), (posterior_f[1,:]-std_f[1,:]).cpu().numpy().reshape(-1), (posterior_f[1,:]+std_f[1,:]).cpu().numpy().reshape(-1), alpha=0.5)
+    plt.plot(train_x.cpu().numpy(), posterior_f_prime[1,:].cpu().numpy(), label='Posterior f prime')
+    plt.fill_between(train_x.cpu().numpy().reshape(-1), (posterior_f_prime[1,:]-std_f_prime[1,:]).cpu().numpy().reshape(-1), (posterior_f_prime[1,:]+std_f_prime[1,:]).cpu().numpy().reshape(-1), alpha=0.5)
+    plt.scatter(model.x_inducing.cpu().numpy(), model.y_inducing[1].cpu().numpy(), label='Inducing points')
     plt.show()
 
