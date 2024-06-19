@@ -32,10 +32,10 @@ class KMP_transportation():
         self.traj_rotated=self.affine_transform.predict(self.training_traj)
         self.training_traj, self.std= self.transportation.predict(self.traj_rotated, return_std=True)
  
-    
-        J = (self.training_traj[1:,:,np.newaxis]- self.training_traj[:-1,:,np.newaxis]) @ np.linalg.pinv(self.training_traj_old[1:,:,np.newaxis]- self.training_traj_old[:-1,:,np.newaxis])
-        J = np.concatenate((J, J[-1:,:,:]), axis=0)
-        self.training_delta= (J @ self.training_delta[:,:,np.newaxis])[:,:,0]
+        if hasattr(self, 'training_delta'):
+            J = (self.training_traj[1:,:,np.newaxis]- self.training_traj[:-1,:,np.newaxis]) @ np.linalg.pinv(self.training_traj_old[1:,:,np.newaxis]- self.training_traj_old[:-1,:,np.newaxis])
+            J = np.concatenate((J, J[-1:,:,:]), axis=0)
+            self.training_delta= (J @ self.training_delta[:,:,np.newaxis])[:,:,0]
 
     def sample_transportation(self):
         training_traj_samples= self.transportation.samples(self.traj_rotated)

@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 # from pbdlib.utils.jupyter_utils import *
 import warnings
-# from models.model_gpt import Multiple_Reference_Frames_GPT
-from models.model_dmp import Multiple_Reference_Frames_DMP
+from models.model_gpt import Multiple_Reference_Frames_GPT
 warnings.filterwarnings("ignore")
 warnings.filterwarnings( "ignore", module = "matplotlib\..*" )
 np.set_printoptions(precision=2) 
@@ -12,12 +11,12 @@ np.set_printoptions(precision=2)
 script_path = str(os.path.dirname(__file__))
 filename = script_path + '/data/' + 'reach_target'
 
-policy=Multiple_Reference_Frames_DMP()
+policy=Multiple_Reference_Frames_GPT()
 policy.load_dataset(filename)
 
 fig, ax = plt.subplots()
 ax.grid(color='gray', linestyle='-', linewidth=1)
-ax.set_title('Dynamic Movement Primitives', fontsize=18)
+ax.set_title('Affine Trasformation', fontsize=18)
 # Customize the background color
 ax.set_facecolor('white')
 ax.set_xlim(-60, 60)
