@@ -14,8 +14,12 @@ import pathlib
 # from geometry_msgs.msg import Point, WrenchStamped, PoseStamped, Vector3
 
 class Drawing():
-    def __init__(self, draw=2):
-        self.fig, self.ax =  plt.subplots()
+    def __init__(self, fig, ax, draw=2):
+        # 
+        if fig is None or ax is None:
+            self.fig, self.ax =  plt.subplots()
+            self.fig=fig
+            self.ax=ax
         self.ax.set_xlim(-50, 50-1)
         self.ax.set_ylim(-50, 50-1)
         self.points, = self.ax.plot([], [], 'o')
