@@ -9,12 +9,10 @@ def plot_vector_field(model,datax_grid,datay_grid,demo,surface):
     dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
     u=np.ones((len(datax_grid),len(datay_grid)))
     v=np.ones((len(datax_grid),len(datay_grid)))
-    for i in range(len(datax_grid)):
-        for j in range(len(datay_grid)):
-            pos=np.array([dataXX[i,j],dataYY[i, j]]).reshape(1,-1)
-            [vel, _]=model.predict(pos)
-            u[i,j]=vel[0][0]
-            v[i,j]=vel[0][1]
+    pos_array= np.column_stack((dataXX.ravel(), dataYY.ravel()))
+    [vel, std]=model.predict(pos_array)
+    u= vel[:,0].reshape(dataXX.shape)
+    v= vel[:,1].reshape(dataXX.shape)
     fig = plt.figure(figsize = (12, 7))
     plt.streamplot(dataXX, dataYY, u, v, density = 2)
     plt.scatter(demo[:,0],demo[:,1], color=[1,0,0])
@@ -24,14 +22,13 @@ def plot_vector_field_minvar(model,datax_grid,datay_grid,demo,surface):
     dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
     u=np.ones((len(datax_grid),len(datay_grid)))
     v=np.ones((len(datax_grid),len(datay_grid)))
-    for i in range(len(datax_grid)):
-        for j in range(len(datay_grid)):
-            pos=np.array([dataXX[i,j],dataYY[i, j]]).reshape(1,-1)
-            [vel, std]=model.predict(pos)
-            [_,grad]=model.derivative(pos)
-            u[i,j]=vel[0,0]-2*std[0][0]*grad[0,0,0]/np.sqrt(grad[0,0,0]**2+grad[0,0,0]**2)
-            v[i,j]=vel[0,1]-2*std[0][0]*grad[0,1,0]/np.sqrt(grad[0,0,0]**2+grad[0,1,0]**2)
-
+    # orgianize data in an array
+    pos_array= np.column_stack((dataXX.ravel(), dataYY.ravel()))
+    [vel, std]=model.predict(pos_array)
+    grad=model.derivative_of_variance(pos_array).transpose()
+    vel_variance_min=vel-2*std*grad/np.linalg.norm(grad, axis=1).reshape(-1,1)
+    u= vel_variance_min[:,0].reshape(dataXX.shape)
+    v= vel_variance_min[:,1].reshape(dataXX.shape)
     fig = plt.figure(figsize = (12, 7))
     plt.streamplot(dataXX, dataYY, u, v, density = 2)
     plt.scatter(demo[:,0],demo[:,1], color=[1,0,0]) 
@@ -42,7 +39,7 @@ def plot_traj_evolution(model,x_grid,y_grid,z_grid,demo, surface):
     start_pos = np.random.uniform([x_grid[0], y_grid[0], z_grid[0]], [x_grid[-1], y_grid[-1], z_grid[-1]], size=(1, 3))
     traj = np.zeros((1000,3))
     pos=np.array(start_pos).reshape(1,-1)   
-    for i in tqdm(range(300)):
+    for i in tqdm(range(1000)):
         pos=np.array(pos).reshape(1,-1)
 
         [vel, std]=model.predict(pos)
@@ -54,11 +51,17 @@ def plot_traj_evolution(model,x_grid,y_grid,z_grid,demo, surface):
 
 
     ax = plt.figure().add_subplot(projection='3d')    
-    newsurf = ax.plot_surface(surface[:,:,0], surface[:,:,1], surface[:,:,2], cmap=cm.coolwarm,
+    ax.plot_surface(surface[:,:,0], surface[:,:,1], surface[:,:,2], cmap=cm.coolwarm,
                     linewidth=0, antialiased=False)    
     ax.scatter(demo[:,0],demo[:,1],demo[:,2], color=[1,0,0])
     ax.scatter(traj[:,0],traj[:,1],traj[:,2], color=[0,0,1])
-    # plt.show()
+
+def plot_traj_3D(trajectory, surface):
+
+    ax = plt.figure().add_subplot(projection='3d')    
+    ax.plot_surface(surface[:,:,0], surface[:,:,1], surface[:,:,2], cmap=cm.coolwarm,
+                    linewidth=0, antialiased=False)    
+    ax.scatter(trajectory[:,0],trajectory[:,1],trajectory[:,2], color=[0,0,1])
 
 def draw_error_band(ax, x, y, err, loop=False, **kwargs):
     # Calculate normals via centered finite differences (except the first point
