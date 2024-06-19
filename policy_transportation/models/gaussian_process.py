@@ -118,6 +118,6 @@ class GaussianProcess():
         # dk_star_dx_transpose= dk_star_dx.transpose(1,0,2)
         dk_star_dx_K_inv_= dk_star_dx @  self.K_inv
 
-        diag_k_K_inv_k = np.sum(dk_star_dx_K_inv_ * dk_star_dx, axis=2)
+        diag_k_K_inv_k =- 2 * np.sum(dk_star_dx_K_inv_ * k_star, axis=2)
         return diag_k_K_inv_k
 
