@@ -92,7 +92,7 @@ class Multiple_Reference_Frames_GPT:
             self.transport.apply_transportation_linear()
             std= np.zeros_like(self.transport.training_traj)
         else:
-            self.transport.fit_transportation()
+            self.transport.fit_transportation(do_scale=True, do_rotation=True)
             self.transport.apply_transportation()
             std=self.transport.std
 
@@ -143,7 +143,7 @@ class Multiple_Reference_Frames_GPT:
             self.transport.apply_transportation_linear()
             std= np.zeros_like(self.transport.training_traj)
         else:
-            self.transport.fit_transportation()
+            self.transport.fit_transportation(do_scale=True, do_rotation=True)
             self.transport.apply_transportation()
             std=self.transport.std
         X1=self.transport.training_traj
