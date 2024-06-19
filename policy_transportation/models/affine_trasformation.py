@@ -39,7 +39,8 @@ class AffineTransform():
         if self.do_scale:
             source_rotated=np.transpose(self.rotation_matrix @ np.transpose((self.source_points_centered)))
             self.scale = np.sum(source_rotated * self.target_points_centered) / np.sum(source_rotated**2)
-        print ("Rotation Matrix of the Affine Matrix:", self.rotation_matrix)
+        print ("Rotation Matrix of the Affine Matrix:")
+        print(self.rotation_matrix)
         print ("Scaling factor:", self.scale)
         #Compute translation
         self.translation=self.T_centroid-self.S_centroid
