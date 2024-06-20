@@ -5,10 +5,10 @@ from  torch.autograd.functional import jacobian
 from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm 
 from torch import autograd
+import random
 
 class NeuralNetwork():
     def __init__(self, X, Y):
-        # self.nn= SVGP_LMC(num_latents=1, X=X, Y=Y ,num_task=Y.shape[1], num_inducing=num_inducing)
         self.use_cuda=False
         input_size=X.shape[1]
         output_size=Y.shape[1]
@@ -42,6 +42,7 @@ class NeuralNetwork():
 
     def mean_fun(self,x):
         predictions = self.nn(x)
+        predictions = torch.sum(predictions, dim=0)
         return predictions
     
     def predict(self,x):
@@ -55,12 +56,19 @@ class NeuralNetwork():
         x=torch.from_numpy(x).float()
         if self.use_cuda:
             x=x.cuda()
-        return jacobian(self.mean_fun, x).cpu().detach().numpy()
+        J=jacobian(self.mean_fun, x).cpu().detach().numpy()
+        J=J.transpose(1,0,2)    
+        return J
     
 # Define the MLP class
 class MLP(nn.Module):
-    def __init__(self, input_size, output_size, hidden_size=100):
+    def __init__(self, input_size, output_size, hidden_size=10000):
         super(MLP, self).__init__()
+
+        seed = random.randint(0, 2**32 - 1)
+        print("Seed:", seed)
+        # Set the random seed for reproducibility
+        torch.manual_seed(seed)
         self.fc1 = nn.Linear(input_size, hidden_size)
         self.relu1 = nn.ReLU()
         self.fc2 = nn.Linear(hidden_size, hidden_size)

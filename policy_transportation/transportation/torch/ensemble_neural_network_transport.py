@@ -5,7 +5,6 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 from policy_transportation import AffineTransform
-# from policy_transportation.models.torch.neural_network import NeuralNetwork
 from policy_transportation.models.torch.ensemble_neural_network import EnsembleNeuralNetwork as NeuralNetwork
 import pickle
 import numpy as np
@@ -63,54 +62,36 @@ class Ensemble_Neural_Transport():
     def apply_transportation(self):
               
         #Deform Trajactories 
-        traj_rotated=self.affine_transform.predict(self.training_traj)
-        delta_map_mean= self.gp_delta_map.predict(traj_rotated)
-        # print(delta_map_mean)
-        transported_traj = traj_rotated + delta_map_mean 
+        self.training_traj_old=self.training_traj
+        self.traj_rotated=self.affine_transform.predict(self.training_traj)
+        self.delta_map_mean, self.std= self.gp_delta_map.predict(self.traj_rotated, return_std=True)
+        self.training_traj = self.traj_rotated + self.delta_map_mean 
 
         #Deform Deltas and orientation
-        new_delta = np.ones_like(self.training_delta)
-        for i in range(len(self.training_traj[:,0])):
-            if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
-                pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
-                # print(type(pos))
-                Jacobian=self.gp_delta_map.derivative(pos)
-                #print(Jacobian.shape)
-                #print(Jacobian)
-                Jacobian=Jacobian.reshape(self.training_delta.shape[1],pos.shape[1])
-                #print(Jacobian)
-                # Jacobian=np.zeros(pos.shape[1])
-                rot_gp= np.eye(pos.shape[1]) + Jacobian 
-                rot_affine= self.affine_transform.rotation_matrix
-                if  hasattr(self, 'training_delta'):
-                    new_delta[i]= rot_affine @ self.training_delta[i]
-                    new_delta[i]= rot_gp @ new_delta[i]
-                if  hasattr(self, 'training_ori'):
-                    rot_gp_norm=rot_gp
-                    rot_gp_norm=rot_gp_norm/np.linalg.det(rot_gp_norm)
-                    quat_i=quaternion.from_float_array(self.training_ori[i,:])
-                    rot_i=quaternion.as_rotation_matrix(quat_i)
-                    rot_final=rot_gp_norm @ rot_affine @ rot_i
-                    product_quat=quaternion.from_rotation_matrix(rot_final)
-                    if quat_i.w*product_quat.w  + quat_i.x * product_quat.x+ quat_i.y* product_quat.y + quat_i.z * product_quat.z < 0:
-                        product_quat = - product_quat
-                    self.training_ori[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])
+        if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
+            pos=(np.array(self.traj_rotated))
+            Jacobian, Jacobian_std=self.gp_delta_map.derivative(pos, return_std=True)
+            # convert the Jacobian and Jacobian_std to numpy
+            Jacobian_std= Jacobian_std
+            rot_gp= np.eye(Jacobian[0].shape[0]) + Jacobian
+            rot_affine= self.affine_transform.rotation_matrix
+            derivative_affine= self.affine_transform.derivative(pos)
 
-        #Update the trajectory and the delta     
-        self.training_traj=transported_traj
+
         if  hasattr(self, 'training_delta'):
-            self.training_delta=new_delta
+            self.training_delta = self.training_delta[:,:,np.newaxis]
+
+            self.training_delta=  derivative_affine @ self.training_delta
+            self.var_vel_transported=Jacobian_std**2 @ self.training_delta**2
+
+            self.training_delta= rot_gp @ self.training_delta
+            self.training_delta=self.training_delta[:,:,0]
+            self.var_vel_transported=self.var_vel_transported[:,:,0]
 
 
-def is_rotation_matrix(matrix):
-    # Check if the matrix is orthogonal
-    is_orthogonal = np.allclose(np.eye(matrix.shape[0]), matrix @ matrix.T)
-    if not is_orthogonal:
-        return False
-
-    # Check if the determinant of the matrix is 1
-    det = np.linalg.det(matrix)
-    if not np.isclose(det, 1.0):
-        return False
-
-    return True
+        if  hasattr(self, 'training_ori'):   
+            quat_demo=quaternion.from_float_array(self.training_ori)
+            quat_affine= quaternion.from_rotation_matrix(rot_affine)
+            quat_gp = quaternion.from_rotation_matrix(rot_gp, nonorthogonal=True)
+            quat_transport=quat_gp * (quat_affine * quat_demo)
+            self.training_ori= quaternion.as_float_array(quat_transport)

@@ -14,8 +14,8 @@ class EnsembleNeuralNetwork():
             nn.fit(X, Y, num_epochs)
             index+=1
 
-    def predict(self, X, return_std=False):
-        predictions = [nn.predict(X) for nn in self.ensemble]
+    def predict(self, x, return_std=False):
+        predictions = [nn.predict(x) for nn in self.ensemble]
         predictions = np.array(predictions)  # Shape: (n_estimators, n_samples)
 
         # Calculate the mean and variance of the predictions

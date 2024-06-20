@@ -75,11 +75,7 @@ class Neural_Transport():
                 pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
                 # print(type(pos))
                 Jacobian=self.gp_delta_map.derivative(pos)
-                #print(Jacobian.shape)
-                #print(Jacobian)
                 Jacobian=Jacobian.reshape(self.training_delta.shape[1],pos.shape[1])
-                #print(Jacobian)
-                # Jacobian=np.zeros(pos.shape[1])
                 rot_gp= np.eye(pos.shape[1]) + Jacobian 
                 rot_affine= self.affine_transform.rotation_matrix
                 if  hasattr(self, 'training_delta'):
@@ -101,16 +97,3 @@ class Neural_Transport():
         if  hasattr(self, 'training_delta'):
             self.training_delta=new_delta
 
-
-def is_rotation_matrix(matrix):
-    # Check if the matrix is orthogonal
-    is_orthogonal = np.allclose(np.eye(matrix.shape[0]), matrix @ matrix.T)
-    if not is_orthogonal:
-        return False
-
-    # Check if the determinant of the matrix is 1
-    det = np.linalg.det(matrix)
-    if not np.isclose(det, 1.0):
-        return False
-
-    return True

@@ -20,6 +20,7 @@ class SVGP(ApproximateGP):
         index=np.array(range(X.shape[0]))
         sample_index=np.random.choice(index, num_inducing)
         self.inducing_points= torch.from_numpy(X[sample_index,:]).float()
+        self.inducing_outputs= torch.from_numpy(Y[sample_index,:]).float()
         # Let's use a different set of inducing points for each latent function
 
         # We have to mark the CholeskyVariationalDistribution as batch
@@ -40,6 +41,8 @@ class SVGP(ApproximateGP):
             self.inducing_points.size(-2), batch_shape=torch.Size([self.num_tasks])
         )
 
+        variational_distribution.variational_mean.data= self.inducing_outputs.t() 
+
         variational_strategy = gpytorch.variational.IndependentMultitaskVariationalStrategy(
             gpytorch.variational.VariationalStrategy(
                 self, self.inducing_points, variational_distribution, learn_inducing_locations=True
@@ -56,8 +59,9 @@ class SVGP(ApproximateGP):
         self.covar_module = gpytorch.kernels.ScaleKernel(
             gpytorch.kernels.RBFKernel(ard_num_dims=ard_num_dim, batch_shape=batch_input),
             batch_shape=batch_output) # The scale kernel should be different for each task because they can have different unit of measure
-        interval=gpytorch.constraints.Interval(0.00000001,0.000001)        
-        self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=self.num_tasks, noise_constraint=interval)
+        # interval=gpytorch.constraints.Interval(0.00000001,0.000001)        
+        # self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=self.num_tasks, noise_constraint=interval)
+        self.likelihood = gpytorch.likelihoods.MultitaskGaussianLikelihood(num_tasks=self.num_tasks)
     def forward(self, x):
         # The forward function should be written as if we were dealing with each output
         # dimension in batch
