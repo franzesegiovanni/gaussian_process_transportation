@@ -11,6 +11,7 @@ from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantK
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
 from policy_transportation import GaussianProcessTransportation as Transport
+from policy_transportation.transportation.affine_transportation import AffineTransportation
 import pathlib
 from policy_transportation.plot_utils import plot_vector_field 
 from policy_transportation.utils import resample
@@ -35,6 +36,9 @@ plt.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
 plt.legend(["Demonstration","Surface","New Surface"])
 #%% Transport the dynamical system on the new surface
 transport=Transport()
+transport_affine = AffineTransportation()
+transport_affine.source_distribution=source_distribution
+transport_affine.target_distribution=target_distribution
 transport.source_distribution=source_distribution 
 transport.target_distribution=target_distribution
 
@@ -42,6 +46,7 @@ k_transport = C(constant_value=np.sqrt(0.1))  * RBF(40*np.ones(2), length_scale_
 transport.kernel_transport=k_transport
 print('Transporting the dynamical system on the new surface')
 transport.fit_transportation()
+transport_affine.fit_transportation()
 
 x_lim=[np.min(X[:,0]-15), np.max(X[:,0]+15)]
 y_lim=[np.min(X[:,1]-15), np.max(X[:,1]+15)]
@@ -84,15 +89,15 @@ axs[1].set_yticklabels([])
 axs[1].legend()
 # plt.axis('equal')
 
-transport.training_traj=grid
+transport_affine.training_traj=grid
 # transport.training_delta=None
 
-transport.apply_transportation_linear()
-grid_new=transport.training_traj
+transport_affine.apply_transportation()
+grid_new=transport_affine.training_traj
 
-transport.training_traj=source_distribution
-transport.apply_transportation_linear()
-source_distribution_new=transport.training_traj
+transport_affine.training_traj=source_distribution
+transport_affine.apply_transportation()
+source_distribution_new=transport_affine.training_traj
 
 X=grid_new[:,0].reshape(num_points,num_points)
 Y=grid_new[:,1].reshape(num_points,num_points)

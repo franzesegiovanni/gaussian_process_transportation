@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 #%% Load the drawings
 
 source_path = str(pathlib.Path(__file__).parent.absolute())  
-data =np.load(source_path+ '/data/'+str('surface3')+'.npz')
+data =np.load(source_path+ '/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
