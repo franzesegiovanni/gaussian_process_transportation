@@ -1,7 +1,6 @@
 #If the plot are completely random, please run the code again.
 import numpy as np
 import matplotlib.pyplot as plt
-from policy_transportation import AffineTransform
 from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C, RBF
 from policy_transportation.plot_utils import draw_error_band
 from policy_transportation.utils import resample
@@ -39,14 +38,15 @@ for j in range(len(X)-1):
 
 
 # initialize the models
-Affine=AffineTransform()
-k_transport = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(2), [1,500]) + WhiteKernel(0.0001)
+# k_transport = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(2), [1,500]) + WhiteKernel(0.0001)
+k_transport = C(constant_value=np.sqrt(0.1), constant_value_bounds=[0.1,2])  * RBF(1*np.ones(2), [10,500]) + WhiteKernel(0.0001)
+k_kmp=C(0.1, constant_value_bounds=[0.1,5]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01])
 GPT=GPT(kernel_transport=k_transport)
 MLP=MLP()
 RFT=RFT()
 LET=LET()
 BNT=BNT()
-KMP=KMP()
+KMP=KMP(kernel=k_kmp)
 methods=[KMP, RFT, MLP, LET, BNT, GPT]
 names=["Kernelized Movement Primitives","Ensemble Random Forest", "Ensemble Neural Network", "Laplacian Editing", "Ensemble Neural Flows", "Gaussian Process Regression"]
 
@@ -56,20 +56,7 @@ fig.subplots_adjust(wspace=0, hspace=0)
 X1_list = []
 std_list = []
 
-# print("Fitting Linear Transformation...")
-# Affine.fit(source_distribution, target_distribution)
-# X1=Affine.predict(X)
-# X1_list.append(X1)
-# eps=1e-5
-# std_list.append(eps*np.ones_like(X1))
-# current_ax = ax[0,0]
 
-# current_ax.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,0], label="New Surface")
-# current_ax.scatter(X1[:,0],X1[:,1], label="Tranported demonstration")
-# current_ax.set_title("Affine Transformation", fontsize=18, fontweight='bold')
-# current_ax.set_ylim(-20, 80)
-# current_ax.grid()
-# i+=1
 i=0
 
 for model , name in zip(methods, names):

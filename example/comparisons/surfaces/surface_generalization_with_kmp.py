@@ -46,14 +46,14 @@ plt.scatter(source_distribution[:,0],source_distribution[:,1], color=[0,1,0])
 plt.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1]) 
 plt.legend(["Demonstration","Surface","New Surface"])
 #%% Transport the dynamical system on the new surface
-transport=Transport()
+transport=Transport(kernel=C(0.1, constant_value_bounds=[0.1,2]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01]))
 transport.source_distribution=source_distribution 
 transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
 
 print('Transporting the dynamical system on the new surface')
-transport.fit_transportation(C(0.1, constant_value_bounds=[0.1,2]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01]))
+transport.fit_transportation()
 transport.apply_transportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 

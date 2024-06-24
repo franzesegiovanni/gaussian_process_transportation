@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
-from policy_transportation import GaussianProcessTransportation as Transport
+from policy_transportation.transportation.affine_transportation import AffineTransportation as Transport
 from policy_transportation.plot_utils import plot_vector_field 
 from policy_transportation.utils import resample
 import warnings
@@ -58,8 +58,8 @@ transport.training_traj=X
 transport.training_delta=deltaX
 
 print('Transporting the dynamical system on the new surface')
-transport.fit_transportation_linear()
-transport.apply_transportation_linear()
+transport.fit_transportation()
+transport.apply_transportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 
 
