@@ -121,6 +121,34 @@ class Tag_Detector():
             distribution=self.continuous_record(distribution)
             self.r_rec.sleep() 
         return distribution    
+    
+    def save_distributions(self):
+        # create a binary pickle file 
+        f = open("distributions/source.pkl","wb")
+        # write the python object (dict) to pickle file
+        pickle.dump(self.source_distribution,f)
+        # close file
+        f.close()
+
+    # create a binary pickle file 
+        f = open("distributions/target.pkl","wb")
+        # write the python object (dict) to pickle file
+        pickle.dump(self.target_distribution,f)
+        # close file
+        f.close()
+
+    def load_distributions(self):
+        try:
+            with open("distributions/source.pkl","rb") as source:
+                self.source_distribution = pickle.load(source)
+        except:
+            print("No source distribution saved")
+
+        try:
+            with open("distributions/target.pkl","rb") as target:
+                self.target_distribution = pickle.load(target)
+        except:
+            print("No target distribution saved")    
 
 def convert_distribution(source_distribution, target_distribution, use_orientation=False):
     target_array=np.array([], dtype=np.int64).reshape(0,3)
