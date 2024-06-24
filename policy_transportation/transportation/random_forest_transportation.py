@@ -6,6 +6,7 @@ This code is part of TERI (TEaching Robots Interactively) project
 """
 from policy_transportation import AffineTransform
 from policy_transportation.models.ensemble_random_forest import Ensemble_RF
+import numpy as np
 class RFTrasportation():
     def __init__(self):
         super(RFTrasportation, self).__init__()
@@ -32,8 +33,11 @@ class RFTrasportation():
 
         self.training_traj = self.traj_rotated + self.delta_map_mean 
 
-        for j in range(len(self.training_traj)-1):
-            self.training_delta[j,:]=(self.training_traj[j+1,:]-self.training_traj[j,:])
+        if hasattr(self, 'training_delta'):
+            J = (self.training_traj[1:,:,np.newaxis]- self.training_traj[:-1,:,np.newaxis]) @ np.linalg.pinv(self.training_traj_old[1:,:,np.newaxis]- self.training_traj_old[:-1,:,np.newaxis])
+            J = np.concatenate((J, J[-1:,:,:]), axis=0)
+            self.training_delta= (J @ self.training_delta[:,:,np.newaxis])[:,:,0]
+
 
     def sample_transportation(self):
         delta_map_samples= self.gp_delta_map.samples(self.traj_rotated)
