@@ -11,7 +11,7 @@ import random
 warnings.filterwarnings("ignore")
 class Multiple_Reference_Frames_KMP:
     def __init__(self):
-        self.transport=Transport(do_scale=True)
+        self.transport=Transport(do_scale=True, kernel=C(0.1, constant_value_bounds=[0.1,5]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01]))
 
     def generate_distribution_from_frames(self, A,b):
         distribution_training_set=np.zeros((len(A),4,2))
@@ -68,7 +68,7 @@ class Multiple_Reference_Frames_KMP:
         self.transport.source_distribution=self.distribution_training_set[index_source,:,:]
         self.transport.target_distribution=self.distribution_training_set[index_target,:,:]
         self.transport.training_traj=X
-        self.transport.fit_transportation(C(0.1, constant_value_bounds=[0.1,5]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01]))
+        self.transport.fit_transportation()
         self.transport.apply_transportation()
         std=self.transport.std
 
@@ -114,14 +114,10 @@ class Multiple_Reference_Frames_KMP:
         self.transport.source_distribution=self.distribution_training_set[index_source,:,:]
         self.transport.target_distribution=self.distribution_test_set[index_target,:,:]
         self.transport.training_traj=X
-        if linear==True:
-            self.transport.fit_transportation_linear()
-            self.transport.apply_transportation_linear()
-            std= np.zeros_like(self.transport.training_traj)
-        else:
-            self.transport.fit_transportation(C(0.1, constant_value_bounds=[0.1,5]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01]))
-            self.transport.apply_transportation()
-            std=self.transport.std
+
+        self.transport.fit_transportation(C(0.1, constant_value_bounds=[0.1,5]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01]))
+        self.transport.apply_transportation()
+        std=self.transport.std
         X1=self.transport.training_traj
         if ax is not None:
             self.plot(X1, std, self.distribution_test_set[index_target,:,:], ax=ax)

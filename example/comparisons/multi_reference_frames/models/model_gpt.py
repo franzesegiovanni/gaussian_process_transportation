@@ -79,14 +79,9 @@ class Multiple_Reference_Frames_GPT:
         self.transport.target_distribution=self.distribution_training_set[index_target,:,:]
         self.transport.training_traj=X
 
-        if linear==True:
-            self.transport.fit_transportation_linear()
-            self.transport.apply_transportation_linear()
-            std= np.zeros_like(self.transport.training_traj)
-        else:
-            self.transport.fit_transportation(do_scale=True, do_rotation=True)
-            self.transport.apply_transportation()
-            std=self.transport.std
+        self.transport.fit_transportation(do_scale=True, do_rotation=True)
+        self.transport.apply_transportation()
+        std=self.transport.std
 
         X1=self.transport.training_traj
         
@@ -130,14 +125,10 @@ class Multiple_Reference_Frames_GPT:
         self.transport.source_distribution=self.distribution_training_set[index_source,:,:].reshape(-1,2)
         self.transport.target_distribution=self.distribution_test_set[index_target,:,:].reshape(-1,2)
         self.transport.training_traj=X
-        if linear==True:
-            self.transport.fit_transportation_linear()
-            self.transport.apply_transportation_linear()
-            std= np.zeros_like(self.transport.training_traj)
-        else:
-            self.transport.fit_transportation(do_scale=True, do_rotation=True)
-            self.transport.apply_transportation()
-            std=self.transport.std
+
+        self.transport.fit_transportation(do_scale=True, do_rotation=True)
+        self.transport.apply_transportation()
+        std=self.transport.std
         X1=self.transport.training_traj
         if ax is not None:
             self.plot(X1, std, self.distribution_test_set[index_target,:,:], ax=ax)

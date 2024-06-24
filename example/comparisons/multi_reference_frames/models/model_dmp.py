@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C, RBF
-from policy_transportation import GaussianProcessTransportation as Transport
+from policy_transportation.transportation.affine_transportation import AffineTransportation as Transport
 from generate_random_frame_orientation import generate_frame_orientation
 from policy_transportation.plot_utils import draw_error_band
 import warnings
@@ -72,8 +72,8 @@ class Multiple_Reference_Frames_DMP:
         self.transport.training_traj=X
 
         if linear==True:
-            self.transport.fit_transportation_linear()
-            self.transport.apply_transportation_linear()
+            self.transport.fit_transportation()
+            self.transport.apply_transportation()
             std= np.zeros_like(self.transport.training_traj)
 
         X1=self.transport.training_traj
@@ -119,8 +119,8 @@ class Multiple_Reference_Frames_DMP:
         self.transport.target_distribution=self.distribution_test_set[index_target,:,:].reshape(-1,2)[2:4,:]
         self.transport.training_traj=X
         if linear==True:
-            self.transport.fit_transportation_linear()
-            self.transport.apply_transportation_linear()
+            self.transport.fit_transportation()
+            self.transport.apply_transportation()
             std= np.zeros_like(self.transport.training_traj)
         X1=self.transport.training_traj
         if ax is not None:
