@@ -39,7 +39,7 @@ class GaussianProcess():
             self.K_inv = np.linalg.inv(K_)
             print('lenghtscales', self.kernel.get_params()['k1__k2__length_scale'] )
 
-    def predict(self,x, return_std=True, return_cov=False):
+    def predict(self,x, return_std=False, return_cov=False):
         if return_std==True:
             [y, std]=self.gp.predict(x, return_std=return_std)
             return np.array(y), np.array(std-np.sqrt(self.kernel.get_params()['k2__noise_level']))

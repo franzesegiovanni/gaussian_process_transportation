@@ -10,7 +10,7 @@ def plot_vector_field(model,datax_grid,datay_grid,demo,surface):
     u=np.ones((len(datax_grid),len(datay_grid)))
     v=np.ones((len(datax_grid),len(datay_grid)))
     pos_array= np.column_stack((dataXX.ravel(), dataYY.ravel()))
-    [vel, std]=model.predict(pos_array)
+    vel=model.predict(pos_array)
     u= vel[:,0].reshape(dataXX.shape)
     v= vel[:,1].reshape(dataXX.shape)
     fig = plt.figure(figsize = (12, 7))
@@ -24,7 +24,7 @@ def plot_vector_field_minvar(model,datax_grid,datay_grid,demo,surface):
     v=np.ones((len(datax_grid),len(datay_grid)))
     # orgianize data in an array
     pos_array= np.column_stack((dataXX.ravel(), dataYY.ravel()))
-    [vel, std]=model.predict(pos_array)
+    [vel, std]=model.predict(pos_array, return_std=True)
     grad=model.derivative_of_variance(pos_array).transpose()
     vel_variance_min=vel-2*std*grad/np.linalg.norm(grad, axis=1).reshape(-1,1)
     u= vel_variance_min[:,0].reshape(dataXX.shape)
@@ -42,7 +42,7 @@ def plot_traj_evolution(model,x_grid,y_grid,z_grid,demo, surface):
     for i in tqdm(range(1000)):
         pos=np.array(pos).reshape(1,-1)
 
-        [vel, std]=model.predict(pos)
+        [vel, std]=model.predict(pos, return_std=True)
         grad=model.derivative_of_variance(pos)
         f_stable=np.array([grad[0,0],grad[1,0],grad[2,0]])/np.sqrt(grad[0,0]**2+grad[1,0]**2+grad[2,0]**2)
         pos = pos+vel.reshape(1,-1)-std[0]*f_stable
