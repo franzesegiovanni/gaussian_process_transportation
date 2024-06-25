@@ -72,7 +72,6 @@ class Ensemble_Neural_Transport():
             pos=(np.array(self.traj_rotated))
             Jacobian, Jacobian_var=self.delta_map.derivative(pos, return_var=True)
             rot_gp= np.eye(Jacobian[0].shape[0]) + Jacobian
-            rot_affine= self.affine_transform.rotation_matrix
             derivative_affine= self.affine_transform.derivative(pos)
 
 
