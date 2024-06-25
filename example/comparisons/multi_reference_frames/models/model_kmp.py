@@ -115,7 +115,7 @@ class Multiple_Reference_Frames_KMP:
         self.transport.target_distribution=self.distribution_test_set[index_target,:,:]
         self.transport.training_traj=X
 
-        self.transport.fit_transportation(C(0.1, constant_value_bounds=[0.1,5]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01]))
+        self.transport.fit_transportation()
         self.transport.apply_transportation()
         std=self.transport.std
         X1=self.transport.training_traj

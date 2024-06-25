@@ -11,9 +11,8 @@ import random
 warnings.filterwarnings("ignore")
 class Multiple_Reference_Frames_GPT:
     def __init__(self):
-        self.transport=Transport()
         k_transport = C(constant_value=np.sqrt(10))  * RBF(20*np.ones(1), [10,50]) + WhiteKernel(0.01 , [0.0000001, 0.000001])
-        self.transport.kernel_transport=k_transport
+        self.transport=Transport(kernel_transport=k_transport)
 
     def generate_distribution_from_frames(self, A,b):
         distribution_training_set=np.zeros((len(A),10,2))
