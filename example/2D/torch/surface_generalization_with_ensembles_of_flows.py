@@ -24,9 +24,13 @@ X=data['demo']
 S=data['floor'] 
 S1=data['newfloor']
 
-X=resample(X, num_points=200)
-source_distribution=resample(S)
-target_distribution=resample(S1)
+# X=resample(X, num_points=200)
+# source_distribution=resample(S)
+# target_distribution=resample(S1)
+
+X=resample(X, num_points=400)
+source_distribution=resample(S, num_points=100)
+target_distribution=resample(S1,num_points=100)
 
 
 fig = plt.figure(figsize = (12, 7))
@@ -59,7 +63,7 @@ transport.source_distribution=source_distribution
 transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
-transport.fit_transportation(num_epochs=500)
+transport.fit_transportation()
 transport.apply_transportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 

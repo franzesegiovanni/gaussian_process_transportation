@@ -9,65 +9,66 @@ import numpy as np
 import random
 
 class BiJectiveNetwork():
-    def __init__(self, X, Y):
-        seed = random.randint(1, 10000)
+	def __init__(self):
+		seed = random.randint(1, 10000)
 
 		# Set random seed for PyTorch
-        torch.manual_seed(seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed(seed)
-        self.use_cuda = torch.cuda.is_available()
-        self.use_cuda=False
-        num_blocks = 4                 # number of coupling layers
-        num_hidden = 20                        # hidden layer dimensions (there are two of hidden layers)
-        # only for fcnn!
-        t_act = 'elu'                           # activation fcn in each network (must be continuously differentiable!)
-        s_act = 'elu'
-        input_size=X.shape[1]
-        self.nn= BijectionNet(num_dims=input_size, num_blocks=num_blocks, num_hidden=num_hidden, s_act=s_act, t_act=t_act)
-        if self.use_cuda:
-            self.nn=self.nn.cuda()
-        X=torch.from_numpy(X).float()
-        Y=torch.from_numpy(Y).float()
-        train_dataset = TensorDataset(X, Y)
-        self.train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True) 
+		torch.manual_seed(seed)
+		if torch.cuda.is_available():
+			torch.cuda.manual_seed(seed)
+		self.use_cuda = torch.cuda.is_available()
+		self.use_cuda=False
+		self.num_blocks = 4                 # number of coupling layers
+		self.num_hidden = 20                        # hidden layer dimensions (there are two of hidden layers)
+		# only for fcnn!
+		self.t_act = 'elu'                           # activation fcn in each network (must be continuously differentiable!)
+		self.s_act = 'elu'
 
 
-    def fit(self, num_epochs=100):
-        # Define the loss function and optimizer
 
-        criterion = nn.SmoothL1Loss()  # Mean Squared Error for regression
-        optimizer = optim.Adam(self.nn.parameters(), lr=0.001)
+	def fit(self, X, Y, num_epochs=1000):
+		# Define the loss function and optimizer
+		input_size=X.shape[1]
+		if self.use_cuda:
+			self.nn=self.nn.cuda()
+		X=torch.from_numpy(X).float()
+		Y=torch.from_numpy(Y).float()
+		train_dataset = TensorDataset(X, Y)
+		self.train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True) 
+		self.nn= BijectionNet(num_dims=input_size, num_blocks=self.num_blocks, num_hidden=self.num_hidden, s_act=self.s_act, t_act=self.t_act)
+		criterion = nn.SmoothL1Loss()  # Mean Squared Error for regression
+		optimizer = optim.Adam(self.nn.parameters(), lr=0.001)
 
-    
-        # Training loop
-        epochs_iter = tqdm(range(num_epochs))
-        for epoch in epochs_iter:
-            for x_batch, y_batch in tqdm(self.train_loader, desc="Minibatch", leave=False):
-                # Forward pass
-                if self.use_cuda:
-                    x_batch=x_batch.cuda()
-                    y_batch=y_batch.cuda()
-                outputs = self.nn(x_batch)[0]
-                loss = criterion(outputs, y_batch)
-                # Backward and optimize
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-             
-    def derivative(self, x): 
-        x=torch.from_numpy(x).float()
-        if self.use_cuda:
-            x=x.cuda()
-        J = self.nn(x)[1]
-        return J.detach().numpy()
-    
-    def predict(self, x): 
-        x=torch.from_numpy(x).float()
-        if self.use_cuda:
-            x=x.cuda()
-        predictions = self.nn(x)[0]
-        return predictions.detach().cpu().numpy()
+
+		# Training loop
+		epochs_iter = tqdm(range(num_epochs))
+		for epoch in epochs_iter:
+			for x_batch, y_batch in tqdm(self.train_loader, desc="Minibatch", leave=False):
+				# Forward pass
+				if self.use_cuda:
+					x_batch=x_batch.cuda()
+					y_batch=y_batch.cuda()
+				outputs = self.nn(x_batch)[0]
+				loss = criterion(outputs, y_batch)
+				# Backward and optimize
+				optimizer.zero_grad()
+				loss.backward()
+				optimizer.step()
+				
+	def derivative(self, x, return_std=False): 
+		x=torch.from_numpy(x).float()
+		if self.use_cuda:
+			x=x.cuda()
+		J = self.nn(x)[1]
+
+		return J.detach().numpy()
+
+	def predict(self, x, return_std=False): 
+		x=torch.from_numpy(x).float()
+		if self.use_cuda:
+			x=x.cuda()
+		predictions = self.nn(x)[0]
+		return predictions.detach().cpu().numpy()
          
 class BijectionNet(nn.Sequential):
 	"""
