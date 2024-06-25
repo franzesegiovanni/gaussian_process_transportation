@@ -10,7 +10,7 @@ import quaternion
 class PolicyTransportation():  
     def __init__(self, method):
         super(PolicyTransportation, self).__init__()
-        self.delta_map=method()
+        self.delta_map=method
 
 
     def fit(self, source_distribution, target_distribution, do_scale=False, do_rotation=True):

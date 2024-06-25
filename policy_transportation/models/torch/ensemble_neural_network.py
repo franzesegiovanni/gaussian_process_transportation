@@ -28,17 +28,14 @@ class EnsembleNeuralNetwork():
             return mean, std
         return mean
     
-    def derivative(self, x, return_std=False): 
+    def derivative(self, x, return_var=False): 
         predictions = [nn.derivative(x) for nn in self.ensemble]
         predictions = np.array(predictions)  # Shape: (n_estimators, n_samples)
 
         # Calculate the mean and variance of the predictions
         mean = np.mean(predictions, axis=0)
-        if return_std:
-            # variance_predictions = np.var(predictions, axis=0)
-            # print("Predection shape", predictions.shape)
-            std= np.std(predictions, axis=0)
-            # print(std)
+        if return_var:
+            std= np.var(predictions, axis=0)
             return mean, std
         return mean
     

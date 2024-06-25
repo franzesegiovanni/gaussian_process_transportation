@@ -56,23 +56,21 @@ class Ensemble_Neural_Transport():
  
         delta_distribution = self.target_distribution - source_distribution
 
-        self.gp_delta_map=NeuralNetwork(source_distribution, delta_distribution)
-        self.gp_delta_map.fit(source_distribution, delta_distribution, num_epochs=num_epochs)  
+        self.delta_map=NeuralNetwork(source_distribution, delta_distribution)
+        self.delta_map.fit(source_distribution, delta_distribution, num_epochs=num_epochs)  
 
     def apply_transportation(self):
               
         #Deform Trajactories 
         self.training_traj_old=self.training_traj
         self.traj_rotated=self.affine_transform.predict(self.training_traj)
-        self.delta_map_mean, self.std= self.gp_delta_map.predict(self.traj_rotated, return_std=True)
+        self.delta_map_mean, self.std= self.delta_map.predict(self.traj_rotated, return_std=True)
         self.training_traj = self.traj_rotated + self.delta_map_mean 
 
         #Deform Deltas and orientation
         if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
             pos=(np.array(self.traj_rotated))
-            Jacobian, Jacobian_std=self.gp_delta_map.derivative(pos, return_std=True)
-            # convert the Jacobian and Jacobian_std to numpy
-            Jacobian_std= Jacobian_std
+            Jacobian, Jacobian_var=self.delta_map.derivative(pos, return_var=True)
             rot_gp= np.eye(Jacobian[0].shape[0]) + Jacobian
             rot_affine= self.affine_transform.rotation_matrix
             derivative_affine= self.affine_transform.derivative(pos)
@@ -82,16 +80,13 @@ class Ensemble_Neural_Transport():
             self.training_delta = self.training_delta[:,:,np.newaxis]
 
             self.training_delta=  derivative_affine @ self.training_delta
-            self.var_vel_transported=Jacobian_std**2 @ self.training_delta**2
+            self.var_vel_transported=Jacobian_var @ self.training_delta**2
 
             self.training_delta= rot_gp @ self.training_delta
             self.training_delta=self.training_delta[:,:,0]
             self.var_vel_transported=self.var_vel_transported[:,:,0]
 
 
-        if  hasattr(self, 'training_ori'):   
-            quat_demo=quaternion.from_float_array(self.training_ori)
-            quat_affine= quaternion.from_rotation_matrix(rot_affine)
-            quat_gp = quaternion.from_rotation_matrix(rot_gp, nonorthogonal=True)
-            quat_transport=quat_gp * (quat_affine * quat_demo)
-            self.training_ori= quaternion.as_float_array(quat_transport)
+    def sample_transportation(self):
+        training_traj_samples= self.delta_map.samples(self.traj_rotated)
+        return training_traj_samples

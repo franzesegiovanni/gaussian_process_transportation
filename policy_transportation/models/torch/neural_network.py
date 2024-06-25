@@ -66,7 +66,7 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
 
         seed = random.randint(0, 2**32 - 1)
-        print("Seed:", seed)
+        # print("Seed:", seed)
         # Set the random seed for reproducibility
         torch.manual_seed(seed)
         self.fc1 = nn.Linear(input_size, hidden_size)

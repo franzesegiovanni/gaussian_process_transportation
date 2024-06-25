@@ -76,10 +76,7 @@ class SVGPTransport():
             Jacobian, Jacobian_std=self.gp_delta_map.derivative(pos)
             # convert the Jacobian and Jacobian_std to numpy
             Jacobian=Jacobian.detach().cpu().numpy()
-            # Jacobian= Jacobian.transpose(0,2,1) # ?????
             Jacobian_std=Jacobian_std.detach().cpu().numpy()
-            # Jacobian_std= Jacobian_std.transpose(0,2,1) # ?????
-            # Jacobian_var= np.zeros_like(Jacobian)
 
             rot_gp= np.eye(Jacobian[0].shape[0]) + Jacobian
             rot_affine= self.affine_transform.rotation_matrix

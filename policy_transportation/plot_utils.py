@@ -7,8 +7,6 @@ from tqdm import tqdm
 
 def plot_vector_field(model,datax_grid,datay_grid,demo,surface):
     dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
-    u=np.ones((len(datax_grid),len(datay_grid)))
-    v=np.ones((len(datax_grid),len(datay_grid)))
     pos_array= np.column_stack((dataXX.ravel(), dataYY.ravel()))
     vel=model.predict(pos_array)
     u= vel[:,0].reshape(dataXX.shape)
@@ -20,8 +18,6 @@ def plot_vector_field(model,datax_grid,datay_grid,demo,surface):
 
 def plot_vector_field_minvar(model,datax_grid,datay_grid,demo,surface):
     dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
-    u=np.ones((len(datax_grid),len(datay_grid)))
-    v=np.ones((len(datax_grid),len(datay_grid)))
     # orgianize data in an array
     pos_array= np.column_stack((dataXX.ravel(), dataYY.ravel()))
     [vel, std]=model.predict(pos_array, return_std=True)

@@ -25,8 +25,8 @@ S=data['floor']
 S1=data['newfloor']
 
 X=resample(X, num_points=200)
-source_distribution=resample(S)
-target_distribution=resample(S1)
+source_distribution=resample(S, num_points=100)
+target_distribution=resample(S1, num_points=100)
 
 
 fig = plt.figure(figsize = (12, 7))
@@ -59,20 +59,19 @@ transport.source_distribution=source_distribution
 transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
-transport.fit_transportation(num_epochs=500)
+transport.fit_transportation(num_epochs=20)
 transport.apply_transportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 
-x1_grid=np.linspace(np.min(X[:,0]-25), np.max(X[:,0]+25), 100)
-y1_grid=np.linspace(np.min(X[:,1]-25), np.max(X[:,1]+25), 100)
+x1_grid=np.linspace(-40,40, 100)
+y1_grid=np.linspace(-30, 80,  100)
 
 # Fit the Gaussian Process dynamical system   
-k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01 ) #this kernel works much better!    
+k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01 )
 gp_deltaX1=GPR(kernel=k_deltaX1)
-# print(X1)
 mask = ~np.any(np.isnan(X1), axis=1)
 gp_deltaX1.fit(X1[mask], deltaX1[mask])
 plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,S1)
-plt.xlim(np.min(X[:,0]-25), np.max(X[:,0]+25))
-plt.ylim(np.min(X[:,1]-25), np.max(X[:,1]+25))
+plt.xlim(-40, 40)
+plt.ylim(-30, 80)
 plt.show()

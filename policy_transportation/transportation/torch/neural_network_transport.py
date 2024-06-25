@@ -57,14 +57,14 @@ class Neural_Transport():
  
         delta_distribution = self.target_distribution - source_distribution
 
-        self.gp_delta_map=NeuralNetwork(source_distribution, delta_distribution)
-        self.gp_delta_map.fit(source_distribution, delta_distribution, num_epochs=num_epochs)  
+        self.delta_map=NeuralNetwork(source_distribution, delta_distribution)
+        self.delta_map.fit(source_distribution, delta_distribution, num_epochs=num_epochs)  
 
     def apply_transportation(self):
               
         #Deform Trajactories 
         traj_rotated=self.affine_transform.predict(self.training_traj)
-        delta_map_mean= self.gp_delta_map.predict(traj_rotated)
+        delta_map_mean= self.delta_map.predict(traj_rotated)
         # print(delta_map_mean)
         transported_traj = traj_rotated + delta_map_mean 
 
@@ -74,7 +74,7 @@ class Neural_Transport():
             if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
                 pos=(np.array(traj_rotated[i,:]).reshape(1,-1))
                 # print(type(pos))
-                Jacobian=self.gp_delta_map.derivative(pos)
+                Jacobian=self.delta_map.derivative(pos)
                 Jacobian=Jacobian.reshape(self.training_delta.shape[1],pos.shape[1])
                 rot_gp= np.eye(pos.shape[1]) + Jacobian 
                 rot_affine= self.affine_transform.rotation_matrix
