@@ -44,7 +44,7 @@ class PolicyTransportation():
         J_gamma= self.affine_transform.derivative(pos)
         J_phi= J_gamma + J_phi @ J_gamma
 
-        print("Is the map locally diffeomorphic?", np.all(np.linalg.det(J_phi) > 0))
+        print("Is the map locally diffeomorphic?", np.all(np.abs(np.linalg.det(J_phi)) > 0))
 
         vel = vel[:,:,np.newaxis]
 
