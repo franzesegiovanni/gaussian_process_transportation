@@ -24,8 +24,8 @@ X=data['demo']
 S=data['floor'] 
 S1=data['newfloor']
 X=resample(X, num_points=100)
-source_distribution=resample(S)
-target_distribution=resample(S1)
+source_distribution=resample(S, num_points=20)
+target_distribution=resample(S1, num_points=20)
 
 #%% Calculate deltaX
 deltaX = np.zeros((len(X),2))
@@ -39,7 +39,7 @@ gp_deltaX=GPR(kernel=k_deltaX)
 gp_deltaX.fit(X, deltaX)
 x_grid=np.linspace(np.min(X[:,0]-10), np.max(X[:,0]+10), 100)
 y_grid=np.linspace(np.min(X[:,1]-10), np.max(X[:,1]+10), 100)
-plot_vector_field_minvar(gp_deltaX, x_grid,y_grid,X,S)
+plot_vector_field_minvar(gp_deltaX, x_grid,y_grid,X,target_distribution)
 
 fig = plt.figure(figsize = (12, 7))
 plt.xlim([-50, 50-1])
@@ -49,15 +49,14 @@ plt.scatter(source_distribution[:,0],source_distribution[:,1], color=[0,1,0])
 plt.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1]) 
 plt.legend(["Demonstration","Surface","New Surface"])
 #%% Transport the dynamical system on the new surface
-transport=Transport()
+k_transport = C(constant_value=10)  * RBF(4*np.ones(2)) + WhiteKernel(0.01 )
+
+transport=Transport(kernel_transport= k_transport)
 transport.source_distribution=source_distribution 
 transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
 
-
-k_transport = C(constant_value=10)  * RBF(4*np.ones(2), length_scale_bounds=[0.01, 500]) + WhiteKernel(0.01, noise_level_bounds=[0.01, 0.01] )
-transport.kernel_transport=k_transport
 print('Transporting the dynamical system on the new surface')
 transport.fit_transportation(do_scale=False, do_rotation=True)
 transport.apply_transportation()
@@ -71,5 +70,5 @@ gp_deltaX1=GPR(kernel=k_deltaX1)
 gp_deltaX1.fit(X1, deltaX1)
 x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 200)
 y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 200)
-plot_vector_field_minvar(gp_deltaX1, x1_grid,y1_grid,X1,S1)
+plot_vector_field_minvar(gp_deltaX1, x1_grid,y1_grid,X1,target_distribution)
 plt.show()
