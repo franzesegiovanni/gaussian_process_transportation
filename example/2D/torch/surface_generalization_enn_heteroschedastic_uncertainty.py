@@ -16,15 +16,10 @@ from policy_transportation.utils import resample
 import warnings
 from policy_transportation.plot_utils import draw_error_band
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
+from policy_transportation.plot_utils import create_vectorfield
 warnings.filterwarnings("ignore")
 #%% Load the drawings
-def create_vectorfield(model,datax_grid,datay_grid):
-    dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
-    pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
-    vel, std = model.predict(pos)
-    u, v = vel[:, 0].reshape(dataXX.shape), vel[:, 1].reshape(dataXX.shape)
-    return u, v, std
+
 
 source_path = str(pathlib.Path(__file__).parent.parent.absolute())  
 data =np.load(source_path+ '/data/'+str('example')+'.npz')
@@ -156,7 +151,7 @@ GP_aleatoric.fit(X1, std_aleatoric_labels)
 
 dataXX, dataYY = np.meshgrid(x_grid, y_grid)
 pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
-std_aleatoric, _ = GP_aleatoric.predict(pos)
+std_aleatoric, _ = GP_aleatoric.predict(pos, return_std=True)
 var_aleatoric=std_aleatoric**2
 
 

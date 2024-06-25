@@ -27,9 +27,13 @@ X=data['demo']
 S=data['floor'] 
 S1=data['newfloor']
 
-X=resample(X, num_points=400)
-source_distribution=resample(S, num_points=100)
-target_distribution=resample(S1,num_points=100)
+# X=resample(X, num_points=400)
+# source_distribution=resample(S, num_points=100)
+# target_distribution=resample(S1,num_points=100)
+
+X=resample(X, num_points=200)
+source_distribution=resample(S, num_points=20)
+target_distribution=resample(S1,num_points=20)
 
 #%% Calculate deltaX
 deltaX = np.zeros((len(X),2))
@@ -38,9 +42,8 @@ for j in range(len(X)-1):
 
 
 # initialize the models
-# k_transport = C(constant_value=np.sqrt(0.1))  * RBF(1*np.ones(2), [1,500]) + WhiteKernel(0.0001)
-k_transport = C(constant_value=np.sqrt(0.1), constant_value_bounds=[0.1,2])  * RBF(1*np.ones(2), [10,500]) + WhiteKernel(0.0001)
-k_kmp=C(0.1, constant_value_bounds=[0.1,5]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.2]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01])
+k_transport = C(constant_value=np.sqrt(0.1), constant_value_bounds=[0.1,2])  * RBF(10*np.ones(2), [5,500]) + WhiteKernel(0.0001)
+k_kmp=C(0.1, constant_value_bounds=[0.1,2]) * RBF(length_scale=[0.1], length_scale_bounds=[0.05, 0.1]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.1])
 GPT=GPT(kernel_transport=k_transport)
 MLP=MLP()
 RFT=RFT()
@@ -82,6 +85,7 @@ for model , name in zip(methods, names):
     current_ax.scatter(X1[:,0],X1[:,1], label="Tranported demonstration")
     current_ax.set_title(name, fontsize=18, fontweight='bold')
     current_ax.set_ylim(-20, 80)
+    current_ax.set_xlim(-40, 40)
     current_ax.grid()
     # legend=current_ax.legend(loc='upper left', fontsize=12)
     i+=1

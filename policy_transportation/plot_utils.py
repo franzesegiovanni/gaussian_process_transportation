@@ -85,3 +85,10 @@ def draw_error_band(ax, x, y, err, loop=False, **kwargs):
     codes[0] = Path.MOVETO
     path = Path(vertices, codes)
     ax.add_patch(PathPatch(path, label='Uncertainty',  **kwargs))
+
+def create_vectorfield(model,datax_grid,datay_grid):
+    dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
+    pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
+    vel, std = model.predict(pos, return_std=True)
+    u, v = vel[:, 0].reshape(dataXX.shape), vel[:, 1].reshape(dataXX.shape)
+    return u, v, std
