@@ -17,6 +17,7 @@ class AffineTransportation():
     def fit_transportation(self, optimize=True, do_scale=False, do_rotation=True):
         self.affine_transform=AffineTransform(do_scale=do_scale, do_rotation=do_rotation)
         self.affine_transform.fit(self.source_distribution, self.target_distribution)
+        self.scale= self.affine_transform.scale
 
     def apply_transportation(self):
               

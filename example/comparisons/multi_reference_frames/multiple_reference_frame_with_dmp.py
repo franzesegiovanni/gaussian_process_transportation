@@ -27,7 +27,7 @@ ax.set_yticks([])
 ax.grid(True)
 source_index=2
 for target_index in range(9):
-    df, area, dtw, fde, fad=policy.reproduce(source_index, target_index, ax=ax, linear=True, compute_metrics=True)
+    policy.reproduce(source_index, target_index, ax=ax, compute_metrics=False)
 for spine in ax.spines.values():
     spine.set_linewidth(2)
 #save figure
@@ -55,7 +55,7 @@ ax.set_yticks([])
 ax.grid(True)
 
 for i in range(9):
-    policy.generalize(index_source=2, index_target=i,  ax=ax, linear=True)
+    policy.generalize(index_source=2, index_target=i,  ax=ax)
     
 for spine in ax.spines.values():
     spine.set_linewidth(2)

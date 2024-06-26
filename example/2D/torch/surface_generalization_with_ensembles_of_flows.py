@@ -25,8 +25,8 @@ S=data['floor']
 S1=data['newfloor']
 
 X=resample(X, num_points=200)
-source_distribution=resample(S, num_points=100)
-target_distribution=resample(S1, num_points=100)
+source_distribution=resample(S, num_points=20)
+target_distribution=resample(S1, num_points=20)
 
 
 fig = plt.figure(figsize = (12, 7))
@@ -49,7 +49,7 @@ gp_deltaX=GPR(kernel=k_deltaX)
 gp_deltaX.fit(X, deltaX)
 x_grid=np.linspace(np.min(X[:,0]-25), np.max(X[:,0]+25), 100)
 y_grid=np.linspace(np.min(X[:,1]-25), np.max(X[:,1]+25), 100)
-plot_vector_field(gp_deltaX, x_grid,y_grid,X,S)
+plot_vector_field(gp_deltaX, x_grid,y_grid,X,source_distribution)
 plt.xlim(np.min(X[:,0]-25), np.max(X[:,0]+25))
 plt.ylim(np.min(X[:,1]-25), np.max(X[:,1]+25))
 
@@ -71,7 +71,7 @@ k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + Whi
 gp_deltaX1=GPR(kernel=k_deltaX1)
 mask = ~np.any(np.isnan(X1), axis=1)
 gp_deltaX1.fit(X1[mask], deltaX1[mask])
-plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,S1)
+plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,target_distribution)
 plt.xlim(-40, 40)
 plt.ylim(-30, 80)
 plt.show()

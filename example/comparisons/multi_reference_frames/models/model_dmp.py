@@ -64,19 +64,41 @@ class Multiple_Reference_Frames_DMP:
         self.test_A=test_A
         self.test_b=test_b
 
-    def reproduce(self, index_source, index_target, ax=None, compute_metrics=False, linear=True, plot_bounds=True):
+    def reproduce(self, index_source, index_target, ax=None, compute_metrics=False, plot_bounds=True):
         X=self.demos_x[index_source]
 
+        # Compute scaling factor
+        self.transport.source_distribution=self.distribution_training_set[index_source,:,:]
+        self.transport.target_distribution=self.distribution_training_set[index_target,:,:]
+        self.transport.training_traj=X
+
+        self.transport.fit_transportation(do_scale=True)
+        scaling_factor=self.transport.scale
+        # Rotate with respect to first frame
+        self.transport.source_distribution=self.distribution_training_set[index_source,:,:][0:2,:]
+        self.transport.target_distribution=self.distribution_training_set[index_target,:,:][0:2,:]
+        self.transport.training_traj=X
+        self.transport.fit_transportation()
+        self.transport.apply_transportation()
+        X_1=self.transport.training_traj
+        # Rotate with respect to second frame
         self.transport.source_distribution=self.distribution_training_set[index_source,:,:][2:4,:]
         self.transport.target_distribution=self.distribution_training_set[index_target,:,:][2:4,:]
         self.transport.training_traj=X
 
-        if linear==True:
-            self.transport.fit_transportation()
-            self.transport.apply_transportation()
-            std= np.zeros_like(self.transport.training_traj)
+        self.transport.fit_transportation()
+        self.transport.apply_transportation()
+        std= np.zeros_like(self.transport.training_traj)
 
-        X1=self.transport.training_traj
+        X_2=self.transport.training_traj
+
+        X_1=X_1[0,:]+ (X_1-X_1[0,:])*scaling_factor
+        X_2=X_2[-1,:]+ (X_2-X_2[-1,:])*scaling_factor
+
+        #create a sigmoid function to smoothly transition between the two trajectories
+        swich_quickly = 5
+        apha= 1/(1+np.exp(-np.linspace(-swich_quickly,swich_quickly,len(X_1))))
+        X1= apha[:,np.newaxis]*X_2 + (1-apha[:,np.newaxis])*X_1
         
 
         if ax is not None:
@@ -112,17 +134,40 @@ class Multiple_Reference_Frames_DMP:
             print("Final Angle Distance  : ", final_angle_distance[0])
             return df, area, dtw, fde, final_angle_distance[0]
 
-    def generalize(self, index_source, index_target, ax=None, compute_metrics=False, linear=True):
+    def generalize(self, index_source, index_target, ax=None, compute_metrics=False):
         X=self.demos_x[index_source].reshape(-1,2)
+        # Compute scaling factor
+        self.transport.source_distribution=self.distribution_training_set[index_source,:,:].reshape(-1,2)
+        self.transport.target_distribution=self.distribution_test_set[index_target,:,:].reshape(-1,2)
+        self.transport.training_traj=X
 
+        self.transport.fit_transportation(do_scale=True)
+        scaling_factor=self.transport.scale
+        # Rotate with respect to first frame
+        self.transport.source_distribution=self.distribution_training_set[index_source,:,:].reshape(-1,2)[0:2,:]
+        self.transport.target_distribution=self.distribution_test_set[index_target,:,:].reshape(-1,2)[0:2,:]
+        self.transport.training_traj=X
+        self.transport.fit_transportation()
+        self.transport.apply_transportation()
+        X_1=self.transport.training_traj
+        # Rotate with respect to second frame
         self.transport.source_distribution=self.distribution_training_set[index_source,:,:].reshape(-1,2)[2:4,:]
         self.transport.target_distribution=self.distribution_test_set[index_target,:,:].reshape(-1,2)[2:4,:]
         self.transport.training_traj=X
-        if linear==True:
-            self.transport.fit_transportation()
-            self.transport.apply_transportation()
-            std= np.zeros_like(self.transport.training_traj)
-        X1=self.transport.training_traj
+
+        self.transport.fit_transportation()
+        self.transport.apply_transportation()
+        std= np.zeros_like(self.transport.training_traj)
+
+        X_2=self.transport.training_traj
+
+        X_1=X_1[0,:]+ (X_1-X_1[0,:])*scaling_factor
+        X_2=X_2[-1,:]+ (X_2-X_2[-1,:])*scaling_factor
+
+        #create a sigmoid function to smoothly transition between the two trajectories
+        swich_quickly = 5
+        apha= 1/(1+np.exp(-np.linspace(-swich_quickly,swich_quickly,len(X_1))))
+        X1= apha[:,np.newaxis]*X_2 + (1-apha[:,np.newaxis])*X_1
         if ax is not None:
             self.plot(X1, std, self.distribution_test_set[index_target,:,:], ax=ax)
 
