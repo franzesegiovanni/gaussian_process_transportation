@@ -37,19 +37,21 @@ class PolicyTransportation():
         return pos_transported, delta_map_std
     
     def transport_velocity(self, pos, vel, return_var=True):
-        if return_var==True:
-            J_phi, J_phi_var=self.delta_map.derivative(pos, return_var=return_var)
-        else:
-            J_phi= self.delta_map.derivative(pos, return_var=return_var)
+        pos_rotated=self.affine_transform.predict(pos)
         J_gamma= self.affine_transform.derivative(pos)
-        J_phi= J_gamma + J_phi @ J_gamma
-
+        if return_var==True:
+            J_psi, J_psi_var=self.delta_map.derivative(pos_rotated, return_var=return_var)
+        else:
+            J_psi= self.delta_map.derivative(pos_rotated, return_var=return_var)
+        
+        J_phi= J_gamma + J_psi @ J_gamma
+        
         print("Is the map locally diffeomorphic?", np.all(np.abs(np.linalg.det(J_phi)) > 0))
 
         vel = vel[:,:,np.newaxis]
 
         vel_rotated=  J_gamma @ vel
-        var_vel_transported=J_phi_var @ vel_rotated**2
+        var_vel_transported=J_psi_var @ vel_rotated**2
 
         vel_transported= J_phi @ vel
 

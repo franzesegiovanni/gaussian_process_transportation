@@ -11,6 +11,7 @@ from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantK
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
 from policy_transportation import GaussianProcessTransportation as Transport
+# from policy_transportation.transportation.gaussian_process_transportation_diffeomorphic import GaussianProcessTransportationDiffeo as Transport
 import pathlib
 from policy_transportation.utils import resample
 import warnings
@@ -22,7 +23,7 @@ warnings.filterwarnings("ignore")
 def create_vectorfield(model,datax_grid,datay_grid):
     dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
     pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
-    vel, std = model.predict(pos)
+    vel, std = model.predict(pos, return_std=True)
     u, v = vel[:, 0].reshape(dataXX.shape), vel[:, 1].reshape(dataXX.shape)
     return u, v, std
 
@@ -118,14 +119,14 @@ axs[1, 1].set_yticklabels([])
 
 axs[1, 0].legend()
 #%% Transport the dynamical system on the new surface
-transport=Transport()
+k_transport = C(constant_value=10)  * RBF(4*np.ones(2)) + WhiteKernel(0.01 )
+
+transport=Transport(kernel_transport= k_transport)
 transport.source_distribution=source_distribution 
 transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
 
-k_transport = C(constant_value=np.sqrt(0.1), constant_value_bounds=[0.1,5])  * RBF(1*np.ones(1), [1,500]) + WhiteKernel(0.0001)
-transport.kernel_transport=k_transport
 print('Transporting the dynamical system on the new surface')
 transport.fit_transportation()
 transport.apply_transportation()
@@ -158,7 +159,7 @@ GP_aleatoric.fit(X1, std_aleatoric_labels)
 
 dataXX, dataYY = np.meshgrid(x_grid, y_grid)
 pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
-std_aleatoric, _ = GP_aleatoric.predict(pos)
+std_aleatoric = GP_aleatoric.predict(pos)
 var_aleatoric=std_aleatoric**2
 
 
