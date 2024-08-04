@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 #%% Load the drawings
 
 source_path = str(pathlib.Path(__file__).parent.absolute())  
-data =np.load(source_path+ '/data/'+str('surface4')+'.npz')
+data =np.load(source_path+ '/data/'+str('example4')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
@@ -31,9 +31,9 @@ transport.fit()
 source_transported = transport.predict(source_distribution)
 demonstration_transported = transport.predict(X)
 
-plt.plot(source_distribution[:,0], source_distribution[:,1], 'ro')
+# plt.plot(source_distribution[:,0], source_distribution[:,1], 'ro')
 plt.plot(source_transported[:,0], source_transported[:,1], 'bo')
-plt.plot(target_distribution[:,0], target_distribution[:,1], 'g*')
+plt.plot(target_distribution[:,0], target_distribution[:,1], 'go')
 plt.plot(demonstration_transported[:,0], demonstration_transported[:,1], 'k-o')
 plt.show()
 
