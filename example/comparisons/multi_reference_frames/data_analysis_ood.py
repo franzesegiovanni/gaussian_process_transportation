@@ -14,7 +14,7 @@ source_path = str(os.path.dirname(__file__))
 # Load the data from the files
 fde1, fda1 = load_in_table(source_path + '/results/tpgmm_out_distribution.npz')
 fde2, fda2 = load_in_table(source_path + '/results/gpt_out_distribution.npz')
-fde3, fda3 = load_in_table(source_path + '/results/dmp_out_distribution.npz')
+fde3, fda3 = load_in_table(source_path + '/results/la_out_distribution.npz')
 fde4, fda4 = load_in_table(source_path + '/results/hmm_out_distribution.npz')
 
 #concatenate the dataframes

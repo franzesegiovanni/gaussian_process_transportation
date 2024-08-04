@@ -51,7 +51,6 @@ def generate_ranking(df):
             #t_statistic, p_value=ttest_ind(samples1, samples2, alternative='less') 
             p_value = stats.mannwhitneyu(samples1, samples2, alternative='less')[1]  # Perform one-sided Mann-Whitney U test for lower distribution
 
-            # if t_statistic < 0 and pvalue < 0.02:
             if p_value < 0.05:
                 rankings.loc[rankings['group'] == group1, 'rank'] -= 1
 

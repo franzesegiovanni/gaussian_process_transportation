@@ -39,9 +39,13 @@ for i in range(maximum_demonstrations-minimum_demonstrations):
         # Create a list of non-selected indexes
         non_selected_indexes = [index for index in all_indexes if index not in selected_indexes]
         policy.train(index_partial_dataset=selected_indexes)
-        fig, ax = plt.subplots()
+        # fig, ax = plt.subplots()
         ax=None
         df, area, dtw, fde, fad= policy.reproduce(index_partial_dataset=non_selected_indexes, ax=ax, compute_metrics=True)      
+        if df is None or area is None or dtw is None or fde is None or fad is None:
+            print("________________________________")
+            print("Error")
+            print("________________________________")
         results_df[i]=results_df[i]+df
         results_area[i]=results_area[i]+area
         results_dtw[i]=results_dtw[i]+dtw

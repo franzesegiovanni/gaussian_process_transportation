@@ -8,11 +8,11 @@ script_path = os.path.dirname(__file__) + '/figs/'
 plots = [
     imread(script_path + 'hmm.png'),
     imread(script_path + 'tp_gmm.png'),
-    imread(script_path + 'dmp.png'),
+    imread(script_path + 'la.png'),
     imread(script_path + 'gpt.png'),
     imread(script_path + 'hmm_ood.png'),
     imread(script_path + 'tp_gmm_ood.png'),
-    imread(script_path + 'dmp_ood.png'),
+    imread(script_path + 'la_ood.png'),
     imread(script_path + 'gpt_ood.png')
 ]
 
@@ -46,5 +46,5 @@ fig.tight_layout()
 axes[0, 0].text(-0.05, 0.5, 'Training set',fontsize=18,  transform=axes[0, 0].transAxes, rotation=90, va='center')
 axes[1, 0].text(-0.05, 0.5, 'Test set',fontsize=18,  transform=axes[1, 0].transAxes, rotation=90, va='center')
 # Save the figure
-fig.savefig(script_path + 'multi_reference_frames_comparison.pdf', dpi=1200, bbox_inches='tight')
+fig.savefig(script_path + 'multi_reference_frames_comparison.pdf', dpi=300, bbox_inches='tight')
 # plt.show()

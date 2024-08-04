@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 import random
-from models.model_gpt import Multiple_Reference_Frames_GPT
+from models.model_laplacian_editing import Multiple_Reference_Frames_LA
 from generate_random_frame_orientation import generate_frame_orientation  
 warnings.filterwarnings("ignore")
 warnings.filterwarnings( "ignore", module = "matplotlib\..*" )
@@ -20,10 +20,10 @@ results_area=[[]]
 results_dtw= [[]]
 results_fde= [[]]
 results_fad= [[]]
-name= ['GPT']
+name= ['LA']
 script_path = str(os.path.dirname(__file__))
 filename = script_path + '/data/' + 'reach_target'
-policy=Multiple_Reference_Frames_GPT()
+policy=Multiple_Reference_Frames_LA()
 policy.load_dataset(filename)
 
 for j in range(number_repetitions):
@@ -41,7 +41,7 @@ for j in range(number_repetitions):
 
 # plt.show()
 
-np.savez(script_path + '/results/gpt_dataset.npz', 
+np.savez(script_path + '/results/la_dataset.npz', 
     results_df=results_df, 
     results_area=results_area, 
     results_dtw=results_dtw,
@@ -53,6 +53,7 @@ results_fda_new=[[]]
 results_fde_new=[[]]
 
 for j in range(number_repetitions):
+    # fig, ax = plt.subplots()
     ax=None
     A_new, b_new = generate_frame_orientation(filename)
     index_source = random.choice(range(len(policy.demos_A)))  
@@ -62,7 +63,7 @@ for j in range(number_repetitions):
         results_fde_new[0].append(fde)
         results_fda_new[0].append(fda)
 
-np.savez(script_path + '/results/gpt_out_distribution.npz', 
+np.savez(script_path + '/results/la_out_distribution.npz', 
     results_fde=results_fde_new,
     results_fad=results_fda_new, 
     name=name)

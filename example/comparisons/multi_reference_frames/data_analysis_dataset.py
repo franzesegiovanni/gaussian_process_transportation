@@ -10,7 +10,7 @@ source_path = str(os.path.dirname(__file__))
 # Load the data from the files
 df1, area1, dtw1, fde1, fda1 = load_in_table(source_path + '/results/tpgmm_dataset.npz')
 df2, area2, dtw2, fde2, fda2 = load_in_table(source_path + '/results/gpt_dataset.npz')
-df3, area3, dtw3, fde3, fda3 = load_in_table(source_path + '/results/dmp_dataset.npz')
+df3, area3, dtw3, fde3, fda3 = load_in_table(source_path + '/results/la_dataset.npz')
 df4, area4, dtw4, fde4, fda4 = load_in_table(source_path + '/results/hmm_dataset.npz')
 
 #concatenate the dataframes
