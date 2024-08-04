@@ -22,9 +22,9 @@ data =np.load(source_path+ '/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
-X=resample(X, num_points=200)
-source_distribution=resample(S,num_points=100)
-target_distribution=resample(S1,num_points=100)
+X=resample(X, num_points=100)
+source_distribution=resample(S,num_points=20)
+target_distribution=resample(S1,num_points=20)
 
 fig = plt.figure(figsize = (12, 7))
 plt.xlim([-50, 50-1])

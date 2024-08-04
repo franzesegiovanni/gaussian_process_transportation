@@ -25,9 +25,19 @@ data =np.load(source_path+ '/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
+# X=resample(X, num_points=200)
+# source_distribution=resample(S,num_points=100)
+# target_distribution=resample(S1,num_points=100)
+# X=resample(X, num_points=200)
+# source_distribution=resample(S)
+# target_distribution=resample(S1)
+
 X=resample(X, num_points=200)
-source_distribution=resample(S,num_points=100)
-target_distribution=resample(S1,num_points=100)
+source_distribution=resample(S, num_points=20)
+target_distribution=resample(S1, num_points=20)
+# X=resample(X, num_points=100)
+# source_distribution=resample(S, num_points=20)
+# target_distribution=resample(S1, num_points=20)
 
 fig = plt.figure(figsize = (12, 7))
 plt.xlim([-50, 50-1])
@@ -59,7 +69,7 @@ transport.source_distribution=source_distribution
 transport.target_distribution=target_distribution
 transport.training_traj=X
 transport.training_delta=deltaX
-transport.fit_transportation(num_epochs=200,num_inducing=20)
+transport.fit_transportation(num_epochs=500,num_inducing=20)
 transport.apply_transportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 
@@ -67,12 +77,13 @@ x1_grid=np.linspace(np.min(X[:,0]-25), np.max(X[:,0]+25), 100)
 y1_grid=np.linspace(np.min(X[:,1]-25), np.max(X[:,1]+25), 100)
 
 # Fit the Gaussian Process dynamical system   
-k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=1.5) + WhiteKernel(0.01 ) #this kernel works much better!    
+k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2),length_scale_bounds=[5,200], nu=2.5) + WhiteKernel(0.01 )  
 gp_deltaX1=GPR(kernel=k_deltaX1)
-# print(X1)
-mask = ~np.any(np.isnan(X1), axis=1)
+mask = ~transport.diffeo_mask
 gp_deltaX1.fit(X1[mask], deltaX1[mask])
-plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,S1)
+plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,target_distribution)
 plt.xlim(np.min(X[:,0]-25), np.max(X[:,0]+25))
 plt.ylim(np.min(X[:,1]-25), np.max(X[:,1]+25))
+# plt.quiver(X1[:,0], X1[:,1], deltaX1[:,0], deltaX1[:,1], color=[1,0,0],  scale=None)
+plt.scatter(X1[transport.diffeo_mask,0],X1[transport.diffeo_mask,1], color=[0,0,1], marker='x', s=100)
 plt.show()

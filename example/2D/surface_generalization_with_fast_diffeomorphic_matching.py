@@ -21,18 +21,19 @@ warnings.filterwarnings("ignore")
 
 source_path = str(pathlib.Path(__file__).parent.absolute())  
 data =np.load(source_path+ '/data/'+str('example')+'.npz')
-# data =np.load(source_path+ '/data/'+str('surface4')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
-X=resample(X, num_points=200)
-source_distribution=resample(S, num_points=50)
-target_distribution=resample(S1, num_points=50)
+X=resample(X, num_points=100)
+source_distribution=resample(S, num_points=30)
+target_distribution=resample(S1, num_points=30)
 
 #%% Calculate deltaX
 deltaX = np.zeros((len(X),2))
 for j in range(len(X)-1):
     deltaX[j,:]=(X[j+1,:]-X[j,:])
+
+deltaX[-1,:]=X[0,:]-X[-1,:]
 
 
 #%% Fit a dynamical system to the demo and plot it
@@ -52,7 +53,7 @@ plt.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
 plt.legend(["Demonstration","Surface","New Surface"])
 #%% Transport the dynamical system on the new surface
 
-transport=Transport(num_iterations=16)
+transport=Transport(num_iterations=30)
 transport.source_distribution=source_distribution 
 transport.target_distribution=target_distribution
 transport.training_traj=X
