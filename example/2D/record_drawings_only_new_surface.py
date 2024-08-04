@@ -22,7 +22,7 @@ import numpy as np
 # Press 'n' to save the drawing as new surface
 # to save the drawing as surface or demo or new surface respectively (This also stops the drawing )
 # Press 'q' to exit
-
+source_path = str(pathlib.Path(__file__).parent.absolute())  
 source_path = str(pathlib.Path(__file__).parent.absolute())  
 data =np.load(source_path+ '/data/'+str('example')+'.npz')
 X=data['demo'] 
@@ -45,6 +45,6 @@ plt.scatter(newsurface[:,0],newsurface[:,1], color=[0,0,1])
 
 #%% Save the drawings
 
-Surface_Demo.save(data='surface3')
+Surface_Demo.save(data='example10')
 
 # %%

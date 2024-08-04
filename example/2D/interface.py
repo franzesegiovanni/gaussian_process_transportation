@@ -9,15 +9,13 @@ from pynput import keyboard
 from pynput.keyboard import Listener,KeyCode
 import numpy as np
 import pathlib
-# import rospy
-# from sensor_msgs.msg import  Joy
-# from geometry_msgs.msg import Point, WrenchStamped, PoseStamped, Vector3
 
 class Drawing():
     def __init__(self, fig, ax, draw=2):
         # 
         if fig is None or ax is None:
             self.fig, self.ax =  plt.subplots()
+        else:
             self.fig=fig
             self.ax=ax
         self.ax.set_xlim(-50, 50-1)
@@ -46,6 +44,8 @@ class Drawing():
 
         if key == KeyCode.from_char('z'):
             self.keep_drawing = True
+        elif key == KeyCode.from_char('x'):
+            self.keep_drawing = False
         elif key == KeyCode.from_char('w'):
             print("Saving the source surface")
             x= self.x[self.idx:]
@@ -89,7 +89,8 @@ class Drawing():
 
 
     def save(self, data='last'):
-        np.savez(str(pathlib.Path().resolve())+'/data/'+str(data)+'.npz', 
+        source_path = str(pathlib.Path(__file__).parent.absolute())  
+        np.savez(source_path+ '/data/'+str(data)+'.npz', 
         demo=self.demo, 
         floor=self.floor, 
         newfloor=self.newfloor) 
