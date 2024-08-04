@@ -9,8 +9,8 @@ This code is part of TERI (TEaching Robots Interactively) project
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
-from policy_transportation import GaussianProcess as GPR
 from policy_transportation import GaussianProcessTransportation as Transport
+from policy_transportation.transportation.diffeomorphic_transportation import DiffeomorphicTransportation as TransportDiffeo
 from policy_transportation.transportation.affine_transportation import AffineTransportation
 import pathlib
 from policy_transportation.plot_utils import plot_vector_field 
@@ -35,15 +35,16 @@ plt.scatter(source_distribution[:,0],source_distribution[:,1], color='green')
 plt.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1]) 
 plt.legend(["Demonstration","Surface","New Surface"])
 #%% Transport the dynamical system on the new surface
-transport=Transport()
+k_transport = C(constant_value=np.sqrt(0.1))  * RBF(2*np.ones(1), length_scale_bounds=[0.01,10]) + WhiteKernel(0.01, noise_level_bounds=[0.01, 0.1] )
+transport=Transport(kernel_transport=k_transport)
+# transport=Transport(num_iterations=16)
 transport_affine = AffineTransportation()
 transport_affine.source_distribution=source_distribution
 transport_affine.target_distribution=target_distribution
 transport.source_distribution=source_distribution 
 transport.target_distribution=target_distribution
 
-k_transport = C(constant_value=np.sqrt(0.1))  * RBF(40*np.ones(2), length_scale_bounds=[0.01, 500]) + WhiteKernel(0.01, noise_level_bounds=[0.01, 0.1] )
-transport.kernel_transport=k_transport
+
 print('Transporting the dynamical system on the new surface')
 transport.fit_transportation()
 transport_affine.fit_transportation()
@@ -58,7 +59,7 @@ axs[0].scatter(source_distribution[:, 0], source_distribution[:, 1], color='gree
 axs[0].scatter(target_distribution[:, 0], target_distribution[:, 1], color='blue', label='Target Distribution')
 axs[0].set_xlim(x_lim)
 axs[0].set_ylim(y_lim)
-axs[0].set_title('Distribution Match', fontsize=20)
+axs[0].set_title('Distribution Match', fontsize=16)
 axs[0].legend()
 # Plot connecting lines between each of the points
 for i in range(len(source_distribution)):
@@ -83,7 +84,7 @@ for i in range(num_points):
 axs[1].scatter(source_distribution[:,0],source_distribution[:,1], color='green', label='Source Distribution')
 axs[1].set_xlim(x_lim)
 axs[1].set_ylim(y_lim)
-axs[1].set_title('Source distribution', fontsize=20)
+axs[1].set_title(' Position Labels ', fontsize=16)
 axs[1].set_yticks([])
 axs[1].set_yticklabels([])
 axs[1].legend()
@@ -114,12 +115,10 @@ for i in range(num_points):
 
 axs[2].scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1], label='Target Distribution')
 axs[2].scatter(source_distribution_new[:,0], source_distribution_new[:,1], facecolors='none', edgecolors='green', linewidths=2,label='Source Distribution')
-axs[2].set_title('Linear Transformation', fontsize=20)
+axs[2].set_title('Affine Transfortation', fontsize=16)
 axs[2].set_yticks([])
 axs[2].set_yticklabels([])
 transport.training_traj=grid
-# transport.training_delta=None
-# transport.optimize_diffeomorphism()
 transport.apply_transportation()
 grid_new=transport.training_traj
 
@@ -129,8 +128,6 @@ source_distribution_new=transport.training_traj
 X=grid_new[:,0].reshape(num_points,num_points)
 Y=grid_new[:,1].reshape(num_points,num_points)
 axs[2].legend()
-
-# plt.contourf(X, Y, cmap=cmap, levels=20) 
 
 axs[3].scatter(grid_new[:,0],grid_new[:,1], c=colors, cmap=cmap, alpha=0.3)
 
@@ -144,7 +141,7 @@ for i in range(num_points):
 
 axs[3].scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1], label='Target Distribution')
 axs[3].scatter(source_distribution_new[:,0], source_distribution_new[:,1], facecolors='none', edgecolors='green', linewidths=2,label='Source Distribution')
-axs[3].set_title(' GP Transportation', fontsize=20)
+axs[3].set_title('Nonlinear Transformation', fontsize=16)
 axs[3].legend()
 axs[3].set_yticks([])
 axs[3].set_yticklabels([])
