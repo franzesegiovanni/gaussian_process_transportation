@@ -85,6 +85,12 @@ class Ensemble_Neural_Transport():
             self.training_delta=self.training_delta[:,:,0]
             self.var_vel_transported=self.var_vel_transported[:,:,0]
 
+            J_phi= rot_gp @ derivative_affine
+            print("Is the map locally diffeomorphic?", np.all(np.linalg.det(J_phi)) > 0)
+            print(np.linalg.det(J_phi))
+            print("percerntagle of non-diffeomorphic points", np.sum(np.linalg.det(J_phi)<=0)/J_phi.shape[0])
+
+
 
     def sample_transportation(self):
         training_traj_samples= self.delta_map.samples(self.traj_rotated)

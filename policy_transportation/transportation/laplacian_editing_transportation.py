@@ -10,11 +10,11 @@ from policy_transportation.models.laplacian_editing import Laplacian_Editing
 class LaplacianEditingTransportation():
     def __init__(self):
         super(LaplacianEditingTransportation, self).__init__()
-        self.affine_transform=AffineTransform(do_scale=True, do_rotation=True)
-        self.transportation=Laplacian_Editing()
+
     
-    def fit_transportation(self):
-        
+    def fit_transportation(self,  do_scale=True, do_rotation=True):
+        self.affine_transform=AffineTransform(do_scale=do_scale, do_rotation=do_rotation)
+        self.transportation=Laplacian_Editing()
         self.affine_transform.fit(self.source_distribution, self.target_distribution)
 
         source_distribution=self.affine_transform.predict(self.source_distribution)  
@@ -22,6 +22,8 @@ class LaplacianEditingTransportation():
         self.training_traj= self.affine_transform.predict(self.training_traj)
         
         self.transportation.fit(source_distribution, self.target_distribution, self.training_traj) 
+        self.mask_traj=self.transportation.mask_traj
+        self.mask_source=self.transportation.mask_source
 
 
     def apply_transportation(self):
@@ -36,6 +38,10 @@ class LaplacianEditingTransportation():
             J = (self.training_traj[1:,:,np.newaxis]- self.training_traj[:-1,:,np.newaxis]) @ np.linalg.pinv(self.training_traj_old[1:,:,np.newaxis]- self.training_traj_old[:-1,:,np.newaxis])
             J = np.concatenate((J, J[-1:,:,:]), axis=0)
             self.training_delta= (J @ self.training_delta[:,:,np.newaxis])[:,:,0]
+
+    def accuracy(self):
+        return self.transportation.accuracy    
+
 
     def sample_transportation(self):
         training_traj_samples= self.transportation.samples(self.traj_rotated)

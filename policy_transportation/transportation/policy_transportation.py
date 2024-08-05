@@ -46,7 +46,10 @@ class PolicyTransportation():
         
         J_phi= J_gamma + J_psi @ J_gamma
         
-        print("Is the map locally diffeomorphic?", np.all(np.abs(np.linalg.det(J_phi)) > 0))
+
+        print("Is the map diffeomorphic?", np.all((np.linalg.det(J_phi)) > 0))
+        print("Percentage of points that are not diffeomorphic: ", np.sum(np.linalg.det(J_phi) <= 0)/len(J_phi)*100, "percent")
+        self.diffeo_mask=np.linalg.det(J_phi)<=0
 
         vel = vel[:,:,np.newaxis]
 

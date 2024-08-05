@@ -25,7 +25,12 @@ class DiffeomorphicTransportation():
 
         self.gp_delta_map.fit(source=source_distribution, target=self.target_distribution)  
 
-
+    def accuracy(self):
+        source_transported=self.affine_transform.predict(self.source_distribution)
+        source_transported= self.gp_delta_map.predict(source_transported, return_std=False)
+        #compute rmse
+        error=np.sqrt(np.mean((source_transported-self.target_distribution)**2))
+        return error
     def apply_transportation(self):
               
         #Deform Trajactories 
@@ -67,7 +72,7 @@ class DiffeomorphicTransportation():
             quat_transport=quat_gp * (quat_affine * quat_demo)
             self.training_ori= quaternion.as_float_array(quat_transport)
 
-    # def sample_transportation(self):
-    #     delta_map_samples= self.gp_delta_map.samples(self.traj_rotated)
-    #     training_traj_samples = self.traj_rotated + delta_map_samples 
-    #     return training_traj_samples
+    def sample_transportation(self):
+        delta_map_samples= self.gp_delta_map.samples(self.traj_rotated)
+        training_traj_samples = delta_map_samples 
+        return training_traj_samples

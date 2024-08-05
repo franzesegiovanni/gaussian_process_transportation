@@ -6,41 +6,13 @@ This code is part of TERI (TEaching Robots Interactively) project
 """
 from policy_transportation import AffineTransform
 from policy_transportation.models.torch.stocastic_variational_gaussian_process_derivatives import StocasticVariationalGaussianProcess 
+# from policy_transportation.models.torch.stocastic_variational_gaussian_process import StocasticVariationalGaussianProcess
 import pickle
 import numpy as np
 import quaternion
 class SVGPTransport():
     def __init__(self):
         super(SVGPTransport, self).__init__()
-
-
-    def save_distributions(self):
-        # create a binary pickle file 
-        f = open("distributions/source.pkl","wb")
-        # write the python object (dict) to pickle file
-        pickle.dump(self.source_distribution,f)
-        # close file
-        f.close()
-
-    # create a binary pickle file 
-        f = open("distributions/target.pkl","wb")
-        # write the python object (dict) to pickle file
-        pickle.dump(self.target_distribution,f)
-        # close file
-        f.close()
-
-    def load_distributions(self):
-        try:
-            with open("distributions/source.pkl","rb") as source:
-                self.source_distribution = pickle.load(source)
-        except:
-            print("No source distribution saved")
-
-        try:
-            with open("distributions/target.pkl","rb") as target:
-                self.target_distribution = pickle.load(target)
-        except:
-            print("No target distribution saved")    
 
 
     def fit_transportation(self, num_epochs=20, num_inducing=100):
@@ -66,17 +38,15 @@ class SVGPTransport():
         self.traj_rotated=self.affine_transform.predict(self.training_traj)
         self.delta_map_mean, self.std= self.gp_delta_map.predict(self.traj_rotated, return_std=True)
         # convert to numpyu array
-        self.delta_map_mean=self.delta_map_mean.detach().cpu().numpy()
-        self.std=self.std.detach().cpu().numpy()
+        self.delta_map_mean=self.delta_map_mean
+        self.std=self.std
         self.training_traj = self.traj_rotated + self.delta_map_mean 
 
         #Deform Deltas and orientation
         if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
             pos=(np.array(self.traj_rotated))
-            Jacobian, Jacobian_std=self.gp_delta_map.derivative(pos)
-            # convert the Jacobian and Jacobian_std to numpy
-            Jacobian=Jacobian.detach().cpu().numpy()
-            Jacobian_std=Jacobian_std.detach().cpu().numpy()
+            Jacobian, Jacobian_var=self.gp_delta_map.derivative(pos, return_var=True)
+            Jacobian=self.gp_delta_map.derivative(pos)
 
             rot_gp= np.eye(Jacobian[0].shape[0]) + Jacobian
             rot_affine= self.affine_transform.rotation_matrix
@@ -87,11 +57,18 @@ class SVGPTransport():
             self.training_delta = self.training_delta[:,:,np.newaxis]
 
             self.training_delta=  derivative_affine @ self.training_delta
-            self.var_vel_transported=Jacobian_std**2 @ self.training_delta**2
+            self.var_vel_transported=Jacobian_var @ self.training_delta**2
 
             self.training_delta= rot_gp @ self.training_delta
             self.training_delta=self.training_delta[:,:,0]
             self.var_vel_transported=self.var_vel_transported[:,:,0]
+
+            J_phi= rot_gp @ derivative_affine
+
+            print("Is the map locally diffeomorphic?", np.all(np.linalg.det(J_phi)> 0)) 
+            print("percerntagle of non-diffeomorphic points", np.sum(np.linalg.det(J_phi)<=0)/len(J_phi))
+            self.diffeo_mask=np.linalg.det(J_phi)<=0
+
 
 
         if  hasattr(self, 'training_ori'):   

@@ -4,7 +4,7 @@ Email: g.franzese@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
-from GILoSA import AffineTransform
+from policy_transportation import AffineTransform
 from policy_transportation.models.torch.bijective_neural_network import BiJectiveNetwork
 import pickle
 import numpy as np
@@ -42,6 +42,11 @@ class Neural_Transport():
             Jacobian=self.gp_delta_map.derivative(pos)
             rot_gp=  Jacobian
             derivative_affine= self.affine_transform.derivative(pos)
+            J_phi= rot_gp @ derivative_affine
+
+            print("Is the map locally diffeomorphic?", np.all(np.linalg.det(J_phi)) > 0)
+            print(np.linalg.det(J_phi))
+            print("percerntagle of non-diffeomorphic points", np.sum(np.linalg.det(J_phi)<=0)/len(J_phi))
 
 
         if  hasattr(self, 'training_delta'):
