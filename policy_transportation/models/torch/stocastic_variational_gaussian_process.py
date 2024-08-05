@@ -106,10 +106,12 @@ class StocasticVariationalGaussianProcess():
         else:
             return predictions.mean.detach().cpu().numpy()
          
-    def derivative(self, x): 
+    def derivative(self, x, return_var=False): 
         x=torch.from_numpy(x).float()
         if self.use_cuda:
             x=x.cuda()
         J= jacobian(self.mean_fun, x).cpu().detach().numpy()
-        J= J.transpose(1,0,2)    
+        J= J.transpose(1,0,2)
+        if return_var:
+            return J, np.zeros_like(J)    
         return J

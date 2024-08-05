@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
+
 class GaussianProcess():
     def __init__(self, kernel, alpha=1e-10, optimizer='fmin_l_bfgs_b', n_restarts_optimizer=5, n_targets=None):
         if optimizer != None:
@@ -26,16 +27,13 @@ class GaussianProcess():
             self.n_features=np.shape(self.X)[1]
             self.n_samples=np.shape(self.X)[0]
             self.n_outputs=np.shape(self.Y)[1]
-            # filter out the nan values
-            mask = np.isnan(self.Y).any(axis=1)
-            self.X=self.X[~mask]
-            self.Y=self.Y[~mask]
             self.gp.fit(self.X,self.Y)
             self.kernel= self.gp.kernel_
             self.kernel_params_= [self.kernel.get_params()['k1__k2__length_scale'], self.kernel.get_params()['k1']]
             self.noise_var_ = self.gp.alpha + self.kernel.get_params()['k2__noise_level']
             self.prior_var   = self.kernel.get_params()['k1__k1__constant_value']
             K_ = self.kernel(self.X, self.X) + (self.noise_var_ * np.eye(len(self.X)))
+            self.K = K_
             self.K_inv = np.linalg.inv(K_)
             print('lenghtscales', self.kernel.get_params()['k1__k2__length_scale'] )
 
@@ -66,7 +64,7 @@ class GaussianProcess():
         The uncertinaty is the variance of each element of the Jacobian matrix.
         """
         lscale=self.kernel_params_[0].reshape(-1,1)
-        alfa=  self.K_inv @ self.Y 
+        alfa = linalg.solve(self.K, self.Y)
         k_star= self.kernel(x, self.X)
         X_T= (self.X).transpose()
         x_T = x.transpose()

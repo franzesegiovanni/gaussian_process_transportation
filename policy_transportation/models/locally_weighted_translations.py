@@ -74,20 +74,9 @@ class Iterative_Locally_Weighted_Translations():
             k_star= np.exp(-rho_beta[i,0]**2 * np.sum((y - p[i,:])**2,axis=1).reshape(-1,1))
             y = y+ k_star* v[i,:].reshape(1,-1)
             # this uncertainty is computed as each deformation was genegerate by a single point GP. At every iteratoin we sum the uncertainty from the previous steps. 
-            # sigma_iter = v[i,:]**2 * (1- k_star*k_star)
-            # sigma_total = sigma_total + sigma_iter
+            sigma_iter = v[i,:]**2 * (1- k_star*k_star)
+            sigma_total = sigma_total + sigma_iter
     
-        # if return_std:
-        #     # this is to return the uncertainty as it was for a GP.
-        #     lenghtscale = 1/rho_beta[:,0]
-        #     lenghtscale_mean = np.mean(lenghtscale)
-        #     vertiacal_lengthscale = np.mean(v**2, axis=0)
-        #     L=1/(lenghtscale_mean**2)
-        #     D=distance.cdist(self.source,self.source)**2
-        #     K= np.exp(-L*D)
-        #     k_star= np.exp(-L * distance.cdist(x ,self.source)**2)
-        #     sigma_gp =vertiacal_lengthscale *( 1- np.diagonal(k_star @ np.linalg.inv(K) @ k_star.transpose())).reshape(-1,1)   
-        #     return y, np.sqrt(sigma_gp)
         if return_std:
             return y, np.zeros_like(y)
         else:
@@ -132,3 +121,9 @@ class Iterative_Locally_Weighted_Translations():
         error = np.sqrt(np.sum((y_pred- self.target)**2,axis=1))
         print ('######### Estimation')
         print ('Total pos error mean+std:', np.mean(error), np.std(error), "[m]")
+
+    def samples(self, X):
+        # laplacian editing is deterministic, then we return the same sample
+        predictions = [self.predict(X) for i in range(10)]
+        predictions = np.array(predictions)  # Shape: (n_estimators, n_samples)
+        return predictions
