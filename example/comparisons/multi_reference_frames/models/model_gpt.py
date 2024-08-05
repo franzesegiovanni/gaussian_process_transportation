@@ -88,6 +88,8 @@ class Multiple_Reference_Frames_GPT:
         if ax is not None:
             self.plot(X1, std, self.distribution_training_set[index_target,:,:], ax, plot_bounds=plot_bounds)
             ax.plot(self.demos_x[index_target][:,0],self.demos_x[index_target][:,1], 'k--')
+            ax.legend()
+
 
         if compute_metrics==True:    
         # Discrete Frechet distance
