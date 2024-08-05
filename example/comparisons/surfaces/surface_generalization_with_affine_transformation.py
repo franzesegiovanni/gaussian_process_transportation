@@ -18,11 +18,11 @@ warnings.filterwarnings("ignore")
 #%% Load the drawings
 import os
 script_path = str(os.path.dirname(__file__))
-data =np.load(script_path+'/data/'+'example'+'.npz')
+data =np.load(script_path+'/data/'+'example0'+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
-X=resample(X, num_points=200)
+X=resample(X, num_points=100)
 source_distribution=resample(S)
 target_distribution=resample(S1)
 
@@ -30,10 +30,6 @@ target_distribution=resample(S1)
 deltaX = np.zeros((len(X),2))
 for j in range(len(X)-1):
     deltaX[j,:]=(X[j+1,:]-X[j,:])
-
-## Downsample
-X=X[::2,:]
-deltaX=deltaX[::2,:]
 
 #%% Fit a dynamical system to the demo and plot it
 k_deltaX = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=2.5) + WhiteKernel(0.01) 
@@ -70,5 +66,5 @@ gp_deltaX1=GPR(kernel=k_deltaX1)
 gp_deltaX1.fit(X1, deltaX1)
 x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 200)
 y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 200)
-plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,S1)
+plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,target_distribution)
 plt.show()

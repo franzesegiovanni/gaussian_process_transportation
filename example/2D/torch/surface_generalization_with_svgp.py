@@ -1,6 +1,6 @@
 """
-Authors:  Giovanni Franzese and Ravi Prakash, Dec 2022
-Email: g.franzese@tudelft.nl, r.prakash-1@tudelft.nl
+Authors:  Giovanni Franzese 
+Email: g.franzese@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """

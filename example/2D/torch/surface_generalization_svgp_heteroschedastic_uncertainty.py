@@ -25,19 +25,14 @@ data =np.load(source_path+ '/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
-X=resample(X, num_points=100)
-source_distribution=resample(S,num_points=20)
-target_distribution=resample(S1, num_points=20)
+X=resample(X, num_points=200)
+source_distribution=resample(S, num_points=50)
+target_distribution=resample(S1, num_points=50)
 
 #%% Calculate deltaX
 deltaX = np.zeros((len(X),2))
 for j in range(len(X)-1):
     deltaX[j,:]=(X[j+1,:]-X[j,:])
-
-X=X[:-1,:]
-deltaX=deltaX[:-1,:]
-
-
 
 fig, axs = plt.subplots(nrows=2, ncols=2,figsize=(12, 12))
 
@@ -119,7 +114,7 @@ transport.training_traj=X
 transport.training_delta=deltaX
 
 print('Transporting the dynamical system on the new surface')
-transport.fit_transportation(num_epochs=500,num_inducing=20)
+transport.fit_transportation(num_epochs=500,num_inducing=5)
 transport.apply_transportation()
 X1=transport.training_traj
 deltaX1=transport.training_delta 
