@@ -27,7 +27,7 @@ for file in files:
     y = np.linspace(y_min, y_max, 100)
     meshgrid_distribution = np.array(np.meshgrid(x, y)).T.reshape(-1,2)
 
-    newZ,_ = gp_distribution.predict(meshgrid_distribution)
+    newZ = gp_distribution.predict(meshgrid_distribution)
 
     distribution_surface=np.hstack([meshgrid_distribution,newZ.reshape(-1,1)])
     # print("distribution_surface.shape",distribution_surface.shape)
