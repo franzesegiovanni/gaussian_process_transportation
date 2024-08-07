@@ -39,11 +39,18 @@ class Laplacian_Editing():
         # Apply the Hungarian algorithm
         row_ind, col_ind = linear_sum_assignment(distance_matrix)
         # The Hungarian algorithm is a combinatorial optimization algorithm that solves the assignment problem in polynomial time. The algorithm has many applications in combinatorial optimization, for example in problems of matching supply and demand in transportation networks, or in finding the minimum cost assignment in job scheduling. The algorithm is also known as the Kuhn-Munkres algorithm.
+        
+        # The optimal assignment and the corresponding costs
+        optimal_assignment = list(zip(row_ind, col_ind))
+        assignment_costs = distance_matrix[row_ind, col_ind]
 
-        mask= np.linalg.norm(training_traj[row_ind] - source_distribution[col_ind],axis=1) < 5
-        row_ind=row_ind[mask]
-        col_ind=col_ind[mask]
-        return row_ind, col_ind
+        # Determine a threshold for outliers (e.g., mean + 2 standard deviations)
+        threshold = np.mean(assignment_costs) + 1 * np.std(assignment_costs)
+
+        # Identify outliers
+        inliers = [pair for pair, cost in zip(optimal_assignment, assignment_costs) if not(cost > threshold)]
+        inliers = np.array(inliers)
+        return inliers[:,0], inliers[:,1]
 
     
     def fit(self, source_distribution, target_distribution, training_traj):

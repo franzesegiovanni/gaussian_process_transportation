@@ -12,17 +12,28 @@ class Multiple_Reference_Frames_LA:
     def __init__(self):
         self.transport=Transport()
 
-    def generate_distribution_from_frames(self, A,b):
-        distribution_training_set=np.zeros((len(A), 4,2))
+    def generate_distribution_from_frames(self, A,b, use_extra_points=True):
+        if use_extra_points==True:
+            distribution_training_set=np.zeros((len(A),10,2))
+        else:
+            distribution_training_set=np.zeros((len(A),4,2)) 
         frame_dim=5
         for i in range(len(A)):
             distribution_training_set[i,0,:]=b[i][0][0]
             distribution_training_set[i,1,:]=b[i][0][0]+A[i][0][0] @ np.array([ 0, frame_dim])
             distribution_training_set[i,2,:]=b[i][0][1]
             distribution_training_set[i,3,:]=b[i][0][1]+A[i][0][1] @ np.array([ 0, -frame_dim])
+            #Extra points
+            if use_extra_points==True:
+                distribution_training_set[i,4,:]=b[i][0][0]+A[i][0][0] @ np.array([ 0, -frame_dim])
+                distribution_training_set[i,5,:]=b[i][0][1]+A[i][0][1] @ np.array([ 0, frame_dim])
+                distribution_training_set[i,6,:]=b[i][0][0]+A[i][0][0] @ np.array([ +frame_dim, 0])
+                distribution_training_set[i,7,:]=b[i][0][1]+A[i][0][1] @ np.array([ +frame_dim, 0])
+                distribution_training_set[i,8,:]=b[i][0][0]+A[i][0][0] @ np.array([ -frame_dim, 0])
+                distribution_training_set[i,9,:]=b[i][0][1]+A[i][0][1] @ np.array([ -frame_dim, 0])
         return distribution_training_set   
     
-    def load_dataset(self, filename = 'reach_target'):
+    def load_dataset(self, filename = 'reach_target', use_extra_points=True):
         
 
         demos = np.load(filename + '.npy', allow_pickle=True, encoding='latin1')[()]
@@ -38,7 +49,7 @@ class Multiple_Reference_Frames_LA:
         final_distance=np.zeros((len(demos_x),2))
         final_orientation=np.zeros((len(demos_x),1))
         # index=2
-        distribution_training_set=self.generate_distribution_from_frames(demos_A,demos_b)
+        distribution_training_set=self.generate_distribution_from_frames(demos_A,demos_b, use_extra_points=use_extra_points)
         for i in range(len(demos_x)):
             final_distance[i]=  np.linalg.inv(demos_A[i][0][1]) @ (demos_x[i][-1,:] - demos_b[i][0][1])
 
@@ -52,21 +63,21 @@ class Multiple_Reference_Frames_LA:
         self.final_distance=final_distance
         self.final_orientation=final_orientation    
 
-    def load_test_dataset(self, test_A, test_b):
+    def load_test_dataset(self, test_A, test_b, use_extra_points=True):
 
         distribution_test_set=np.zeros((len(test_A),10,2))
 
-        distribution_test_set=self.generate_distribution_from_frames(test_A,test_b)     
+        distribution_test_set=self.generate_distribution_from_frames(test_A,test_b, use_extra_points=use_extra_points)     
         self.distribution_test_set=distribution_test_set
         self.test_A=test_A
         self.test_b=test_b
 
     def reproduce(self, index_source, index_target, ax=None, compute_metrics=False):
-        X=self.demos_x[index_source]
+        self.X=self.demos_x[index_source]
 
         self.transport.source_distribution=self.distribution_training_set[index_source,:,:]
         self.transport.target_distribution=self.distribution_training_set[index_target,:,:]
-        self.transport.training_traj=X
+        self.transport.training_traj=self.X
 
         
         self.transport.fit_transportation()
@@ -77,7 +88,10 @@ class Multiple_Reference_Frames_LA:
         
 
         if ax is not None:
-            self.plot(X1, std, self.distribution_training_set[index_target,:,:], ax)
+            if index_source == index_target:
+                self.plot(X1, std, self.distribution_training_set[index_target,:,:], ax, c_frames=['#FFD700', '#FFD700'])
+            else:
+                self.plot(X1, std, self.distribution_training_set[index_target,:,:], ax)
             ax.plot(self.demos_x[index_target][:,0],self.demos_x[index_target][:,1], 'k--')
 
         if compute_metrics==True:    
@@ -110,6 +124,7 @@ class Multiple_Reference_Frames_LA:
             return df, area, dtw, fde, final_angle_distance[0]
 
     def generalize(self, index_source, index_target, ax=None, compute_metrics=False, linear=False):
+
         X=self.demos_x[index_source].reshape(-1,2)
 
         self.transport.source_distribution=self.distribution_training_set[index_source,:,:].reshape(-1,2)
@@ -139,10 +154,20 @@ class Multiple_Reference_Frames_LA:
             print("Final Angle Distance  : ", final_angle_distance[0])
             return fde, final_angle_distance[0]
     
-    def plot(self, X1, std, distribution, ax=None):
-        ax.plot(distribution[0:2,0],distribution[0:2,1], linewidth=10, alpha=0.9, c='green')
-        ax.scatter(distribution[0,0],distribution[0,1], linewidth=10, alpha=0.9, c='green')
-        ax.plot(distribution[2:4,0],distribution[2:4,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])
-        ax.scatter(distribution[2,0],distribution[2,1], linewidth=10, alpha=0.9, c= [30.0/256.0,144.0/256.0,255.0/256.0])
+    def plot(self, X1, std, distribution, ax=None, c_frames=['green', [30.0/256.0,144.0/256.0,255.0/256.0]]):
+        ax.plot(distribution[0:2,0],distribution[0:2,1], linewidth=10, alpha=0.9, c=c_frames[0])
+        ax.scatter(distribution[0,0],distribution[0,1], linewidth=10, alpha=0.9, c=c_frames[0])
+        ax.plot(distribution[2:4,0],distribution[2:4,1], linewidth=10, alpha=0.9, c=c_frames[1])
+        ax.scatter(distribution[2,0],distribution[2,1], linewidth=10, alpha=0.9, c=c_frames[1])
         # ax.plot(distribution[:,0],distribution[:,1], 'b*',  linewidth=0.2)
         ax.plot(X1[:,0],X1[:,1], c= [255.0/256.0,20.0/256.0,147.0/256.0])
+        # plot connection between trajectory and target distribution 
+        mask_traj=self.transport.mask_traj
+        mask_source=self.transport.mask_source
+        traj_connected=  X1[mask_traj]
+        target_connected= self.transport.target_distribution[mask_source]
+        for i in range(len(traj_connected)):
+            plt.plot([traj_connected[i,0], target_connected[i,0]], [traj_connected[i,1], target_connected[i,1]], 'k-', lw=1)
+        
+        #plot the target distribution
+        ax.plot(distribution[:,0],distribution[:,1], 'b*',  linewidth=0.2)
