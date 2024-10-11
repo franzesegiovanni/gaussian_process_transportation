@@ -9,7 +9,7 @@ plots = [
     imread(script_path + 'hmm.png'),
     imread(script_path + 'tp_gmm.png'),
     imread(script_path + 'la.png'),
-    imread(script_path + 'gpt.png'),
+    imread(script_path + 'gpt_dataset.png'),
     imread(script_path + 'hmm_ood.png'),
     imread(script_path + 'tp_gmm_ood.png'),
     imread(script_path + 'la_ood.png'),
