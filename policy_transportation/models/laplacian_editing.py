@@ -45,7 +45,7 @@ class Laplacian_Editing():
         assignment_costs = distance_matrix[row_ind, col_ind]
 
         # Determine a threshold for outliers (e.g., mean + 2 standard deviations)
-        threshold = np.mean(assignment_costs) + 1 * np.std(assignment_costs)
+        threshold = np.mean(assignment_costs) + 2 * np.std(assignment_costs)
 
         # Identify outliers
         inliers = [pair for pair, cost in zip(optimal_assignment, assignment_costs) if not(cost > threshold)]
