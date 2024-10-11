@@ -20,11 +20,11 @@ results_area=[[]]
 results_dtw= [[]]
 results_fde= [[]]
 results_fad= [[]]
-name= ['LA']
+name= ['LE']
 script_path = str(os.path.dirname(__file__))
 filename = script_path + '/data/' + 'reach_target'
 policy=Multiple_Reference_Frames_LA()
-policy.load_dataset(filename)
+policy.load_dataset(filename, use_extra_points=False)
 
 for j in range(number_repetitions):
     # fig, ax = plt.subplots()
@@ -57,7 +57,7 @@ for j in range(number_repetitions):
     ax=None
     A_new, b_new = generate_frame_orientation(filename)
     index_source = random.choice(range(len(policy.demos_A)))  
-    policy.load_test_dataset(A_new, b_new)
+    policy.load_test_dataset(A_new, b_new, use_extra_points=False)
     for k in range(len(A_new)):
         fde, fda = policy.generalize(index_source, k,  ax=ax, compute_metrics=True )
         results_fde_new[0].append(fde)
