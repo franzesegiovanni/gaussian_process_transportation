@@ -21,12 +21,16 @@ class AffineTransform():
         self.T_centroid = np.mean(target_points, axis=0)
         self.source_points_centered=source_points-self.S_centroid
         self.target_points_centered=target_points-self.T_centroid
+        H = np.dot(np.transpose(self.source_points_centered),  self.target_points_centered)
+        rank_H = np.linalg.matrix_rank(H)
 
-        if not self.do_rotation or (source_points.shape[1] == 2 and source_points.shape[0] < 2) or (source_points.shape[1] == 3 and source_points.shape[0] < 3):
+        if not self.do_rotation:
             self.rotation_matrix= np.eye(source_points.shape[1])
-        else:    
-            #  Compute covariance matrix
-            H = np.dot(np.transpose(self.source_points_centered),  self.target_points_centered)
+            print("Rotation matrix is not computed and set to identity...")
+        elif rank_H < source_points.shape[1]:
+            self.rotation_matrix= np.eye(source_points.shape[1])
+            print("Rotation matrix cannot be uniquely determined. Set to identity...")
+        else:   
 	        # Perform SVD
             U, S, Vt = np.linalg.svd(H)
             V=Vt.T
