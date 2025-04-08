@@ -13,7 +13,8 @@ class GaussianProcessTransportation():
         super(GaussianProcessTransportation, self).__init__()
         self.method=PolicyTransportation(GaussianProcess(kernel=kernel_transport))
 
-    
+    def set_kernel(self, kernel_transport):
+        self.method=PolicyTransportation(GaussianProcess(kernel=kernel_transport))
     def fit_transportation(self, do_scale=False, do_rotation=True):
         self.method.fit(self.source_distribution, self.target_distribution, do_scale=do_scale, do_rotation=do_rotation)
 
