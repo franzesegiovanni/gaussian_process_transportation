@@ -64,17 +64,32 @@ class PolicyTransportation():
         return vel_transported, var_vel_transported
         
     def transport_orientation(self, pos, ori):
-        J_phi=self.delta_map.derivative(pos)
+
+        pos_rotated=self.affine_transform.predict(pos)
         J_gamma= self.affine_transform.derivative(pos)
-        J_phi= J_gamma + J_phi @ J_gamma
+
+        J_psi= self.delta_map.derivative(pos_rotated, return_var=False)
+        
+        J_phi= J_gamma + J_psi @ J_gamma
 
         print("Is the map locally diffeomorphic?", np.all(np.linalg.det(J_phi) > 0))
         if J_phi[0].shape[0]==3:
-    
             quat=quaternion.from_float_array(ori)
             quat_J_phi = quaternion.from_rotation_matrix(J_phi, nonorthogonal=True)
             quat_transport=quat_J_phi * quat
             ori_transported= quaternion.as_float_array(quat_transport)
+
+            # OLD CODE: This is how it was done before. I am still not sure which one works better
+            # ori_transported=np.zeros(ori.shape)
+            # for i in range(ori.shape[0]):
+            #     rot_gp_norm=J_phi[i]/np.linalg.det(J_phi[i])
+            #     quat_i=quaternion.from_float_array(ori[i,:])
+            #     rot_i=quaternion.as_rotation_matrix(quat_i)
+            #     rot_final=rot_gp_norm @ rot_i
+            #     product_quat=quaternion.from_rotation_matrix(rot_final)
+            #     if quat_i.w*product_quat.w  + quat_i.x * product_quat.x+ quat_i.y* product_quat.y + quat_i.z * product_quat.z < 0:
+            #         product_quat = - product_quat
+            #     ori_transported[i,:]=np.array([product_quat.w, product_quat.x, product_quat.y, product_quat.z])
             return ori_transported
 
         else:
