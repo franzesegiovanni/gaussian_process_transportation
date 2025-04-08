@@ -7,6 +7,7 @@ This code is part of TERI (TEaching Robots Interactively) project
 from policy_transportation import GaussianProcessTransportation as Transport
 from sensors.tag_detector import Tag_Detector
 from sensors.surface_pointcloud_detector import Surface_PointCloud_Detector
+from sensors.basic_loader import BasicLoader
 from SIMPLe import SIMPLe
 import rospy
 
@@ -22,6 +23,13 @@ class GPT_tag(Transport, Tag_Detector, SIMPLe):
         rospy.init_node('GPT', anonymous=True)
         rospy.sleep(2)
         super(GPT_tag,self).__init__()
+
+class GPT_DINO(Transport, BasicLoader, SIMPLe):
+    def __init__(self):
+        rospy.init_node('GPT', anonymous=True)
+        rospy.sleep(2)
+        super(GPT_DINO,self).__init__()
+
 
 
         
