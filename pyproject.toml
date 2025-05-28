@@ -17,7 +17,8 @@ dependencies = [
   "pandas",
   "pynput",
   "scikit_learn",
-  "scipy"
+  "scipy", 
+  "similaritymeasures"
 ]
 
 [tool.setuptools.packages.find]
