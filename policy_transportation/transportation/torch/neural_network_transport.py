@@ -36,19 +36,13 @@ class Neural_Transport():
         #Deform Trajactories 
         self.training_traj_old=self.training_traj
         self.traj_rotated=self.affine_transform.predict(self.training_traj)
-        self.delta_map_mean, self.std= self.gp_delta_map.predict(self.traj_rotated, return_std=True)
-        # convert to numpyu array
-        self.delta_map_mean=self.delta_map_mean.detach().cpu().numpy()
-        self.std=self.std.detach().cpu().numpy()
+        self.delta_map_mean= self.delta_map.predict(self.traj_rotated)
         self.training_traj = self.traj_rotated + self.delta_map_mean 
 
         #Deform Deltas and orientation
         if  hasattr(self, 'training_delta') or hasattr(self, 'training_ori'):
             pos=(np.array(self.traj_rotated))
-            Jacobian, Jacobian_std=self.gp_delta_map.derivative(pos)
-            # convert the Jacobian and Jacobian_std to numpy
-            Jacobian=Jacobian.detach().cpu().numpy()
-            Jacobian_std=Jacobian_std.detach().cpu().numpy()
+            Jacobian =self.delta_map.derivative(pos)
 
             rot_gp= np.eye(Jacobian[0].shape[0]) + Jacobian
             rot_affine= self.affine_transform.rotation_matrix
@@ -59,12 +53,9 @@ class Neural_Transport():
             self.training_delta = self.training_delta[:,:,np.newaxis]
 
             self.training_delta=  derivative_affine @ self.training_delta
-            self.var_vel_transported=Jacobian_std**2 @ self.training_delta**2
 
             self.training_delta= rot_gp @ self.training_delta
             self.training_delta=self.training_delta[:,:,0]
-            self.var_vel_transported=self.var_vel_transported[:,:,0]
-
 
         if  hasattr(self, 'training_ori'):   
             quat_demo=quaternion.from_float_array(self.training_ori)
@@ -75,6 +66,6 @@ class Neural_Transport():
 
 
     def sample_transportation(self):
-        training_traj_samples= self.gp_delta_map.samples(self.traj_rotated)
+        training_traj_samples= self.delta_map.samples(self.traj_rotated)
         return training_traj_samples
 

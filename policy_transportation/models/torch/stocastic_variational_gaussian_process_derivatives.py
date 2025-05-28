@@ -123,7 +123,7 @@ class SVGP(ApproximateGP):
             
             k_star_star=self.covar_module(x,x)
             sigma_exact = k_star_star - self.k_star @ self.K_inv_svgp @ self.k_star.transpose(-1,-2)
-            sigma_exact= sigma_exact.evaluate()
+            # sigma_exact= sigma_exact.evaluate()
             std_exact=torch.sqrt(sigma_exact.diagonal(dim1=-2,dim2=-1))
             mu_exact= mu_exact.squeeze()
             mu_exact= mu_exact.permute(1,0)
