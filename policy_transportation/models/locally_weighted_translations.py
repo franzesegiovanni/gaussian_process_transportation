@@ -8,14 +8,14 @@ from scipy.spatial import distance
 
 # The original icea was formulated in the paper : "Perrin, Nicolas, and Philipp Schlehuber-Caissier. "Fast diffeomorphic matching to learn globally asymptotically stable nonlinear dynamical systems." Systems & Control Letters 96 (2016): 51-59."
 class Iterative_Locally_Weighted_Translations():
-    def __init__(self, para):
+    def __init__(self, num_iterations=30, rho=1, beta=0.9):
         # para: [k, rho, beta]
         # source: [n,7]
         # target: [n,7]
-        self.k = int(para[0])
-        self.para = para
+        self.num_iterations = int(num_iterations)
+        self.rho = rho
+        self.beta = beta
 
-    
     def fit(self, source, target):
         self.source = np.copy(source)
         self.target = np.copy(target)
@@ -24,14 +24,14 @@ class Iterative_Locally_Weighted_Translations():
         start_time = time.time()
         self.learnt_data = self.mapping(self.source, self.target)
         print ('Number of points =',self.nums,'in',self.nbState,'D space.')
-        print ('iteration number =',self.k)
+        print ('iteration number =',self.num_iterations)
         print ('training time', time.time() - start_time, '[s].')
         self.mapping_error()
         
     def mapping(self, x, y):
         num_data = x.shape[0]
         # initialization
-        k = self.k
+        k = self.num_iterations
         N = self.nbState
         rho_beta = np.zeros((k,2))
         p = np.zeros((k,N))   #  position transform center
@@ -47,9 +47,9 @@ class Iterative_Locally_Weighted_Translations():
             v0 = (q - p[i,:])
             # v0 = para[1]*(q - p[i,:])  # translation vector with the max distance, [2,]
             norm_v0 = np.sqrt(np.sum(v0**2))
-            up_bound = self.para[1] *  np.sqrt(np.exp(1.)/2)/norm_v0 # for rho upbound to keep the diffeomorphism.
+            up_bound = self.rho *  np.sqrt(np.exp(1.)/2)/norm_v0 # for rho upbound to keep the diffeomorphism.
             x0 = np.array([[up_bound/10,0.5]])                 # initial values for [rho, beta]
-            bnds = (0,up_bound),(0.9,0.9)  # rho, beta bounds
+            bnds = (0,up_bound),(self.beta,self.beta)  # beta bounds
             args = (xi, v0, p[i,:], y, num_data)
             res_p = minimize(self.pos_cost_fun,x0.reshape(-1,),args,bounds=bnds) # solve the 2-parameter minimum problem
             rho_beta[i,:] = res_p.x
@@ -67,7 +67,7 @@ class Iterative_Locally_Weighted_Translations():
         #           y: [n,3],  [x,y,z]
         #           J:  [n, 3,3], Jacobian of forward mapping
         rho_beta, p, v = self.learnt_data[0], self.learnt_data[1], self.learnt_data[2]  # position data
-        k = self.k
+        k = self.num_iterations
         y = np.copy(x)    
         sigma_total = np.zeros_like(y)
         for i in range(k):
@@ -85,7 +85,7 @@ class Iterative_Locally_Weighted_Translations():
     
     def derivative(self, x, return_var=False):
         rho_beta, p, v = self.learnt_data[0], self.learnt_data[1], self.learnt_data[2]  # position data
-        k = self.k
+        k = self.num_iterations
         N = self.nbState
         J = np.identity(N)
         J=np.repeat(J[np.newaxis, :, :], x.shape[0], axis=0)

@@ -19,7 +19,7 @@ class DiffeomorphicTransportation():
 
         source_distribution=self.affine_transform.predict(self.source_distribution)  
 
-        self.transportation_map=Iterative_Locally_Weighted_Translations(para=[self.num_iterations, 1, 0.9])
+        self.transportation_map=Iterative_Locally_Weighted_Translations(num_iterations=self.num_iterations)
 
         self.transportation_map.fit(source=source_distribution, target=self.target_distribution)  
 

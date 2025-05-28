@@ -40,7 +40,7 @@ class GaussianProcessTransportation():
 
         if hasattr(self, 'training_delta'):
             self.training_delta, self.var_vel_transported =self.method.transport_velocity(self.training_traj_old, self.training_delta)
-            self.diffeo_mask=self.method.diffeo_mask
+            self.diffeo_mask=self.method.is_diffeomorphic_on(self.training_traj_old)
         if hasattr(self, 'training_ori'):
             self.training_ori=self.method.transport_orientation(self.training_traj_old, self.training_ori)
 

@@ -7,10 +7,11 @@ This code is part of TERI (TEaching Robots Interactively) project
 
 #%%
 import numpy as np
-from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
+from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
-from policy_transportation.transportation.diffeomorphic_transportation import DiffeomorphicTransportation as Transport
+from policy_transportation.transportation.transportation import PolicyTransportation
+from policy_transportation.models.locally_weighted_translations import Iterative_Locally_Weighted_Translations
 import pathlib
 from policy_transportation.plot_utils import plot_vector_field
 from policy_transportation.utils import resample
@@ -52,24 +53,22 @@ plt.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
 plt.legend(["Demonstration","Surface","New Surface"])
 #%% Transport the dynamical system on the new surface
 
-transport=Transport(num_iterations=30)
-transport.source_distribution=source_distribution 
-transport.target_distribution=target_distribution
-transport.training_traj=X
-transport.training_delta=deltaX
+transport=PolicyTransportation()
 
-print('Transporting the dynamical system on the new surface')
-transport.fit_transportation(do_scale=False, do_rotation=True)
-transport.apply_transportation()
-X1=transport.training_traj
-deltaX1=transport.training_delta 
+transport.set_method(Iterative_Locally_Weighted_Translations(num_iterations=30), is_residual=False)
+
+transport.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
+
+X_hat=transport.transport(X, return_std=False)
+deltaX_hat=transport.transport_velocity(X, deltaX, return_var=False)
+# quat_hat= transport.transport_orientation(X, quat)
 
 # Fit the Gaussian Process dynamical system   
 print('Fitting the GP dynamical system on the transported trajectory')
 k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2),  nu=2.5) + WhiteKernel(0.01)    
 gp_deltaX1=GPR(kernel=k_deltaX1)
-gp_deltaX1.fit(X1, deltaX1)
-x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 100)
-y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 100)
-plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,target_distribution )
+gp_deltaX1.fit(X_hat, deltaX_hat)
+x1_grid=np.linspace(np.min(X_hat[:,0]-10), np.max(X_hat[:,0]+10), 100)
+y1_grid=np.linspace(np.min(X_hat[:,1]-10), np.max(X_hat[:,1]+10), 100)
+plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X_hat,target_distribution )
 plt.show()
