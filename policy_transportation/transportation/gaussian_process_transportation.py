@@ -5,7 +5,7 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 from policy_transportation import GaussianProcess
-from policy_transportation.transportation.policy_transportation import PolicyTransportation
+from policy_transportation.transportation.transportation import PolicyTransportation
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel as C
 import numpy as np  
 class GaussianProcessTransportation():
@@ -15,6 +15,17 @@ class GaussianProcessTransportation():
 
     def set_kernel(self, kernel_transport):
         self.method=PolicyTransportation(GaussianProcess(kernel=kernel_transport))
+    
+    def set_source_distribution(self, source_distribution):
+        self.source_distribution= source_distribution
+    def set_target_distribution(self, target_distribution):
+        self.target_distribution= target_distribution
+    def set_training_traj(self, training_traj):
+        self.training_traj= training_traj
+    def set_training_delta(self, training_delta):
+        self.training_delta= training_delta
+    def set_training_ori(self, training_ori):
+        self.training_ori= training_ori
     def fit_transportation(self, do_scale=False, do_rotation=True):
         self.method.fit(self.source_distribution, self.target_distribution, do_scale=do_scale, do_rotation=do_rotation)
 
@@ -22,8 +33,6 @@ class GaussianProcessTransportation():
         source_transported=self.method.transport(self.source_distribution)[0]
         #compute rmse
         error=np.sqrt(np.mean((source_transported-self.target_distribution)**2))
-        # error = np.max(np.abs(source_transported-self.target_distribution))
-        # error = error/np.sqrt(np.sum((self.source_distribution-self.target_distribution)**2))
         return error
     def apply_transportation(self):
         self.training_traj_old=self.training_traj

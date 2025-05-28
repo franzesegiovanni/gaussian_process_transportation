@@ -63,13 +63,6 @@ class KMP_transportation():
             # self.training_delta= J @ self.training_delta
             # self.training_delta = self.training_delta[:,:,0]
             self.training_delta[:-1,:]=(self.training_traj[1:,:]- self.training_traj[:-1,:])
-        if hasattr(self, 'training_ori'):
-            J = (self.training_traj[1:,:,np.newaxis]- self.training_traj[:-1,:,np.newaxis]) @ np.linalg.pinv(self.training_traj_old[1:,:,np.newaxis]- self.training_traj_old[:-1,:,np.newaxis])
-            J = np.concatenate((J, J[-1:,:,:]), axis=0)
-            quat_demo=quaternion.from_float_array(self.training_ori)
-            quat_gp = quaternion.from_rotation_matrix(J, nonorthogonal=True)
-            quat_transport=quat_gp * quat_demo
-            self.training_ori= quaternion.as_float_array(quat_transport)
 
     def accuracy(self):
         traj_at_tstar= self.movement_primitive.predict(self.time_star)

@@ -17,7 +17,13 @@ from policy_transportation.utils import resample
 import warnings
 from policy_transportation.plot_utils import draw_error_band
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib
 
+use_latex = False   
+if use_latex:
+    matplotlib.rcParams['text.usetex'] = True
+else:
+    matplotlib.rcParams['text.usetex'] = False
 warnings.filterwarnings("ignore")
 #%% Load the drawings
 def create_vectorfield(model,datax_grid,datay_grid):
@@ -89,7 +95,7 @@ axs[0, 0].set_ylim(y_lim)
 axs[0, 0].legend(fontsize=14)
 # Add LaTeX symbol at the top left
 latex_symbol = r'$ {x} $'  # Replace '\alpha' with your desired LaTeX symbol
-axs[0, 0].text(0.05, 0.95, latex_symbol, transform=axs[0, 0].transAxes, fontsize=50, va='top', ha='left',  usetex=True)
+axs[0, 0].text(0.05, 0.95, latex_symbol, transform=axs[0, 0].transAxes, fontsize=50, va='top', ha='left',  usetex=use_latex)
 
 u,v, std=create_vectorfield(gp_deltaX, x_grid,y_grid)
 var=np.sum(std**2,axis=1)
@@ -104,7 +110,7 @@ axs[0, 1].set_yticklabels([])
 stream = axs[0, 1].streamplot(x_grid, y_grid, u, v, density=1, color=std, cmap='plasma')
 
 latex_symbol = r'$ {\dot{x}} $'  # Replace '\alpha' with your desired LaTeX symbol
-axs[0, 1].text(0.05, 0.95, latex_symbol, transform=axs[0, 1].transAxes, fontsize=50, va='top', ha='left',  usetex=True)
+axs[0, 1].text(0.05, 0.95, latex_symbol, transform=axs[0, 1].transAxes, fontsize=50, va='top', ha='left',  usetex=use_latex)
 
 divider = make_axes_locatable(axs[0, 1])
 cax = divider.append_axes("right", size="5%", pad=-0.25)  # adjust the size and pad as needed
@@ -144,7 +150,7 @@ draw_error_band(axs[1, 0], X1[:,0], X1[:,1], err=2*std[:], facecolor= [255.0/256
 axs[1, 0].legend(fontsize=14, loc='lower left')
 
 latex_symbol = r'$ {\hat{x}} $'  # Replace '\alpha' with your desired LaTeX symbol
-axs[1, 0].text(0.05, 0.95, latex_symbol, transform=axs[1, 0].transAxes, fontsize=50, va='top', ha='left',  usetex=True)
+axs[1, 0].text(0.05, 0.95, latex_symbol, transform=axs[1, 0].transAxes, fontsize=50, va='top', ha='left',  usetex=use_latex)
 
 
 #We should fit a gp for the aleatoric noise. 
@@ -184,7 +190,7 @@ axs[1, 1].set_yticklabels([])
 
 
 latex_symbol = r'$ {\dot{\hat{x}}} $'  # Replace '\alpha' with your desired LaTeX symbol
-axs[1, 1].text(0.05, 0.95, latex_symbol, transform=axs[1, 1].transAxes, fontsize=50, va='top', ha='left',  usetex=True)
+axs[1, 1].text(0.05, 0.95, latex_symbol, transform=axs[1, 1].transAxes, fontsize=50, va='top', ha='left',  usetex=use_latex)
 
 stream = axs[1, 1].streamplot(dataXX, dataYY, u, v, density=1, color=std_hetero, cmap='plasma')
 

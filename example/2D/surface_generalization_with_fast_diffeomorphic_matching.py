@@ -15,12 +15,11 @@ import pathlib
 from policy_transportation.plot_utils import plot_vector_field
 from policy_transportation.utils import resample
 import warnings
-from policy_transportation.plot_utils import draw_error_band
 warnings.filterwarnings("ignore")
 #%% Load the drawings
 
 source_path = str(pathlib.Path(__file__).parent.absolute())  
-data =np.load(source_path+ '/data/'+str('example')+'.npz')
+data =np.load(source_path+ '/data/'+str('example2')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
@@ -42,7 +41,7 @@ gp_deltaX=GPR(kernel=k_deltaX)
 gp_deltaX.fit(X, deltaX)
 x_grid=np.linspace(np.min(X[:,0]-10), np.max(X[:,0]+10), 100)
 y_grid=np.linspace(np.min(X[:,1]-10), np.max(X[:,1]+10), 100)
-plot_vector_field(gp_deltaX, x_grid,y_grid,X,target_distribution)
+plot_vector_field(gp_deltaX, x_grid,y_grid,X,source_distribution)
 
 fig = plt.figure(figsize = (12, 7))
 plt.xlim([-50, 50-1])
@@ -72,13 +71,5 @@ gp_deltaX1=GPR(kernel=k_deltaX1)
 gp_deltaX1.fit(X1, deltaX1)
 x1_grid=np.linspace(np.min(X1[:,0]-10), np.max(X1[:,0]+10), 100)
 y1_grid=np.linspace(np.min(X1[:,1]-10), np.max(X1[:,1]+10), 100)
-plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,target_distribution)
-# plt.scatter(X1[transport.diffeo_mask,0],X1[transport.diffeo_mask,1], color=[0,0,1], marker='x', s=100)
-# plt.quiver(X1[:,0], X1[:,1], deltaX1[:,0], deltaX1[:,1], color=[1,0,0],  scale=None)
-fig, ax = plt.subplots()
-ax.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,0], label="New Surface")
-draw_error_band(ax, X1[:,0], X1[:,1], err=2*transport.std, facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.4, loop=True)
-ax.scatter(X1[:,0],X1[:,1], label="Tranported demonstration")
-#save the figure
-# plt.savefig(source_path+'/lwt_uncertainty_16.png')
+plot_vector_field(gp_deltaX1, x1_grid,y1_grid,X1,target_distribution )
 plt.show()

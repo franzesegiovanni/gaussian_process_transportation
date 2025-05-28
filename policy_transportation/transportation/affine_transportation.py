@@ -5,10 +5,8 @@ Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 from policy_transportation import  AffineTransform
-import pickle
 import numpy as np
 import quaternion
-import matplotlib.pyplot as plt
 class AffineTransportation():
     def __init__(self):
         super(AffineTransportation, self).__init__()

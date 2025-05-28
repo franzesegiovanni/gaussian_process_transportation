@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: policy_transportation
+Version: 0.1.0
+Summary: Gaussian Process Transportation
+Author-email: Giovanni Franzese <g.franzese@tudelft.nl>
+License-Expression: MIT
+Requires-Python: >=3.6
+License-File: LICENSE
+Requires-Dist: matplotlib
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: pynput
+Requires-Dist: scikit_learn
+Requires-Dist: scipy
+Dynamic: license-file

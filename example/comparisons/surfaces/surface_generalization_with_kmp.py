@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 #%% Load the drawings
 
 script_path = str(os.path.dirname(__file__))
-data =np.load(script_path+'/data/'+str('example4')+'.npz')
+data =np.load(script_path+'/data/'+str('example0')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']

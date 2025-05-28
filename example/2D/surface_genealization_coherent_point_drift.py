@@ -10,14 +10,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from policy_transportation.models.coherent_point_drift import DeformableRegistration as Transport
 import pathlib
-from policy_transportation.plot_utils import plot_vector_field, plot_vector_field_minvar
 from policy_transportation.utils import resample
 import warnings
 warnings.filterwarnings("ignore")
 #%% Load the drawings
 
 source_path = str(pathlib.Path(__file__).parent.absolute())  
-data =np.load(source_path+ '/data/'+str('example4')+'.npz')
+data =np.load(source_path+ '/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
