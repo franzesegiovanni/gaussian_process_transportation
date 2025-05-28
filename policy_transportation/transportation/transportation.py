@@ -87,6 +87,16 @@ class PolicyTransportation():
             return J_phi
 
     def transport_velocity(self, pos, vel, return_var=True):
+        """
+        Transport velocities using the learned transformation.
+        Parameters:
+            pos (numpy.ndarray): Input positions, shape (n, 2) or (n, 3) where n is the number of points.
+            vel (numpy.ndarray): Input velocities, shape (n, 2) or (n, 3) where n is the number of points.
+            return_var (bool): Whether to return the variance of the transported velocities.
+        Returns:
+            numpy.ndarray: Transported velocities, same shape as input.
+            numpy.ndarray: Variance of the transported velocities if return_var=True, same shape as input.
+        """
         if return_var:
             J_phi, J_psi_var = self.compute_jacobian(pos, return_var=return_var)
         else:
@@ -107,7 +117,12 @@ class PolicyTransportation():
             return vel_transported
         
     def transport_orientation(self, pos, ori):
-
+        """
+        Transport orientations using the learned transformation.
+        Parameters:
+            pos (numpy.ndarray): Input positions, shape (n, 2) or (n, 3) where n is the number of points.
+            ori (numpy.ndarray): Input orientations, shape (n, 4) where n is the number of points and each orientation is represented as a quaternion. The quaternion should be in the alphabetic order [w, x, y, z].
+        """
         J_phi= self.compute_jacobian(pos, return_var=False)
 
         if J_phi[0].shape[0]==3:
