@@ -4,6 +4,7 @@ from matplotlib import cm
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from tqdm import tqdm
+from scipy.spatial.transform import Rotation
 
 def plot_vector_field(model,datax_grid,datay_grid,demo,surface):
     dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
@@ -92,3 +93,28 @@ def create_vectorfield(model,datax_grid,datay_grid):
     vel, std = model.predict(pos, return_std=True)
     u, v = vel[:, 0].reshape(dataXX.shape), vel[:, 1].reshape(dataXX.shape)
     return u, v, std
+
+# Function to create orientation frames from quaternions
+def plot_orientation_frame(ax, position, orientation, length=0.2, skip=10):
+    for i in range(0, len(position), skip):
+        # Convert quaternion to rotation matrix (w,x,y,z format)
+        quat = orientation[i]
+        rot = Rotation.from_quat([quat[1], quat[2], quat[3], quat[0]])  # scipy uses x,y,z,w format
+        
+        # Create basis vectors
+        basis = np.eye(3) * length
+        rotated_basis = rot.apply(basis)
+        
+        # Get position
+        pos = position[i]
+        
+        # Plot each axis (RGB for XYZ)
+        ax.quiver(pos[0], pos[1], pos[2], 
+                 rotated_basis[0, 0], rotated_basis[0, 1], rotated_basis[0, 2], 
+                 color='red', length=length)
+        ax.quiver(pos[0], pos[1], pos[2], 
+                 rotated_basis[1, 0], rotated_basis[1, 1], rotated_basis[1, 2], 
+                 color='green', length=length)
+        ax.quiver(pos[0], pos[1], pos[2], 
+                 rotated_basis[2, 0], rotated_basis[2, 1], rotated_basis[2, 2], 
+                 color='blue', length=length)
