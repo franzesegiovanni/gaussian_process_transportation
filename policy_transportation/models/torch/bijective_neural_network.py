@@ -9,66 +9,65 @@ import numpy as np
 import random
 
 class BiJectiveNetwork():
-    def __init__(self, X, Y):
-        seed = random.randint(1, 10000)
+	def __init__(self, num_epochs=20, num_blocks = 4, num_hidden = 20, t_act = 'elu', s_act = 'elu'):
+		seed = random.randint(1, 10000)
 
 		# Set random seed for PyTorch
-        torch.manual_seed(seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed(seed)
-        self.use_cuda = torch.cuda.is_available()
-        self.use_cuda=False
-        num_blocks = 4                 # number of coupling layers
-        num_hidden = 20                        # hidden layer dimensions (there are two of hidden layers)
-        # only for fcnn!
-        t_act = 'elu'                           # activation fcn in each network (must be continuously differentiable!)
-        s_act = 'elu'
-        input_size=X.shape[1]
-        self.nn= BijectionNet(num_dims=input_size, num_blocks=num_blocks, num_hidden=num_hidden, s_act=s_act, t_act=t_act)
-        if self.use_cuda:
-            self.nn=self.nn.cuda()
-        X=torch.from_numpy(X).float()
-        Y=torch.from_numpy(Y).float()
-        train_dataset = TensorDataset(X, Y)
-        self.train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True) 
+		torch.manual_seed(seed)
+		if torch.cuda.is_available():
+			torch.cuda.manual_seed(seed)
+		self.use_cuda = torch.cuda.is_available()
+		
+		self.num_epochs = num_epochs
+		self.num_blocks = num_blocks
+		self.num_hidden = num_hidden
+		self.t_act = t_act
+		self.s_act = s_act
 
-
-    def fit(self, num_epochs=100):
-        # Define the loss function and optimizer
-
-        criterion = nn.SmoothL1Loss()  # Mean Squared Error for regression
-        optimizer = optim.Adam(self.nn.parameters(), lr=0.001)
-
-    
-        # Training loop
-        epochs_iter = tqdm(range(num_epochs))
-        for epoch in epochs_iter:
-            for x_batch, y_batch in tqdm(self.train_loader, desc="Minibatch", leave=False):
-                # Forward pass
-                if self.use_cuda:
-                    x_batch=x_batch.cuda()
-                    y_batch=y_batch.cuda()
-                outputs = self.nn(x_batch)[0]
-                loss = criterion(outputs, y_batch)
-                # Backward and optimize
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-             
-    def derivative(self, x): 
-        x=torch.from_numpy(x).float()
-        if self.use_cuda:
-            x=x.cuda()
-        J = self.nn(x)[1]
-        return J.detach().numpy()
-    
-    def predict(self, x): 
-        x=torch.from_numpy(x).float()
-        if self.use_cuda:
-            x=x.cuda()
-        predictions = self.nn(x)[0]
-        return predictions.detach().cpu().numpy()
-         
+	def fit(self, X, Y):
+		input_size = X.shape[1]
+		self.nn = BijectionNet(num_dims=input_size, num_blocks=self.num_blocks, 
+				   num_hidden=self.num_hidden, s_act=self.s_act, t_act=self.t_act)
+		if self.use_cuda:
+			self.nn = self.nn.cuda()
+		X = torch.from_numpy(X).float()
+		Y = torch.from_numpy(Y).float()
+		train_dataset = TensorDataset(X, Y)
+		self.train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True) 
+		
+		# Define the loss function and optimizer
+		criterion = nn.SmoothL1Loss()  # Mean Squared Error for regression
+		optimizer = optim.Adam(self.nn.parameters(), lr=0.001)
+		
+		# Training loop
+		epochs_iter = tqdm(range(self.num_epochs))
+		for epoch in epochs_iter:
+			for x_batch, y_batch in tqdm(self.train_loader, desc="Minibatch", leave=False):
+				# Forward pass
+				if self.use_cuda:
+					x_batch = x_batch.cuda()
+					y_batch = y_batch.cuda()
+				outputs = self.nn(x_batch)[0]
+				loss = criterion(outputs, y_batch)
+				# Backward and optimize
+				optimizer.zero_grad()
+				loss.backward()
+				optimizer.step()
+			 
+	def derivative(self, x, return_var=False): 
+		x=torch.from_numpy(x).float()
+		if self.use_cuda:
+			x=x.cuda()
+		J = self.nn(x)[1]
+		return J.detach().cpu().numpy()  # Added .cpu() before .numpy()
+	
+	def predict(self, x, return_std=False): 
+		x=torch.from_numpy(x).float()
+		if self.use_cuda:
+			x=x.cuda()
+		predictions = self.nn(x)[0]
+		return predictions.detach().cpu().numpy()
+		 
 class BijectionNet(nn.Sequential):
 	"""
 	A sequential container of flows based on coupling layers.
@@ -130,8 +129,8 @@ class BijectionNet(nn.Sequential):
 				J = torch.matmul(J_module, J)
 				inputs = module(inputs, mode)
 		return inputs, J        
-        
-    
+		
+	
 class CouplingLayer(nn.Module):
 	""" An implementation of a coupling layer
 	from RealNVP (https://arxiv.org/abs/1605.08803).
@@ -142,8 +141,9 @@ class CouplingLayer(nn.Module):
 		super(CouplingLayer, self).__init__()
 
 		self.num_inputs = num_inputs
-		self.mask = mask
-
+		# Register mask as a buffer instead of an attribute
+		self.register_buffer('mask', mask)
+		
 		if base_network == 'fcnn':
 			self.scale_net = FCNN(in_dim=num_inputs, out_dim=num_inputs, hidden_dim=num_hidden, act=s_act)
 			self.translate_net = FCNN(in_dim=num_inputs, out_dim=num_inputs, hidden_dim=num_hidden, act=t_act)
@@ -279,4 +279,4 @@ def get_jacobian(net, x, output_dims, reshape_flag=True):
 	J = autograd.grad(y_m, x_m, mask, create_graph=True)[0]
 	if reshape_flag:
 		J = J.reshape(n, output_dims, output_dims)
-	return J        
+	return J

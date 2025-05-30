@@ -25,9 +25,9 @@ class Neural_Transport():
 
         source_distribution=self.affine_transform.predict(self.source_distribution)  
  
-        self.gp_delta_map=BiJectiveNetwork(source_distribution, self.target_distribution)
+        self.gp_delta_map=BiJectiveNetwork(num_epochs=num_epochs)
 
-        self.gp_delta_map.fit(num_epochs=num_epochs)  
+        self.gp_delta_map.fit(source_distribution, self.target_distribution)  
 
     def apply_transportation(self):
               
