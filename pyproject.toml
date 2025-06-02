@@ -18,7 +18,9 @@ dependencies = [
   "pynput",
   "scikit_learn",
   "scipy", 
-  "similaritymeasures"
+  "similaritymeasures",
+  "quaternion", 
+  "numpy-quaternion"
 ]
 
 [tool.setuptools.packages.find]

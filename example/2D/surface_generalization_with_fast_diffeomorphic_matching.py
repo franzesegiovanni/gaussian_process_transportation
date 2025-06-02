@@ -7,10 +7,11 @@ This code is part of TERI (TEaching Robots Interactively) project
 
 #%%
 import numpy as np
-from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel as C
+from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
 from policy_transportation.transportation.transportation import PolicyTransportation
+
 from policy_transportation.models.locally_weighted_translations import Iterative_Locally_Weighted_Translations
 import pathlib
 from policy_transportation.plot_utils import plot_vector_field
@@ -55,7 +56,8 @@ plt.legend(["Demonstration","Surface","New Surface"])
 
 transport=PolicyTransportation()
 
-transport.set_method(Iterative_Locally_Weighted_Translations(num_iterations=30), is_residual=False)
+method = Iterative_Locally_Weighted_Translations(num_iterations=10, rho=0.3, beta=0.9)
+transport.set_method(method=method, is_residual=False)
 
 transport.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
 

@@ -6,12 +6,9 @@ This code is part of TERI (TEaching Robots Interactively) project
 """
 import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 from scipy import linalg
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
-from tqdm import tqdm
+
+# from tqdm import tqdm
 
 class GaussianProcess():
     def __init__(self, kernel, alpha=1e-10, optimizer='fmin_l_bfgs_b', n_restarts_optimizer=5, n_targets=None):

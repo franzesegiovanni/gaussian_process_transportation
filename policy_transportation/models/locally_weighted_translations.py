@@ -120,7 +120,7 @@ class Iterative_Locally_Weighted_Translations():
 
         error = np.sqrt(np.sum((y_pred- self.target)**2,axis=1))
         print ('######### Estimation')
-        print ('Total pos error mean+std:', np.mean(error), np.std(error), "[m]")
+        print ('Total mean pos error:', np.mean(error), "[m]")
 
     def samples(self, X):
         # laplacian editing is deterministic, then we return the same sample

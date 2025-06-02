@@ -9,6 +9,9 @@ This code is part of TERI (TEaching Robots Interactively) project
 import numpy as np
 import matplotlib.pyplot as plt
 from policy_transportation.transportation.transportation import PolicyTransportation
+from policy_transportation.models.torch.bijective_neural_network import BiJectiveNetwork
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel as C
+from policy_transportation import GaussianProcess as GPR
 from policy_transportation.models.locally_weighted_translations import Iterative_Locally_Weighted_Translations
 import pathlib
 import warnings
@@ -36,10 +39,13 @@ orientation_validation = trajectory_validation[:, 4:8]  # Extract orientation da
 #%% Transport the dynamical system on the new surface
 
 transport=PolicyTransportation()
-
-transport.set_method(Iterative_Locally_Weighted_Translations(num_iterations=30,rho=0.5, beta=0.9), is_residual=False)
+method = Iterative_Locally_Weighted_Translations(num_iterations=10, rho=0.3, beta=0.9)
+# method = GPR(kernel=C(0.1) * RBF(length_scale=[0.1]) + WhiteKernel(0.0001))
+# method = BiJectiveNetwork(num_epochs=1000, num_blocks=4, num_hidden=50)
+transport.set_method(method=method, is_residual=False)
 
 transport.fit(source_distribution, target_distribution, do_scale=False, do_rotation=False)
+
 
 position_hat=transport.transport(position, return_std=False)
 oritentation_hat= transport.transport_orientation(position, orientation)
