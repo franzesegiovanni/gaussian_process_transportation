@@ -35,7 +35,7 @@ deltaX = np.zeros((len(X),2))
 for j in range(len(X)-1):
     deltaX[j,:]=(X[j+1,:]-X[j,:])
 transport=PolicyTransportation()
-method = BiJectiveNetwork(num_epochs=200)
+# method = BiJectiveNetwork(num_epochs=200)
 method = EnsembleBijectiveNetwork(num_epochs=200, n_estimators=10)
 transport.set_method(method=method, is_residual=method.is_residual)
     

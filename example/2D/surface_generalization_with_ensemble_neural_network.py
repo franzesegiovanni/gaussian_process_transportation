@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from policy_transportation.models.torch.ensemble_neural_network import EnsembleNeuralNetwork
 from policy_transportation.models.torch.neural_network import NeuralNetwork
 from policy_transportation.transportation.transportation import PolicyTransportation
-
+EnsembleNeuralNetwork(num_epochs=200, n_estimators=10)
 
 import pathlib
 from policy_transportation.plot_utils import plot_vector_field
@@ -36,8 +36,8 @@ deltaX = np.zeros((len(X),2))
 for j in range(len(X)-1):
     deltaX[j,:]=(X[j+1,:]-X[j,:])
 transport=PolicyTransportation()
-# method = EnsembleNeuralNetwork(num_epochs=200, n_estimators=10)
-method = NeuralNetwork(num_epochs=200)
+method = 
+# method = NeuralNetwork(num_epochs=200)
 transport.set_method(method=method, is_residual=method.is_residual)
     
 transport.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)

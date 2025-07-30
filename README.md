@@ -1,11 +1,16 @@
 # Generalizable Motion Policies through Keypoint Parameterization and Transportation Maps (TRO 2025)
 
-![Transportation Function Illustration](transportation_illustration.png)
+<img src="transportation_illustration.png" alt="Transportation Function Illustration" width="300"/>
 
 This is the code accompaning the paper Generalizable Motion Policies through Keypoint Parameterization and Transportation Maps published in Transaction of Robotics (2025).
 
-In this article, we parameterize the space with keypoints—for example, the shoulder, elbow, wrist, and hand positions of a human during dressing, or keypoints of an object being manipulated and its goal. We then fit a differentiable map $\phi$ to model the transportation between these keypoints. We use the map to generalize the original position, velocity and orientation labels. 
-![Transportation Scheme](example/2D/pictures/transportation_scheme.png)
+In this article, we parameterize the space with keypoints—for example, the shoulder, elbow, wrist, and hand positions of a human during dressing, or keypoints of an object being manipulated and its goal. We then fit a differentiable map $\phi$ to model the transportation between these keypoints. We deform the 
+
+![Space Deformation Illustration](example/2D/pictures/space_deformation.png)
+
+
+ We use the map to generalize the original position, velocity and orientation labels. For example, given a circular motion used to clean a table, we can use the transportation map to generalize it to a new surface and also generalize the velocity labels. 
+<img src="example/2D/pictures/transportation_scheme.png" alt="Transportation Scheme" width="300"/>
 
 Many function approximators are available as transportation methods. 
 

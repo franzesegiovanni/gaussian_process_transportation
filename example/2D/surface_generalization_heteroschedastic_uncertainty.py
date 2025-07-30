@@ -28,7 +28,7 @@ warnings.filterwarnings("ignore")
 #%% Load the drawings
 
 source_path = str(pathlib.Path(__file__).parent.absolute())  
-data =np.load(source_path+ '/data/'+str('example4')+'.npz')
+data =np.load(source_path+ '/data/'+str('example')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
@@ -210,6 +210,8 @@ cbar = plt.colorbar(stream.lines, cax=cax)
 
 #save figure
 fig.savefig(source_path+'/pictures/transportation_scheme.pdf',bbox_inches='tight')
+
+fig.savefig(source_path+'/pictures/transportation_scheme.png',bbox_inches='tight')
 # Plot surface of the norm of ouput uncertainties
 
 fig=plt.figure(figsize=(20,6))
@@ -264,5 +266,7 @@ ax.set_zlabel('std [m/s]', fontsize=20)
 fig.subplots_adjust(hspace=0, wspace=0.1) # set the space between subplots
 # rest of the code
 fig.savefig(source_path+'/pictures/uncertainty_surface.pdf',bbox_inches='tight', pad_inches=0.3)
+fig.savefig(source_path+'/pictures/uncertainty_surface.png',bbox_inches='tight', pad_inches=0.3)
+
 plt.show()
 
