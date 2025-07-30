@@ -8,8 +8,8 @@ This code is part of TERI (TEaching Robots Interactively) project
 #%%
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel as C, ExpSineSquared as Periodic
+from policy_transportation.transportation.laplacian_editing_transportation import LaplacianEditingTransportation as LET
 from policy_transportation.transportation.kernelized_movement_primitives_transportation import KMP_transportation as KMP
-from policy_transportation.transportation.laplacian_editing_transportation import LaplacianEditingTransportation as LE
 import pathlib
 from policy_transportation.utils import resample
 import warnings
@@ -23,12 +23,12 @@ source_path = str(pathlib.Path(__file__).parent.absolute())
 fig, axs = plt.subplots(2, 10, figsize=(20, 4), tight_layout=True)
 fig.text(0.0, 0.75, 'Kernelize MP', va='center', rotation='vertical', fontsize=12)
 fig.text(0.0, 0.25, 'Laplacian Editing', va='center', rotation='vertical',  fontsize=12)
-time_gpt= []
-time_diffeo= []
-diffeo_percentage_gpt= []
-diffeo_percentage_ltw= []
-accurracy_gpt= []
-accurracy_ltw= []
+time_kmp= []
+time_let= []
+diffeo_percentage_kmp= []
+diffeo_percentage_let= []
+accurracy_kmp= []
+accurracy_let= []
 #plot demo and floor in the first column for both methods
 data= np.load(source_path+ '/data/'+'example'+str(0)+'.npz')
 X=data['demo']
@@ -63,20 +63,16 @@ for i in range(0,9):
     #%% Transport the dynamical system on the new surface
     
     k_kmp=kernel=C(0.1, constant_value_bounds=[0.1,2]) * Periodic(periodicity=1, periodicity_bounds=[1,1], length_scale=0.1, length_scale_bounds=[0.02, 0.05]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01])
-    gpt=KMP(kernel=k_kmp)
-    gpt.source_distribution=source_distribution 
-    gpt.target_distribution=target_distribution
-    gpt.training_traj=X
-    gpt.training_delta=deltaX
+    model=KMP(kernel=k_kmp, training_traj=X)
     start = timeit.default_timer()
-    gpt.fit_transportation()
-    gpt.apply_transportation()
+    model.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
+    X1, std=model.transport(X, return_std=True)
     stop = timeit.default_timer()
-    time_gpt.append(stop - start)
-    accurracy_gpt.append(gpt.accuracy())
     # print('Accuracy: ', accurracy_gpt[i])
     print('Time: ', stop - start)
-    axs[0,plot_index].plot(gpt.training_traj[:,0],gpt.training_traj[:,1], color=[1,0,0])
+    accurracy_kmp.append(model.accuracy)
+    time_kmp.append(stop - start)
+    axs[0,plot_index].plot(X1[:,0],X1[:,1], color=[1,0,0])
     axs[0,plot_index].plot(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
     #remove axis
     axs[0,plot_index].axis('off')
@@ -85,24 +81,20 @@ for i in range(0,9):
     # axs[0,plot_index].text(1, 0.2, str(np.round(diffeo_percentage_gpt[i],3)), transform=axs[0,plot_index].transAxes, color='red')
     #add the time under it 
     # axs[0,plot_index].text(0.9, 0.1, str(np.round(time_gpt[i],3))+'[s]', transform=axs[0,plot_index].transAxes, color='blue')
-    axs[0,plot_index].text(0.9, 0.1, "{:.1e}".format(time_gpt[i]), transform=axs[0,plot_index].transAxes, color='blue')
-    axs[0,plot_index].text(0.9, 0.0, "{:.1e}".format(accurracy_gpt[i]), transform=axs[0,plot_index].transAxes, color='black')
+    axs[0,plot_index].text(0.9, 0.1, "{:.1e}".format(time_kmp[i]), transform=axs[0,plot_index].transAxes, color='blue')
+    axs[0,plot_index].text(0.9, 0.0, "{:.1e}".format(accurracy_kmp[i]), transform=axs[0,plot_index].transAxes, color='black')
 
     #%% Diffeomorphic transportation
-    lwt=LE()
-    lwt.source_distribution=source_distribution
-    lwt.target_distribution=target_distribution
-    lwt.training_traj=X
-    lwt.training_delta=deltaX
+    model=LET(training_traj=X)
     start = timeit.default_timer()
-    lwt.fit_transportation(do_scale=True, do_rotation=True)
-    lwt.apply_transportation()
+    model.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
+    X1, std=model.transport(X, return_std=True)
     stop = timeit.default_timer()
-    time_diffeo.append(stop - start)
+    # print('Accuracy: ', accurracy_gpt[i])
     print('Time: ', stop - start)
-    accurracy_ltw.append(lwt.accuracy())
-    print('Accuracy: ', accurracy_ltw[i])
-    axs[1,plot_index].plot(lwt.training_traj[:,0],lwt.training_traj[:,1], color=[1,0,0])
+    accurracy_let.append(model.accuracy)
+    time_let.append(stop - start)
+    axs[1,plot_index].plot(X1[:,0],X1[:,1], color=[1,0,0])
     axs[1,plot_index].plot(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
     axs[1,plot_index].axis('off')
     # diffeo_percentage_ltw.append(np.sum(~lwt.diffeo_mask)/len(lwt.diffeo_mask))
@@ -110,8 +102,8 @@ for i in range(0,9):
     # axs[1,plot_index].text(1, 0.2, str(np.round(diffeo_percentage_ltw[i],3)), transform=axs[1,plot_index].transAxes, color='red')
     #add the time under it
     # axs[1,plot_index].text(0.9, 0.1, str(np.round(time_diffeo[i],3))+'[s]', transform=axs[1,plot_index].transAxes, color='blue')
-    axs[1,plot_index].text(0.9, 0.1, "{:.1e}".format(time_diffeo[i]), transform=axs[1,plot_index].transAxes, color='blue')
-    axs[1,plot_index].text(0.9, 0.0, "{:.1e}".format(accurracy_ltw[i]), transform=axs[1,plot_index].transAxes, color='black')
+    axs[1,plot_index].text(0.9, 0.1, "{:.1e}".format(time_let[i]), transform=axs[1,plot_index].transAxes, color='blue')
+    axs[1,plot_index].text(0.9, 0.0, "{:.1e}".format(accurracy_let[i]), transform=axs[1,plot_index].transAxes, color='black')
 
 
 #save the figure as pdf high resolution

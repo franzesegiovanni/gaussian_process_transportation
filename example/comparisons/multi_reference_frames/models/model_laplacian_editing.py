@@ -8,7 +8,7 @@ import os
 import similaritymeasures
 import random
 warnings.filterwarnings("ignore")
-class Multiple_Reference_Frames_LA:
+class Multiple_Reference_Frames_LE:
     def __init__(self):
         self.transport=Transport()
 

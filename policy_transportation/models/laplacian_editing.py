@@ -105,9 +105,9 @@ class Laplacian_Editing():
             std = eps*np.ones_like(mean)
             return mean, std
         return mean
-    
-    def samples(self, X):
+
+    def samples(self, X, n_samples=10):
         # laplacian editing is deterministic, then we return the same sample
-        predictions = [self.predict(X) for i in range(10)]
+        predictions = [self.predict(X) for i in range(n_samples)]
         predictions = np.array(predictions)  # Shape: (n_estimators, n_samples)
         return predictions

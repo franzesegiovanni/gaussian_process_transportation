@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
-from policy_transportation import GaussianProcessTransportation as Transport
+from policy_transportation import PolicyTransportation 
 # from policy_transportation.transportation.gaussian_process_transportation_diffeomorphic import GaussianProcessTransportationDiffeo as Transport
 import pathlib
 from policy_transportation.utils import resample
@@ -26,21 +26,15 @@ else:
     matplotlib.rcParams['text.usetex'] = False
 warnings.filterwarnings("ignore")
 #%% Load the drawings
-def create_vectorfield(model,datax_grid,datay_grid):
-    dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
-    pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
-    vel, std = model.predict(pos, return_std=True)
-    u, v = vel[:, 0].reshape(dataXX.shape), vel[:, 1].reshape(dataXX.shape)
-    return u, v, std
 
 source_path = str(pathlib.Path(__file__).parent.absolute())  
-data =np.load(source_path+ '/data/'+str('example')+'.npz')
+data =np.load(source_path+ '/data/'+str('example4')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
 X=resample(X, num_points=100)
-source_distribution=resample(S,num_points=20)
-target_distribution=resample(S1, num_points=20)
+source_distribution=resample(S,num_points=50)
+target_distribution=resample(S1, num_points=50)
 
 #%% Calculate deltaX
 deltaX = np.zeros((len(X),2))
@@ -97,7 +91,10 @@ axs[0, 0].legend(fontsize=14)
 latex_symbol = r'$ {x} $'  # Replace '\alpha' with your desired LaTeX symbol
 axs[0, 0].text(0.05, 0.95, latex_symbol, transform=axs[0, 0].transAxes, fontsize=50, va='top', ha='left',  usetex=use_latex)
 
-u,v, std=create_vectorfield(gp_deltaX, x_grid,y_grid)
+dataXX, dataYY = np.meshgrid(x_grid, y_grid)
+pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
+vel, std = gp_deltaX.predict(pos, return_std=True)
+u, v = vel[:, 0].reshape(dataXX.shape), vel[:, 1].reshape(dataYY.shape)
 var=np.sum(std**2,axis=1)
 std=np.sqrt(var) 
 std=std.reshape(u.shape)
@@ -124,66 +121,77 @@ axs[1, 1].set_xticklabels([])
 axs[1, 1].set_yticklabels([])
 
 axs[1, 0].legend()
+
 #%% Transport the dynamical system on the new surface
-k_transport = C(constant_value=10)  * RBF(4*np.ones(2)) + WhiteKernel(0.01 )
+k_transport = C(constant_value=10)  * RBF(1*np.ones(2), [0.1,5]) + WhiteKernel(0.01)
 
-transport=Transport(kernel_transport= k_transport)
-transport.source_distribution=source_distribution 
-transport.target_distribution=target_distribution
-transport.training_traj=X
-transport.training_delta=deltaX
 
+method = GPR(k_transport)
+
+transport=PolicyTransportation()
+
+transport.set_method(method=method, is_residual=method.is_residual)
+
+transport.fit(source_distribution, target_distribution, do_scale=True, do_rotation=True)
 print('Transporting the dynamical system on the new surface')
-transport.fit_transportation()
-transport.apply_transportation()
-X1=transport.training_traj
-deltaX1=transport.training_delta 
-std=transport.std
 
-axs[1, 0].scatter(X1[:,0],X1[:,1], color=[1,0,0], label='Transported Demo')
-axs[1, 0].scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1], label='Target Distribution')
-axs[1, 0].set_xlim(x_lim)
-axs[1, 0].set_ylim(y_lim)
-axs[1, 0].set_xticklabels([])
-axs[1, 0].set_yticklabels([])
-draw_error_band(axs[1, 0], X1[:,0], X1[:,1], err=2*std[:], facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.4, loop=True)
-axs[1, 0].legend(fontsize=14, loc='lower left')
+X_hat, std_position_transport = transport.transport(X, return_std=True)
 
-latex_symbol = r'$ {\hat{x}} $'  # Replace '\alpha' with your desired LaTeX symbol
-axs[1, 0].text(0.05, 0.95, latex_symbol, transform=axs[1, 0].transAxes, fontsize=50, va='top', ha='left',  usetex=use_latex)
-
+deltaX_hat, var_aleatoric = transport.transport_velocity(X, deltaX, return_var=True)
 
 #We should fit a gp for the aleatoric noise. 
 print('Fitting the GP for the aleatoric noise')
 kernel_uncertainty=C(constant_value=np.sqrt(0.1))  * RBF(4*np.ones(1), length_scale_bounds=[0.01, 500]) + WhiteKernel(0.01, noise_level_bounds=[0.01, 0.1] )
 GP_aleatoric=GPR(kernel=kernel_uncertainty)
-var_aleatoric=transport.var_vel_transported
+
 std_aleatoric_labels=np.sqrt(var_aleatoric)
-GP_aleatoric.fit(X1, std_aleatoric_labels)
+GP_aleatoric.fit(X_hat, std_aleatoric_labels)
 
 
 
 dataXX, dataYY = np.meshgrid(x_grid, y_grid)
 pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
 std_aleatoric = GP_aleatoric.predict(pos)
-var_aleatoric=std_aleatoric**2
-
+var_aleatoric_norm=np.sum(std_aleatoric**2,axis=1)
+std_aleatoric_norm=np.sqrt(var_aleatoric_norm)
+std_aleatoric_norm=std_aleatoric_norm.reshape(u.shape)
 
 print('Fitting the GP dynamical system on the transported trajectory')
-k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=2.5) + WhiteKernel(0.01 )    
-gp_deltaX1=GPR(kernel=k_deltaX1)
-gp_deltaX1.fit(X1, deltaX1)
+k_deltaX_hat = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=2.5) + WhiteKernel(0.01 )    
+gp_deltaX_hat=GPR(kernel=k_deltaX_hat)
+gp_deltaX_hat.fit(X_hat, deltaX_hat)
 
-u,v, std_epi=create_vectorfield(gp_deltaX1, x_grid,y_grid)
 
-var_epi= std_epi**2
-var_hetero= var_epi+ var_aleatoric
-std_hetero=np.sqrt(np.sum(var_hetero,1))
+dataXX, dataYY = np.meshgrid(x_grid, y_grid)
+pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
+vel, std_epistemic = gp_deltaX_hat.predict(pos, return_std=True)
+u, v = vel[:, 0].reshape(dataXX.shape), vel[:, 1].reshape(dataYY.shape)
+var_epistemic_norm=np.sum(std_epistemic**2,axis=1)
+std_epistemic_norm=np.sqrt(var_epistemic_norm)
+std_epistemic_norm=std_epistemic_norm.reshape(u.shape)
 
+
+
+var_hetero= var_epistemic_norm+ var_aleatoric_norm
+std_hetero=np.sqrt(var_hetero)
 std_hetero=std_hetero.reshape(u.shape)
-std_aleatoric=np.sqrt(np.sum(var_aleatoric,1)).reshape(u.shape)
+
+# Create plots
+
+axs[1, 0].scatter(X_hat[:,0],X_hat[:,1], color=[1,0,0], label='Transported Demo')
+axs[1, 0].scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1], label='Target Distribution')
+axs[1, 0].set_xlim(x_lim)
+axs[1, 0].set_ylim(y_lim)
+axs[1, 0].set_xticklabels([])
+axs[1, 0].set_yticklabels([])
+draw_error_band(axs[1, 0], X_hat[:,0], X_hat[:,1], err=2*std_position_transport[:], facecolor= [255.0/256.0,140.0/256.0,0.0], edgecolor="none", alpha=.4, loop=True)
+axs[1, 0].legend(fontsize=14, loc='lower left')
+
+latex_symbol = r'$ {\hat{x}} $'  # Replace '\alpha' with your desired LaTeX symbol
+axs[1, 0].text(0.05, 0.95, latex_symbol, transform=axs[1, 0].transAxes, fontsize=50, va='top', ha='left',  usetex=use_latex)
+
 # axs[1, 1].streamplot(dataXX, dataYY, u, v, density = 1, color=std_hetero, cmap='plasma')
-axs[1, 1].scatter(X1[:,0],X1[:,1], color=[1,0,0])
+axs[1, 1].scatter(X_hat[:,0],X_hat[:,1], color=[1,0,0])
 axs[1, 1].scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
 axs[1, 1].set_xticklabels([])
 axs[1, 1].set_yticklabels([])
@@ -208,7 +216,7 @@ fig=plt.figure(figsize=(20,6))
 
 ax = fig.add_subplot(131, projection='3d')
 ax.set_title('Transportation Uncertainty', fontsize=20, y=-0.15)
-surf = ax.plot_surface(dataXX, dataYY, std_aleatoric , linewidth=0, antialiased=True, cmap=plt.cm.inferno)
+surf = ax.plot_surface(dataXX, dataYY, std_aleatoric_norm , linewidth=0, antialiased=True, cmap=plt.cm.inferno)
 Z=np.sum(GP_aleatoric.Y,1)
 #set the point of view 
 ax.view_init(elev=30, azim=-20)
@@ -225,9 +233,8 @@ ax.set_zlabel('std [m/s]', fontsize=20)
 ax = fig.add_subplot(132, projection='3d')
 
 ax.set_title('Epistemic Uncertainty', fontsize=20, y=-0.15)
-Z=np.sum(std_epi,1).reshape(u.shape)
-surf = ax.plot_surface(dataXX, dataYY, Z , linewidth=0, antialiased=True, cmap=plt.cm.inferno)
-ax.set_zlim(np.max(std_hetero), np.min(Z))
+surf = ax.plot_surface(dataXX, dataYY, std_epistemic_norm, linewidth=0, antialiased=True, cmap=plt.cm.inferno)
+ax.set_zlim(np.max(std_hetero), np.min(std_epistemic_norm))
 ax.set_ylim(np.max(dataYY), np.min(dataYY))
 ax.view_init(elev=30, azim=-20)
 ax.set_facecolor('none')

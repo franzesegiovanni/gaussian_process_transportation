@@ -5,14 +5,17 @@ from sklearn.gaussian_process.kernels import Matern, WhiteKernel, ConstantKernel
 from policy_transportation.plot_utils import draw_error_band
 from policy_transportation.utils import resample
 
+
 # load the models
-from policy_transportation.transportation.gaussian_process_transportation import GaussianProcessTransportation as GPT
-from policy_transportation.transportation.multi_layer_perceptron_transportation import MLPTrasportation as MLP
-from policy_transportation.transportation.diffeomorphic_transportation import DiffeomorphicTransportation as LTW
+from policy_transportation.transportation.transportation import PolicyTransportation
 from policy_transportation.transportation.laplacian_editing_transportation import LaplacianEditingTransportation as LET
-from policy_transportation.transportation.torch.ensemble_bijective_transport import Neural_Transport as BNT
 from policy_transportation.transportation.kernelized_movement_primitives_transportation import KMP_transportation as KMP
 import os
+
+from policy_transportation.models.gaussian_process import GaussianProcess as GPR
+from policy_transportation.models.torch.ensemble_neural_network import EnsembleNeuralNetwork as ENN
+from policy_transportation.models.torch.ensemble_bijective_network import EnsembleBijectiveNetwork as EBN
+from policy_transportation.models.locally_weighted_translations import Iterative_Locally_Weighted_Translations as ILWT
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -38,12 +41,21 @@ for j in range(len(X)-1):
 # initialize the models
 k_transport = C(constant_value=np.sqrt(0.1), constant_value_bounds=[0.1,2])  * RBF(10*np.ones(2), [5,500]) + WhiteKernel(0.0001)
 k_periodic= kernel=C(0.1, constant_value_bounds=[0.1,2]) * Periodic(periodicity=1, periodicity_bounds=[1,1], length_scale=0.1, length_scale_bounds=[0.05, 1]) + WhiteKernel(0.00001, noise_level_bounds=[1e-5, 0.01])
-GPT=GPT(kernel_transport=k_transport)
-MLP=MLP()
-LTW=LTW(num_iterations=10)
-LET=LET()
-BNT=BNT()
-KMP=KMP(kernel=k_periodic)
+LET=LET(training_traj=X)
+KMP=KMP(kernel=k_periodic, training_traj=X)
+
+GPT=PolicyTransportation()
+GPT.set_method(method=GPR(k_transport), is_residual=True)
+
+LTW=PolicyTransportation()
+LTW.set_method(method=ILWT(), is_residual=False)
+
+MLP=PolicyTransportation()
+MLP.set_method(method=ENN(num_epochs=200, n_estimators=10), is_residual=True)
+
+BNT=PolicyTransportation()
+BNT.set_method(method=EBN(num_epochs=200, n_estimators=10), is_residual=False)
+
 methods=[KMP, LTW, MLP, LET, BNT, GPT]
 names=["Kernelized Movement Primitives","Locally Weighted Translations", "Ensemble Neural Network", "Laplacian Editing", "Ensemble Neural Flows", "Gaussian Process Regression"]
 
@@ -58,19 +70,10 @@ i=0
 
 for model , name in zip(methods, names):
     print("Fitting "+name+"...")
-    model.source_distribution=source_distribution 
-    model.target_distribution=target_distribution
-    model.training_traj=X
-    model.training_delta=deltaX
-    model.fit_transportation()
-    model.apply_transportation()
-    X1=model.training_traj
+    model.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
+    X1, std=model.transport(X, return_std=True)
     X1_list.append(X1)
-    deltaX1=model.training_delta 
-    std=model.std
-    std_list.append(std)
-    # std=np.linalg.norm(std, axis=1)
-    X_samples=model.sample_transportation()
+    X_samples=model.sample_transportation(X)
     current_ax = ax[i // 3, i % 3]
 
     current_ax.scatter(target_distribution[:,0],target_distribution[:,1], color=[0,0,0], label="New Surface")

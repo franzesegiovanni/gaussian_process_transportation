@@ -8,8 +8,8 @@ This code is part of TERI (TEaching Robots Interactively) project
 #%%
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel as C
-from policy_transportation.transportation.gaussian_process_transportation import GaussianProcessTransportation as GPT
-from policy_transportation.transportation.diffeomorphic_transportation import DiffeomorphicTransportation as LTW
+from policy_transportation.transportation.transportation import PolicyTransportation
+from policy_transportation.models.gaussian_process import GaussianProcess as GPR
 import pathlib
 from policy_transportation.utils import resample
 import warnings
@@ -58,28 +58,25 @@ for i in range(0,9):
     #%% Transport the dynamical system on the new surface
     
     k_transport = C(constant_value=10)  * RBF(0.9*np.ones(1), [1, 10]) + WhiteKernel(0.01, [0.001, 0.1])
-    gpt=GPT(kernel_transport= k_transport)
-    gpt.source_distribution=source_distribution 
-    gpt.target_distribution=target_distribution
-    gpt.training_traj=X
-    gpt.training_delta=deltaX
-    gpt.fit_transportation(do_scale=True, do_rotation=True)
-    gpt.apply_transportation()
+    transport=PolicyTransportation()
+    k_transport = C(constant_value=10)  * RBF(1*np.ones(2), [0.1,5]) + WhiteKernel(0.01 )
 
-    axs[0,plot_index].plot(gpt.training_traj[:,0],gpt.training_traj[:,1], color=[1,0,0])
+    method = GPR(k_transport)
+    transport.set_method(method=method, is_residual=method.is_residual)
+    transport.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
+
+    X_hat=transport.transport(X, return_std=False)
+
+    axs[0,plot_index].plot(X_hat[:,0],X_hat[:,1], color=[1,0,0])
     axs[0,plot_index].plot(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
     axs[0,plot_index].axis('off')
 
     #%% Diffeomorphic transportation
-    gpt_no_rotation=GPT(kernel_transport= k_transport)
-    gpt_no_rotation.source_distribution=source_distribution 
-    gpt_no_rotation.target_distribution=target_distribution
-    gpt_no_rotation.training_traj=X
-    gpt_no_rotation.training_delta=deltaX
-    gpt_no_rotation.fit_transportation(do_scale=True, do_rotation=False)
-    gpt_no_rotation.apply_transportation()
+    transport.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
 
-    axs[1,plot_index].plot(gpt_no_rotation.training_traj[:,0],gpt_no_rotation.training_traj[:,1], color=[1,0,0])
+    X_hat=transport.transport(X, return_std=False)
+
+    axs[1,plot_index].plot(X_hat[:,0],X_hat[:,1], color=[1,0,0])
     axs[1,plot_index].plot(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
     axs[1,plot_index].axis('off')
 #save the figure as pdf high resolution

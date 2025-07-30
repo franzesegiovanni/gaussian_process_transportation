@@ -18,6 +18,7 @@ class GaussianProcess():
             self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha, optimizer=optimizer, n_targets=n_targets)      
         self.kernel=kernel
         self.alpha=alpha
+        self.is_residual = True
     def fit(self, X, Y):
             self.X=X
             self.Y=Y
@@ -32,7 +33,7 @@ class GaussianProcess():
             K_ = self.kernel(self.X, self.X) + (self.noise_var_ * np.eye(len(self.X)))
             self.K = K_
             self.K_inv = np.linalg.inv(K_)
-            print('lenghtscales', self.kernel.get_params()['k1__k2__length_scale'] )
+            # print('lenghtscales', self.kernel.get_params()['k1__k2__length_scale'] )
 
     def predict(self,x, return_std=False, return_cov=False):
         if return_std==True:

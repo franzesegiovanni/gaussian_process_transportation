@@ -26,10 +26,10 @@ class AffineTransform():
 
         if not self.do_rotation:
             self.rotation_matrix= np.eye(source_points.shape[1])
-            print("Rotation matrix is not computed and set to identity...")
+            # print("Rotation matrix is not computed and set to identity...")
         elif rank_H < source_points.shape[1]:
             self.rotation_matrix= np.eye(source_points.shape[1])
-            print("Rotation matrix cannot be uniquely determined. Set to identity...")
+            # print("Rotation matrix cannot be uniquely determined. Set to identity...")
         else:   
 	        # Perform SVD
             U, S, Vt = np.linalg.svd(H)
@@ -43,15 +43,21 @@ class AffineTransform():
         if self.do_scale:
             source_rotated=np.transpose(self.rotation_matrix @ np.transpose((self.source_points_centered)))
             self.scale = np.sum(source_rotated * self.target_points_centered) / np.sum(source_rotated**2)
-        print ("Rotation Matrix of the Affine Matrix:")
-        print(self.rotation_matrix)
-        print ("Scaling factor:", self.scale)
+        # print ("Rotation Matrix of the Affine Matrix:")
+        # print(self.rotation_matrix)
+        # print ("Scaling factor:", self.scale)
         #Compute translation
         self.translation=self.T_centroid-self.S_centroid
         
     def predict(self, x):
-        transported_x= self.scale*np.transpose(self.rotation_matrix @ np.transpose((x-self.S_centroid)))+ self.T_centroid
+        transported_x= self.scale* (x-self.S_centroid) @ np.transpose(self.rotation_matrix) + self.T_centroid
         return transported_x
+    
+    def inverse(self, x):
+        # Inverse transformation
+        inverse_x = (x - self.T_centroid) / self.scale
+        inverse_x = np.transpose(np.linalg.inv(self.rotation_matrix) @ np.transpose(inverse_x)) + self.S_centroid
+        return inverse_x
         
     def derivative(self,x):
         affine_derivative=np.repeat(self.rotation_matrix[np.newaxis, :, :], x.shape[0], axis=0)

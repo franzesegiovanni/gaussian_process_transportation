@@ -154,15 +154,18 @@ class SVGP(ApproximateGP):
             return mu_prime_exact.detach().cpu().numpy()
         
 class StocasticVariationalGaussianProcess():
-    def __init__(self, X, Y, num_inducing=100):
+    def __init__(self, num_epochs=10, num_inducing=100):
         torch.cuda.empty_cache()
         self.use_cuda=torch.cuda.is_available()
-        self.gp= SVGP(X, Y, num_inducing=num_inducing)
+        self.num_epochs=num_epochs
+        self.num_inducing=num_inducing
+        self.is_residual=True
+    def fit(self, X, Y ):
+        self.gp= SVGP(X, Y, num_inducing=self.num_inducing)
         if self.use_cuda:
             self.gp=self.gp.cuda()
         train_dataset = TensorDataset(self.gp.X, self.gp.Y)
-        self.train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True)    
-    def fit(self, num_epochs=10):
+        self.train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True)  
         self.gp.train()
         self.gp.likelihood.train()
 
@@ -171,7 +174,7 @@ class StocasticVariationalGaussianProcess():
         ], lr=0.01)
 
         self.mll = gpytorch.mlls.VariationalELBO(self.gp.likelihood, self.gp, num_data=self.gp.Y.size(0))
-        epochs_iter = tqdm(range(num_epochs))
+        epochs_iter = tqdm(range(self.num_epochs))
         for i in epochs_iter:
             # Within each iteration, we will go over each minibatch of data
             minibatch_iter = self.train_loader
@@ -194,8 +197,13 @@ class StocasticVariationalGaussianProcess():
         x=torch.from_numpy(x).float()
         if self.use_cuda:
             x=x.cuda()
-        return self.gp.posterior_f(x, return_std=return_std)
-         
+        if return_std:
+            y, std = self.gp.posterior_f(x, return_std=return_std)
+            return y.transpose(1, 0), std.transpose(1, 0)
+        else:
+            y = self.gp.posterior_f(x, return_std=return_std)
+            return y.transpose(1, 0)
+
     def derivative(self, x, return_var=False):
         x=torch.from_numpy(x).float()
         if self.use_cuda:

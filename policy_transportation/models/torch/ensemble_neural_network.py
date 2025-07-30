@@ -3,15 +3,17 @@ import torch
 import numpy as np
 
 class EnsembleNeuralNetwork():
-    def __init__ (self, X,Y, n_estimators=10):
-        self.ensemble = [NeuralNetwork(X,Y) for _ in range(n_estimators)]
-    
-    def fit(self, X, Y, num_epochs=100):
+    def __init__ (self, num_epochs=100, n_estimators=10):
+        self.ensemble = [NeuralNetwork(num_epochs=num_epochs) for _ in range(n_estimators)]
+        self.num_epochs = num_epochs
+        self.num_estimators = n_estimators
+        self.is_residual = True
+    def fit(self, X, Y):
         # Train the ensemble of neural networks
         index=1
         for nn in self.ensemble:
             print("Training a neural network number:", index, "out of", len(self.ensemble))
-            nn.fit(X, Y, num_epochs)
+            nn.fit(X, Y)
             index+=1
 
     def predict(self, x, return_std=False):

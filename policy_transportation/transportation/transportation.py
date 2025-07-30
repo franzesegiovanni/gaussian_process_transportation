@@ -7,6 +7,7 @@ This code is part of TERI (TEaching Robots Interactively) project
 from policy_transportation import AffineTransform
 import numpy as np
 import quaternion
+import warnings
 class PolicyTransportation():  
     def __init__(self, method=None, is_residual=True):
         super(PolicyTransportation, self).__init__()
@@ -25,7 +26,10 @@ class PolicyTransportation():
 
     def fit(self, source_distribution, target_distribution, do_scale=False, do_rotation=True):
         if self.nonlinear_transform is None:
-            raise ValueError("Nonlinear transform method is not set. Please set it using set_method() before fitting.")
+            warnings.warn(
+                "Nonlinear transform method is not set. Please set it using set_method() before fitting. Otherwise, the transportation will be only affine.",
+                stacklevel=2
+            )
         if source_distribution.shape[0] != target_distribution.shape[0]:
             raise ValueError("Source and target distributions must have the same number of points.")
         if source_distribution.shape[1] != target_distribution.shape[1]:
@@ -34,13 +38,16 @@ class PolicyTransportation():
         self.affine_transform.fit(source_distribution, target_distribution)
 
         source_distribution_rotated=self.affine_transform.predict(source_distribution)  
-        if self.is_residual==True:
-            self.delta_distribution = target_distribution - source_distribution_rotated
-            self.nonlinear_transform.fit(source_distribution_rotated, self.delta_distribution)  
-        
-        else:
-            self.nonlinear_transform.fit(source_distribution_rotated, target_distribution)  
+        if self.nonlinear_transform:
+            if self.is_residual==True:
+                self.delta_distribution = target_distribution - source_distribution_rotated
+                self.nonlinear_transform.fit(source_distribution_rotated, self.delta_distribution)  
+            
+            else:
+                self.nonlinear_transform.fit(source_distribution_rotated, target_distribution)  
 
+        transported = self.transport(source_distribution, return_std=False)
+        self.accuracy = np.sqrt(np.mean(np.sum((transported - target_distribution) ** 2, axis=1)))
     def transport(self, pos, return_std=True):
         """
         Transport positions using the learned transformation.
@@ -54,37 +61,49 @@ class PolicyTransportation():
             numpy.ndarray: Standard deviation of the transport if return_std=True, same shape as input.
         """
         pos_rotated = self.affine_transform.predict(pos)
-        if return_std:
-            delta_map_mean, nonlinear_map_std = self.nonlinear_transform.predict(pos_rotated, return_std=return_std)
-        else:
-            delta_map_mean = self.nonlinear_transform.predict(pos_rotated, return_std=return_std)
+        if self.nonlinear_transform:
+            if return_std:
+                delta_map_mean, nonlinear_map_std = self.nonlinear_transform.predict(pos_rotated, return_std=return_std)
+            else:
+                delta_map_mean = self.nonlinear_transform.predict(pos_rotated, return_std=return_std)
 
-        if self.is_residual:
-            pos_transported = pos_rotated + delta_map_mean
+            if self.is_residual:
+                pos_transported = pos_rotated + delta_map_mean
+            else:
+                pos_transported = delta_map_mean 
+            if return_std:
+                return pos_transported, nonlinear_map_std
+            else:
+                return pos_transported
         else:
-            pos_transported = delta_map_mean 
-        if return_std:
-            return pos_transported, nonlinear_map_std
-        else:
-            return pos_transported
-    
+            if return_std:
+                return pos_rotated, np.zeros_like(pos_rotated)
+            else:
+                return pos_rotated
+
     def compute_jacobian(self, pos, return_var=True):
         pos_rotated=self.affine_transform.predict(pos)
         J_gamma= self.affine_transform.derivative(pos)
-        if return_var==True:
-            J_psi, J_psi_var=self.nonlinear_transform.derivative(pos_rotated, return_var=return_var)
-        else:
-            J_psi= self.nonlinear_transform.derivative(pos_rotated, return_var=return_var)
+        if self.nonlinear_transform:
+            if return_var:
+                J_psi, J_psi_var=self.nonlinear_transform.derivative(pos_rotated, return_var=return_var)
+            else:
+                J_psi= self.nonlinear_transform.derivative(pos_rotated, return_var=return_var)
+            
+            if self.is_residual:
+                J_phi= J_gamma + J_psi @ J_gamma
+            else:
+                J_phi= J_psi @ J_gamma
         
-        if self.is_residual==True:
-            J_phi= J_gamma + J_psi @ J_gamma
+            if return_var:
+                return J_phi, J_psi_var
+            else:
+                return J_phi
         else:
-            J_phi= J_psi @ J_gamma
-        
-        if return_var:
-            return J_phi, J_psi_var
-        else:
-            return J_phi
+            if return_var:
+                return J_gamma, np.zeros_like(J_gamma)
+            else:
+                return J_gamma
 
     def transport_velocity(self, pos, vel, return_var=True):
         """
@@ -140,7 +159,7 @@ class PolicyTransportation():
     def sample_transportation(self, pos):
         pos_rotated=self.affine_transform.predict(pos)
         nonlinear_samples= self.nonlinear_transform.samples(pos_rotated)
-        if self.is_residual==True:
+        if self.is_residual:
             training_traj_samples = pos_rotated + nonlinear_samples 
         else:
             training_traj_samples = nonlinear_samples
@@ -150,12 +169,10 @@ class PolicyTransportation():
         pos_rotated=self.affine_transform.predict(pos)
         J_gamma= self.affine_transform.derivative(pos)
         J_psi= self.nonlinear_transform.derivative(pos_rotated, return_var=False)
-        if self.is_residual==True:
+        if self.is_residual:
             J_phi= J_gamma + J_psi @ J_gamma
         else:
             J_phi= J_psi @ J_gamma
         print("Is the map diffeomorphic?", np.all((np.linalg.det(J_phi)) > 0))
         print("Percentage of points that are not diffeomorphic: ", np.sum(np.linalg.det(J_phi) <= 0)/len(J_phi)*100, "percent")
         return np.linalg.det(J_phi) > 0
-
-

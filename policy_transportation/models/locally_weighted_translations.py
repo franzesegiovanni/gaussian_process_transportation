@@ -16,6 +16,7 @@ class Iterative_Locally_Weighted_Translations():
         self.rho = rho
         self.beta = beta
 
+        self.is_residual = False
     def fit(self, source, target):
         self.source = np.copy(source)
         self.target = np.copy(target)
@@ -23,9 +24,9 @@ class Iterative_Locally_Weighted_Translations():
         self.nbState = source.shape[1]  # dimension of position
         start_time = time.time()
         self.learnt_data = self.mapping(self.source, self.target)
-        print ('Number of points =',self.nums,'in',self.nbState,'D space.')
-        print ('iteration number =',self.num_iterations)
-        print ('training time', time.time() - start_time, '[s].')
+        # print ('Number of points =',self.nums,'in',self.nbState,'D space.')
+        # print ('iteration number =',self.num_iterations)
+        # print ('training time', time.time() - start_time, '[s].')
         self.mapping_error()
         
     def mapping(self, x, y):
@@ -45,10 +46,14 @@ class Iterative_Locally_Weighted_Translations():
             
             q = y[m,:]
             v0 = (q - p[i,:])
-            # v0 = para[1]*(q - p[i,:])  # translation vector with the max distance, [2,]
+            # v0 = rho*(q - p[i,:])  # translation vector with the max distance, [2,]
             norm_v0 = np.sqrt(np.sum(v0**2))
+            norm_v0 = np.clip(norm_v0, 1e-5, None)  # avoid division by zero
             up_bound = self.rho *  np.sqrt(np.exp(1.)/2)/norm_v0 # for rho upbound to keep the diffeomorphism.
             x0 = np.array([[up_bound/10,0.5]])                 # initial values for [rho, beta]
+            if x0[0] is np.inf or x0[0] is np.nan:
+                print("Warning: Initial rho value is infinite or NaN. Adjusting to a small value.")
+                x0[0] = 1e-5
             bnds = (0,up_bound),(self.beta,self.beta)  # beta bounds
             args = (xi, v0, p[i,:], y, num_data)
             res_p = minimize(self.pos_cost_fun,x0.reshape(-1,),args,bounds=bnds) # solve the 2-parameter minimum problem
@@ -109,7 +114,11 @@ class Iterative_Locally_Weighted_Translations():
         xi, v0, p0, y, n = args[0],args[1],args[2],args[3],args[4]
         v0 = v0.reshape(1, -1)
         p0 = p0.reshape(1, -1)
-        x22 = xi + x[1]*np.repeat(v0,n,axis=0)* np.exp(-x[0]**2 * np.sum((xi - p0)**2,axis=1).reshape(-1,1))
+        # Compute the exponent and clip to avoid overflow/underflow
+        exponent = -x[0]**2 * np.sum((xi - p0)**2, axis=1).reshape(-1,1)
+        x22 = xi + x[1]*np.repeat(v0,n,axis=0)* np.exp(exponent)
+        if np.any(np.isnan(x22)) or np.any(np.isinf(x22)):
+            print("Warning: NaN or Inf encountered in x22 during optimization.")
         dis = np.sum( np.sqrt(np.sum((x22-y)**2, axis=1)) )/n
         return dis
 
@@ -119,8 +128,8 @@ class Iterative_Locally_Weighted_Translations():
         y_pred = self.predict(self.source)
 
         error = np.sqrt(np.sum((y_pred- self.target)**2,axis=1))
-        print ('######### Estimation')
-        print ('Total mean pos error:', np.mean(error), "[m]")
+        # print ('######### Estimation')
+        # print ('Total mean pos error:', np.mean(error), "[m]")
 
     def samples(self, X):
         # laplacian editing is deterministic, then we return the same sample

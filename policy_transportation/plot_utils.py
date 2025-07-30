@@ -5,32 +5,27 @@ from matplotlib.patches import PathPatch
 from matplotlib.path import Path
 from tqdm import tqdm
 from scipy.spatial.transform import Rotation
-
-def plot_vector_field(model,datax_grid,datay_grid,demo,surface):
-    dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
+from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
+from policy_transportation import GaussianProcess as GPR
+def plot_vector_field(X, deltaX, distribution, min_var=False):
+    kernel_policy = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(2), nu=2.5) + WhiteKernel(0.01) 
+    model=GPR(kernel=kernel_policy)
+    model.fit(X, deltaX)
+    x_grid=np.linspace(np.min(X[:,0]-10), np.max(X[:,0]+10), 100)
+    y_grid=np.linspace(np.min(X[:,1]-10), np.max(X[:,1]+10), 100)
+    dataXX, dataYY = np.meshgrid(x_grid, y_grid)
     pos_array= np.column_stack((dataXX.ravel(), dataYY.ravel()))
-    vel=model.predict(pos_array)
+    [vel, std]=model.predict(pos_array, return_std=True)
+    if min_var: 
+        grad=model.derivative_of_variance(pos_array).transpose()
+        vel=vel-2*std*grad/np.linalg.norm(grad, axis=1).reshape(-1,1)
     u= vel[:,0].reshape(dataXX.shape)
     v= vel[:,1].reshape(dataXX.shape)
     fig = plt.figure(figsize = (12, 7))
     plt.streamplot(dataXX, dataYY, u, v, density = 2)
-    plt.scatter(demo[:,0],demo[:,1], color=[1,0,0])
-    plt.scatter(surface[:,0],surface[:,1], color=[0,0,0])
+    plt.scatter(X[:,0],X[:,1], color=[1,0,0])
+    plt.scatter(distribution[:,0],distribution[:,1], color=[0,0,0])
 
-def plot_vector_field_minvar(model,datax_grid,datay_grid,demo,surface):
-    dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
-    # orgianize data in an array
-    pos_array= np.column_stack((dataXX.ravel(), dataYY.ravel()))
-    [vel, std]=model.predict(pos_array, return_std=True)
-    grad=model.derivative_of_variance(pos_array).transpose()
-    vel_variance_min=vel-2*std*grad/np.linalg.norm(grad, axis=1).reshape(-1,1)
-    u= vel_variance_min[:,0].reshape(dataXX.shape)
-    v= vel_variance_min[:,1].reshape(dataXX.shape)
-    fig = plt.figure(figsize = (12, 7))
-    plt.streamplot(dataXX, dataYY, u, v, density = 2)
-    plt.scatter(demo[:,0],demo[:,1], color=[1,0,0]) 
-    plt.scatter(surface[:,0],surface[:,1], color=[0,0,0])
-    plt.title("Minimum variance")
 
 def plot_traj_evolution(model,x_grid,y_grid,z_grid,demo, surface):
     start_pos = np.random.uniform([x_grid[0], y_grid[0], z_grid[0]], [x_grid[-1], y_grid[-1], z_grid[-1]], size=(1, 3))
@@ -87,12 +82,6 @@ def draw_error_band(ax, x, y, err, loop=False, **kwargs):
     path = Path(vertices, codes)
     ax.add_patch(PathPatch(path, label='Uncertainty',  **kwargs))
 
-def create_vectorfield(model,datax_grid,datay_grid):
-    dataXX, dataYY = np.meshgrid(datax_grid, datay_grid)
-    pos = np.column_stack((dataXX.ravel(), dataYY.ravel()))
-    vel, std = model.predict(pos, return_std=True)
-    u, v = vel[:, 0].reshape(dataXX.shape), vel[:, 1].reshape(dataXX.shape)
-    return u, v, std
 
 # Function to create orientation frames from quaternions
 def plot_orientation_frame(ax, position, orientation, length=0.2, skip=10):

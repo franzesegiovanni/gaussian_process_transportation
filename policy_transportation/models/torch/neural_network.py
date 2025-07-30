@@ -6,16 +6,19 @@ from torch.utils.data import TensorDataset, DataLoader
 from tqdm import tqdm 
 from torch import autograd
 import random
+import numpy as np
 
 class NeuralNetwork():
-    def __init__(self, X, Y):
+    def __init__(self, num_epochs=100):
         self.use_cuda=False
+        self.num_epochs=num_epochs
+        self.is_residual=True
+    def fit(self, X, Y):
         input_size=X.shape[1]
         output_size=Y.shape[1]
         self.nn= MLP(input_size=input_size, output_size= output_size , hidden_size=100)
         if self.use_cuda:
             self.nn=self.nn.cuda()
-    def fit(self, X, Y, num_epochs=100):
         # Define the loss function and optimizer
         X=torch.from_numpy(X).float()
         Y=torch.from_numpy(Y).float()
@@ -26,7 +29,7 @@ class NeuralNetwork():
 
     
         # Training loop
-        epochs_iter = tqdm(range(num_epochs))
+        epochs_iter = tqdm(range(self.num_epochs))
         for epoch in epochs_iter:
             for x_batch, y_batch in tqdm(self.train_loader, desc="Minibatch", leave=False):
                 # Forward pass
@@ -45,19 +48,24 @@ class NeuralNetwork():
         predictions = torch.sum(predictions, dim=0)
         return predictions
     
-    def predict(self,x):
+    def predict(self,x, return_std=False):
         x=torch.from_numpy(x).float()
         if self.use_cuda:
             x=x.cuda()
         predictions = self.nn(x)
-        return predictions.detach().cpu().numpy()
+        prediction = predictions.detach().cpu().numpy()
+        if return_std:
+            return prediction, np.zeros_like(prediction)
+        return prediction
          
-    def derivative(self, x): 
+    def derivative(self, x, return_var=False): 
         x=torch.from_numpy(x).float()
         if self.use_cuda:
             x=x.cuda()
         J=jacobian(self.mean_fun, x).cpu().detach().numpy()
         J=J.transpose(1,0,2)    
+        if return_var:
+            return J, np.zeros_like(J)
         return J
     
 # Define the MLP class

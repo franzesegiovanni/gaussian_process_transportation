@@ -9,7 +9,7 @@ np.set_printoptions(precision=2)
 
 script_path = str(os.path.dirname(__file__))
 filename = script_path + '/data/' + 'reach_target'
-use_extra_points = False
+use_extra_points = True
 policy=Multiple_Reference_Frames_LA()
 policy.load_dataset(filename, use_extra_points=use_extra_points)
 fig, ax = plt.subplots()

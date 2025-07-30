@@ -8,8 +8,10 @@ This code is part of TERI (TEaching Robots Interactively) project
 #%%
 import numpy as np
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel as C
-from policy_transportation.transportation.gaussian_process_transportation import GaussianProcessTransportation as GPT
-from policy_transportation.transportation.diffeomorphic_transportation import DiffeomorphicTransportation as LTW
+from policy_transportation.transportation.transportation import PolicyTransportation
+from policy_transportation.models.gaussian_process import GaussianProcess as GPR
+from policy_transportation.models.locally_weighted_translations import Iterative_Locally_Weighted_Translations as ILWT
+
 import pathlib
 from policy_transportation.utils import resample
 import warnings
@@ -22,9 +24,9 @@ source_path = str(pathlib.Path(__file__).parent.absolute())
 #create subfigure 2x10 with tight layeout
 fig, axs = plt.subplots(2, 10, figsize=(20, 4), tight_layout=True)
 fig.text(0.0, 0.75, 'Gaussian Process', va='center', rotation='vertical', fontsize=12)
-fig.text(0.0, 0.25, 'Diffeo. Matching', va='center', rotation='vertical',  fontsize=12)
+fig.text(0.0, 0.25, 'LTW', va='center', rotation='vertical',  fontsize=12)
 time_gpt= []
-time_diffeo= []
+time_ltw= []
 diffeo_percentage_gpt= []
 diffeo_percentage_ltw= []
 accurracy_gpt= []
@@ -64,24 +66,28 @@ for i in range(0,9):
     #%% Transport the dynamical system on the new surface
     
     k_transport = C(constant_value=10)  * RBF(0.9*np.ones(2), [0.1, 10]) + WhiteKernel(0.01 )
-    gpt=GPT(kernel_transport= k_transport)
-    gpt.source_distribution=source_distribution 
-    gpt.target_distribution=target_distribution
-    gpt.training_traj=X
-    gpt.training_delta=deltaX
+    transport=PolicyTransportation()
+    k_transport = C(constant_value=10)  * RBF(1*np.ones(2), [0.1,5]) + WhiteKernel(0.01 )
+
+    method = GPR(k_transport)
+    transport.set_method(method=method, is_residual=method.is_residual)
     start = timeit.default_timer()
-    gpt.fit_transportation(do_scale=True, do_rotation=True)
-    gpt.apply_transportation()
+    transport.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
+
+    X_hat=transport.transport(X, return_std=False)
+    deltaX_hat=transport.transport_velocity(X, deltaX, return_var=False)
+
     stop = timeit.default_timer()
     time_gpt.append(stop - start)
-    accurracy_gpt.append(gpt.accuracy())
+    accurracy_gpt.append(transport.accuracy)
+    diffeomorphic = transport.is_diffeomorphic_on(X)
     print('Accuracy: ', accurracy_gpt[i])
     print('Time: ', stop - start)
-    axs[0,plot_index].plot(gpt.training_traj[:,0],gpt.training_traj[:,1], color=[1,0,0])
+    axs[0,plot_index].plot(X_hat[:,0],X_hat[:,1], color=[1,0,0])
     axs[0,plot_index].plot(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
     #remove axis
     axs[0,plot_index].axis('off')
-    diffeo_percentage_gpt.append(np.sum(~gpt.diffeo_mask)/len(gpt.diffeo_mask))
+    diffeo_percentage_gpt.append(np.sum(diffeomorphic)/len(diffeomorphic))
     #add the diffemorphic percentage on the top right corner
     axs[0,plot_index].text(1, 0.2, str(np.round(diffeo_percentage_gpt[i],3)), transform=axs[0,plot_index].transAxes, color='red')
     #add the time under it 
@@ -90,28 +96,32 @@ for i in range(0,9):
     axs[0,plot_index].text(0.9, 0.0, "{:.1e}".format(accurracy_gpt[i]), transform=axs[0,plot_index].transAxes, color='black')
 
     #%% Diffeomorphic transportation
-    lwt=LTW(num_iterations=20)
-    lwt.source_distribution=source_distribution
-    lwt.target_distribution=target_distribution
-    lwt.training_traj=X
-    lwt.training_delta=deltaX
+    transport=PolicyTransportation()
+
+    method = ILWT( num_iterations=30, rho=1, beta=0.9)
+    transport.set_method(method=method, is_residual=method.is_residual)
     start = timeit.default_timer()
-    lwt.fit_transportation(do_scale=True, do_rotation=True)
-    lwt.apply_transportation()
+    transport.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
+
+    X_hat=transport.transport(X, return_std=False)
+    deltaX_hat=transport.transport_velocity(X, deltaX, return_var=False)
+
     stop = timeit.default_timer()
-    time_diffeo.append(stop - start)
+    time_ltw.append(stop - start)
+    accurracy_ltw.append(transport.accuracy)
+    diffeomorphic = transport.is_diffeomorphic_on(X)
+    print('Accuracy: ', accurracy_gpt[i])
     print('Time: ', stop - start)
-    accurracy_ltw.append(lwt.accuracy())
-    print('Accuracy: ', accurracy_ltw[i])
-    axs[1,plot_index].plot(lwt.training_traj[:,0],lwt.training_traj[:,1], color=[1,0,0])
+    axs[1,plot_index].plot(X_hat[:,0],X_hat[:,1], color=[1,0,0])
     axs[1,plot_index].plot(target_distribution[:,0],target_distribution[:,1], color=[0,0,1])
+    #remove axis
     axs[1,plot_index].axis('off')
-    diffeo_percentage_ltw.append(np.sum(~lwt.diffeo_mask)/len(lwt.diffeo_mask))
+    diffeo_percentage_ltw.append(np.sum(diffeomorphic)/len(diffeomorphic))
     #add the diffemorphic percentage on the top right corner
     axs[1,plot_index].text(1, 0.2, str(np.round(diffeo_percentage_ltw[i],3)), transform=axs[1,plot_index].transAxes, color='red')
     #add the time under it
     # axs[1,plot_index].text(0.9, 0.1, str(np.round(time_diffeo[i],3))+'[s]', transform=axs[1,plot_index].transAxes, color='blue')
-    axs[1,plot_index].text(0.9, 0.1, "{:.1e}".format(time_diffeo[i]), transform=axs[1,plot_index].transAxes, color='blue')
+    axs[1,plot_index].text(0.9, 0.1, "{:.1e}".format(time_ltw[i]), transform=axs[1,plot_index].transAxes, color='blue')
     axs[1,plot_index].text(0.9, 0.0, "{:.1e}".format(accurracy_ltw[i]), transform=axs[1,plot_index].transAxes, color='black')
 
 

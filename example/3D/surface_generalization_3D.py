@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from policy_transportation import GaussianProcess as GPR
 import pathlib
 from policy_transportation.plot_utils import *
-from policy_transportation import GaussianProcessTransportation as Transport
+from policy_transportation import PolicyTransportation
 import warnings
 warnings.filterwarnings("ignore")
 # Load the drawings
@@ -51,17 +51,17 @@ source_distribution =S.reshape(-1,3)
 target_distribution =S1.reshape(-1,3)
 
 print("Fit Gaussian Process Tranportation")
-#%% Transport the dynamical system on the new surface
-transport=Transport()
-transport.source_distribution=source_distribution 
-transport.target_distribution=target_distribution
-transport.training_traj=X
-transport.training_delta=deltaX
-transport.fit_transportation()
-transport.apply_transportation()
 
-X1=transport.training_traj
-deltaX1=transport.training_delta 
+transport=PolicyTransportation()
+k_transport = C(constant_value=10)  * RBF(1*np.ones(3), [0.1,5]) + WhiteKernel(0.01 )
+
+method = GPR(k_transport)
+transport.set_method(method=method, is_residual=method.is_residual)
+    
+transport.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
+
+X_hat=transport.transport(X, return_std=False)
+deltaX_hat=transport.transport_velocity(X, deltaX, return_var=False)
 
 x1_grid=np.linspace(np.min(X[:,0]), np.max(X[:,0]), 10)
 y1_grid=np.linspace(np.min(X[:,1]), np.max(X[:,1]), 10)
@@ -71,7 +71,7 @@ print("Fit Gaussian Process Dynamical System on the target distribution")
 # Fit the Gaussian Process dynamical system   
 k_deltaX1 = C(constant_value=np.sqrt(0.1))  * Matern(1*np.ones(3), nu=1.5) + WhiteKernel(0.01)   
 gp_deltaX1=GPR(kernel=k_deltaX1)
-gp_deltaX1.fit(X1, deltaX1)
-plot_traj_evolution(gp_deltaX1,x1_grid,y1_grid,z1_grid,X1,S1)
+gp_deltaX1.fit(X_hat, deltaX_hat)
+plot_traj_evolution(gp_deltaX1,x1_grid,y1_grid,z1_grid,X_hat,S1)
 
 plt.show()

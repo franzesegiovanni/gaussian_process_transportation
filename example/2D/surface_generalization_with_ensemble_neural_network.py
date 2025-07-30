@@ -1,15 +1,20 @@
 """
-Authors:  Giovanni Franzese and Ravi Prakash, Dec 2022
-Email: g.franzese@tudelft.nl, r.prakash-1@tudelft.nl
+Authors:  Giovanni Franzese 
+Email: g.franzese@tudelft.nl
 Cognitive Robotics, TU Delft
 This code is part of TERI (TEaching Robots Interactively) project
 """
 
 #%%
 import numpy as np
+from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel as C
 import matplotlib.pyplot as plt
+
+from policy_transportation.models.torch.ensemble_neural_network import EnsembleNeuralNetwork
+from policy_transportation.models.torch.neural_network import NeuralNetwork
 from policy_transportation.transportation.transportation import PolicyTransportation
-from policy_transportation.models.locally_weighted_translations import Iterative_Locally_Weighted_Translations
+
+
 import pathlib
 from policy_transportation.plot_utils import plot_vector_field
 from policy_transportation.utils import resample
@@ -22,22 +27,19 @@ data =np.load(source_path+ '/data/'+str('example2')+'.npz')
 X=data['demo'] 
 S=data['floor'] 
 S1=data['newfloor']
-X=resample(X, num_points=100)
-source_distribution=resample(S, num_points=30)
-target_distribution=resample(S1, num_points=30)
+X=resample(X, num_points=200)
+source_distribution=resample(S, num_points=20)
+target_distribution=resample(S1, num_points=20)
 
 #%% Calculate deltaX
 deltaX = np.zeros((len(X),2))
 for j in range(len(X)-1):
     deltaX[j,:]=(X[j+1,:]-X[j,:])
-
-deltaX[-1,:]=X[0,:]-X[-1,:]
-
 transport=PolicyTransportation()
-
-method = Iterative_Locally_Weighted_Translations(num_iterations=30, rho=0.9, beta=0.9)
+# method = EnsembleNeuralNetwork(num_epochs=200, n_estimators=10)
+method = NeuralNetwork(num_epochs=200)
 transport.set_method(method=method, is_residual=method.is_residual)
-
+    
 transport.fit(source_distribution, target_distribution, do_scale=False, do_rotation=True)
 
 X_hat=transport.transport(X, return_std=False)

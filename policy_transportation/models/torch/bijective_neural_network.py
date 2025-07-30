@@ -10,6 +10,7 @@ import random
 
 class BiJectiveNetwork():
 	def __init__(self, num_epochs=20, num_blocks = 4, num_hidden = 20, t_act = 'elu', s_act = 'elu'):
+		self.is_residual = False
 		seed = random.randint(1, 10000)
 
 		# Set random seed for PyTorch

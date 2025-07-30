@@ -42,3 +42,15 @@ def resample(surface, num_points=20):
     # Convert the new trajectory to a numpy array
     new_trajectory = np.array(new_trajectory)
     return new_trajectory
+
+def from_list_trajectory_to_array(trajectory):
+    # trajectory: list of trajectories, each trajectory is a list of points [x, y]
+    xs = []
+    dxs = []
+    for traj in trajectory:
+        traj = np.array(traj)
+        xs.append(traj[:-1])
+        dxs.append(traj[1:] - traj[:-1])
+    xs = np.concatenate(xs, axis=0)
+    dxs = np.concatenate(dxs, axis=0)
+    return xs, dxs

@@ -50,7 +50,7 @@ class KMP():
     def derivative(self, time, return_var=False):
         return self.gp.derivative(time, return_var=return_var)
     
-    def samples(self, X, n_samples=10):
+    def samples(self, X=None, n_samples=10):
         total_variance= self.transportation_variance
         y_samples = [
             np.random.multivariate_normal(
