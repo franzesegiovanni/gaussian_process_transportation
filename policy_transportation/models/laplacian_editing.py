@@ -23,7 +23,6 @@ class Laplacian_Editing():
             print("Path graph")
         # Compute the graph Laplacian matrix that is the discrete analog of the Laplace-Beltrami operator. It can be computed as the difference between the degree matrix and the adjacency matrix.The degree matrix of an undirected graph is a diagonal matrix which contains information about the degree of each vertex—that is, the number of edges attached to each vertex. The adjacency matrix of an undirected graph is a square matrix with dimensions equal to the number of vertices in the graph. The elements of the matrix indicate whether pairs of vertices are adjacent or not in the graph.
         self.L = nx.laplacian_matrix(G).toarray()
-        self.L = self.L 
         # Rather than working in absolute Cartesian coordinates, the discrete Laplace-Beltrami operator specifies the loca path properties, called Laplacian coordinates Delta that can be calculated as the product of the graph Laplacian and the training trajectory
         self.DELTA= self.L @ training_traj
 

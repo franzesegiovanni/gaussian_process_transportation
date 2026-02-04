@@ -18,13 +18,27 @@ class PolicyTransportation():
         Set the method for the nonlinear transformation. You can use any method that implements the fit and predict methods, such as Iterative_Locally_Weighted_Translations or GaussianProcess.
         Parameters:
             method (object): The method to be used for the nonlinear transformation. It should implement fit and predict methods.
-            is_residual (bool): If True, Phi(x)= Psi(Gamma(x)) + Gamma(x), where Gamma is the affine transformation and Psi is the nonlinear transformation. If False, Phi(x)=Psi(Gamma(x)). Default is True.
+            is_residual (bool): If True, φ(x)= ψ(γ(x)) + γ(x), where γ is the affine transformation and ψ is the nonlinear transformation. If False, φ(x)=ψ(γ(x)). Default is True.
+            where φ is the overall transportation function, γ is the affine transformation, and ψ is the nonlinear transformation.
         """
 
         self.nonlinear_transform=method
         self.is_residual=is_residual
 
     def fit(self, source_distribution, target_distribution, do_scale=False, do_rotation=True):
+        """
+        Transport positions using the learned transformation conditioned on some variables.
+        The prediction is done as T = ψ(γ(S)) if the set method is not residual. Otherwise T = ψ(γ(S)) + γ(S)
+        
+        Parameters:
+            source_distribution (numpy.ndarray): Input positions, shape (n, 2) or (n, 3) where n is the number of points.
+            target_distribution (numpy.ndarray): Target positions, shape (n, 2) or (n, 3) where n is the number of points.
+            do_scale (bool): Whether to include scaling in the affine transformation.
+            do_rotation (bool): Whether to include rotation in the affine transformation.
+            
+        Returns:
+            numpy.ndarray: Transported positions, same shape as input.
+        """
         if self.nonlinear_transform is None:
             warnings.warn(
                 "Nonlinear transform method is not set. Please set it using set_method() before fitting. Otherwise, the transportation will be only affine.",
@@ -48,9 +62,11 @@ class PolicyTransportation():
 
         transported = self.transport(source_distribution, return_std=False)
         self.accuracy = np.sqrt(np.mean(np.sum((transported - target_distribution) ** 2, axis=1)))
+        
     def transport(self, pos, return_std=True):
         """
         Transport positions using the learned transformation.
+        x_hat = ψ(γ(x)) + γ(x) if the set method is residual. Otherwise x_hat = ψ(γ(x))
         
         Parameters:
             pos (numpy.ndarray): Input positions, shape (n, 2) or (n, 3) where n is the number of points.
@@ -144,17 +160,20 @@ class PolicyTransportation():
         """
         J_phi= self.compute_jacobian(pos, return_var=False)
 
-        if J_phi[0].shape[0]==3:
+        print("Is the map locally diffeomorphic?", np.all(np.linalg.det(J_phi) > 0))
+
+        if J_phi[0].shape[0]<3:
+            print("The Jacobain of the map as shape ", J_phi[0].shape, " but it should be (3x3) or (4x4) if you also have time dimension.")
+            print("Robot orientation is not transported")
+            
+        
+        else:
+            J_phi=J_phi[:, :3, :3]
             quat=quaternion.from_float_array(ori)
             quat_J_phi = quaternion.from_rotation_matrix(J_phi, nonorthogonal=True)
             quat_transport=quat_J_phi * quat
             ori_transported= quaternion.as_float_array(quat_transport)
-
             return ori_transported
-
-        else:
-            print("The Jacobain of the map as shape ", self.J_phi[0].shape, " but it should be (3x3)")
-            print("Robot orientation is not transported")
 
     def sample_transportation(self, pos):
         pos_rotated=self.affine_transform.predict(pos)
@@ -176,3 +195,69 @@ class PolicyTransportation():
         print("Is the map diffeomorphic?", np.all((np.linalg.det(J_phi)) > 0))
         print("Percentage of points that are not diffeomorphic: ", np.sum(np.linalg.det(J_phi) <= 0)/len(J_phi)*100, "percent")
         return np.linalg.det(J_phi) > 0
+
+
+    def fit_with_conditioning(self, y_source, y_target, x_conditioned, do_scale=False, do_rotation=True):
+        """
+        This is part of a different way of doing transportation, where we are learning that 
+        T = ϕ(S, x_conditioning)=  γ(S) + ψ(x_conditioned)
+        The affine transformation γ is learned on the source and target distributions, 
+        while the nonlinear transformation ϕ is learned on the conditioned variables x_conditioned and the difference between 
+        the target and the affine transformed source.
+
+        Practical example of usage: 
+        For example, if you have a set of poses of object that you are tracking in the space and
+        you also have a set of robot pose trajectories. You can learn a transportation map on the 
+        quaternions (only the q_x, q_y, q_z components) conditioning on the current position (x,y,z). This means that you are learning
+        a map that accordig to the current position of the robot, it will locally modify the orientation given the source and target orientation key quaternions. 
+        Parameters:
+            y_source (numpy.ndarray): Source distribution, shape (n, d) where n is the number of points and d is the dimensionality.
+            y_target (numpy.ndarray): Target distribution, shape (n, d) where n is the number of points and d is the dimensionality.
+            x_conditioned (numpy.ndarray): Conditioning variables, shape (n, m) where n is the number of points and m is the dimensionality of the conditioning variables.
+            do_scale (bool): Whether to include scaling in the affine transformation.
+            do_rotation (bool): Whether to include rotation in the affine transformation.
+        """
+        if self.nonlinear_transform is None:
+            warnings.warn(
+                "Nonlinear transform method is not set. Please set it using set_method() before fitting. Otherwise, the transportation will be only affine.",
+                stacklevel=2
+            )
+        if y_source.shape[0] != y_target.shape[0]:
+            raise ValueError("Source and target distributions must have the same number of points.")
+        if y_source.shape[1] != y_target.shape[1]:
+            raise ValueError("Source and target distributions must have the same dimensionality.")
+        self.affine_transform=AffineTransform(do_scale=do_scale, do_rotation=do_rotation)
+        self.affine_transform.fit(y_source, y_target)
+
+        y_source_rotated=self.affine_transform.predict(y_source)  
+        self.y_delta = y_target - y_source_rotated  
+        if self.nonlinear_transform:
+            if self.is_residual==True:
+                self.nonlinear_transform.fit(x_conditioned, self.y_delta)  
+            else:
+                raise ValueError("The conditioned fitting is only implemented for residual transformations.")
+
+    def transport_with_conditioning(self, y, x_conditioned):
+        """
+        Transport positions using the learned transformation conditioned on some variables.
+        The prediction is done as y_hat = γ(y) + ψ(x_conditioned)
+
+
+        Parameters:
+            y (numpy.ndarray): Input positions, shape (n, 2) or (n, 3) where n is the number of points.
+            x_conditioned (numpy.ndarray): Conditioning variables used for the transformation.
+            
+        Returns:
+            numpy.ndarray: Transported positions, same shape as input.
+        """
+        if self.nonlinear_transform:
+            if self.is_residual:
+                y_rotated = self.affine_transform.predict(y)
+                delta_map_mean = self.nonlinear_transform.predict(x_conditioned)
+
+                pos_transported = y_rotated + delta_map_mean
+            else:
+                raise ValueError("The conditioned transport is only implemented for residual transformations.")
+            return pos_transported
+        else:
+            raise ValueError("Nonlinear transform method is not set. Please set it using set_method() before transporting.")
